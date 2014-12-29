@@ -1,0 +1,26 @@
+{
+  "name": "free-style",
+  "version": "0.0.0",
+  "description": "Cross-browser style object",
+  "main": "free-style.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/blakeembrey/free-style.git"
+  },
+  "keywords": [
+    "style",
+    "css",
+    "object",
+    "react"
+  ],
+  "author": {
+    "name": "Blake Embrey",
+    "email": "hello@blakeembrey.com",
+    "url": "http://blakeembrey.me"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blakeembrey/free-style/issues"
+  },
+  "homepage": "https://github.com/blakeembrey/free-style"
+}
