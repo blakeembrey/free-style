@@ -1,6 +1,6 @@
 {
   "name": "free-style",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Cross-browser style object",
   "main": "free-style.js",
   "repository": {
