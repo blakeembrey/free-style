@@ -51,6 +51,10 @@ module.exports = React.createElement('div', {
 });
 ```
 
+### Legacy
+
+To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Array.prototype.forEach` and `Object.keys`.
+
 ## Notes
 
 There is still work to be done for global value support (E.g. `transitionProperty: transform` to `WebkitTransitionProperty: -webkit-transform`). Support will likely transform over time.
