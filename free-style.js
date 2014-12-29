@@ -339,7 +339,7 @@
     Object.keys(style).forEach(function (key) {
       var value = style[key];
 
-      if (isNaN(value) || CSS_NUMBER[key]) {
+      if (!value || isNaN(value) || CSS_NUMBER[key]) {
         return;
       }
 
