@@ -1,7 +1,6 @@
 # Free-style
 
 [![NPM version][npm-image]][npm-url]
-[![Build status][travis-image]][travis-url]
 
 **Free-style** is designed to make cross-browser style objects easier to work with.
 
@@ -62,5 +61,3 @@ MIT
 
 [npm-image]: https://img.shields.io/npm/v/free-style.svg?style=flat
 [npm-url]: https://npmjs.org/package/free-style
-[travis-image]: https://img.shields.io/travis/blakeembrey/free-style.svg?style=flat
-[travis-url]: https://travis-ci.org/blakeembrey/free-style
