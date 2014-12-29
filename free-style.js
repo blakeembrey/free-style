@@ -169,22 +169,7 @@
    *
    * @type {String}
    */
-  var CSS_PREFIX = (Array.prototype.join.call(
-    window.getComputedStyle(document.documentElement, ''), ''
-  ).match(/\-(?:moz|webkit|khtml|ms|o)\-/) || [])[0];
-
-  /**
-   * Current browser vendor prefix.
-   *
-   * @type {String}
-   */
-  var VENDOR_PREFIX = ({
-    '-moz-': 'Moz',
-    '-webkit-': 'Webkit',
-    '-khtml-': 'Khtml',
-    '-o-': 'O',
-    '-ms-': 'ms'
-  })[CSS_PREFIX];
+  var PREFIXES = ['Moz', 'Webkit', 'Khtml', 'O', 'ms'];
 
   /**
    * Cache vendor prefix lookups.
@@ -267,12 +252,17 @@
       return prop;
     }
 
-    var upper  = prop.charAt(0).toUpperCase() + prop.substr(1);
-    var prefix = VENDOR_PREFIX + upper;
+    var upper = prop.charAt(0).toUpperCase() + prop.substr(1);
 
-    // Return the prefixed property when supported, otherwise keep the
-    // original to avoid confusing the user.
-    return scope[prefix] == null ? prop : prefix;
+    for (var i = 0; i < PREFIXES.length; i++) {
+      var prefix = PREFIXES[i] + upper;
+
+      if (scope[prefix] != null) {
+        return prefix;
+      }
+    }
+
+    return prop;
   }
 
   /**
