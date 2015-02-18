@@ -274,12 +274,10 @@
     Object.keys(style).forEach(function (key) {
       var prefix = PREFIX_CACHE[key] || (PREFIX_CACHE[key] = getPrefix(key));
 
-      // Break when the property matches.
       if (prefix === key) {
         return;
       }
 
-      // Rename property to vendor prefix.
       style[prefix] = style[key];
       delete style[key];
     });
@@ -295,7 +293,6 @@
   function values (prop, values) {
     var supported;
 
-    // Find the supported value.
     for (var i = 0; i < values.length; i++) {
       if (isSupported(prop, values[i])) {
         supported = values[i];
@@ -312,29 +309,10 @@
     return function (style) {
       var value = style[prop];
 
-      // Update the property.
       if (cache[value]) {
         style[prop] = supported;
       }
     };
-  }
-
-  /**
-   * Append `px` to numbers.
-   *
-   * @param  {Object} style
-   * @return {Array}
-   */
-  function appendNumbers (style) {
-    Object.keys(style).forEach(function (key) {
-      var value = style[key];
-
-      if (!value || isNaN(value) || CSS_NUMBER[key]) {
-        return;
-      }
-
-      style[key] = value + 'px';
-    });
   }
 
   /**
@@ -344,7 +322,6 @@
    * @return {Object}
    */
   var TRANSFORM_FNS = [
-    appendNumbers,
     prefixProperties,
     values('display', DISPLAY_FLEX_VALUES)
   ];
@@ -381,16 +358,18 @@
       var props = TRANSFORM_LONGHAND[key];
       var value = src[key];
 
+      if (!isNaN(value) && !CSS_NUMBER[key]) {
+        value += 'px';
+      }
+
       if (!props) {
         style[key] = value;
 
         return;
       }
 
-      // Set the element property, which will automatically parse the value.
       ELEM.style[key] = value;
 
-      // Retrieve the updated long-hand properties.
       props.forEach(function (prop) {
         style[prop] = ELEM.style[prop];
       });
