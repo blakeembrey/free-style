@@ -399,6 +399,12 @@
     return transform(style)
   }
 
+  /**
+   * Wrap a url for CSS.
+   *
+   * @param  {String} url
+   * @return {String}
+   */
   freeStyle.url = function (url) {
     return 'url("' + encodeURI(url) + '")'
   }
