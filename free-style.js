@@ -399,5 +399,9 @@
     return transform(style)
   }
 
+  freeStyle.url = function (url) {
+    return 'url("' + encodeURI(url) + '")'
+  }
+
   return freeStyle
 })
