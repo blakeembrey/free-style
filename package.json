@@ -1,6 +1,6 @@
 {
   "name": "free-style",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Cross-browser style object",
   "main": "free-style.js",
   "files": [
