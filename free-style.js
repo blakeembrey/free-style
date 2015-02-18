@@ -358,7 +358,7 @@
       var props = TRANSFORM_LONGHAND[key];
       var value = src[key];
 
-      if (!isNaN(value) && !CSS_NUMBER[key]) {
+      if (value && !isNaN(value) && !CSS_NUMBER[key]) {
         value += 'px';
       }
 
