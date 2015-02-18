@@ -3,6 +3,14 @@
   "version": "0.0.3",
   "description": "Cross-browser style object",
   "main": "free-style.js",
+  "files": [
+    "free-style.js",
+    "LICENSE"
+  ],
+  "scripts": {
+    "lint": "standard",
+    "test": "npm run lint"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/blakeembrey/free-style.git"
@@ -22,5 +30,9 @@
   "bugs": {
     "url": "https://github.com/blakeembrey/free-style/issues"
   },
-  "homepage": "https://github.com/blakeembrey/free-style"
+  "homepage": "https://github.com/blakeembrey/free-style",
+  "devDependencies": {
+    "pre-commit": "^1.0.4",
+    "standard": "^2.6.3"
+  }
 }

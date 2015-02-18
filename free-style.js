@@ -1,13 +1,15 @@
+/* global define */
+
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define([], factory);
+    define([], factory)
   } else if (typeof exports === 'object') {
-    module.exports = factory();
+    module.exports = factory()
   } else {
-    root.freeStyle = factory();
+    root.freeStyle = factory()
   }
 })(this, function () {
-  var ELEM = document.createElement('div');
+  var ELEM = document.createElement('div')
 
   /**
    * Unit-less CSS properties.
@@ -30,7 +32,7 @@
     widows: true,
     zIndex: true,
     zoom: true
-  };
+  }
 
   /**
    * Longhand transform functions.
@@ -148,7 +150,7 @@
       'flexDirection',
       'flexWrap'
     ]
-  };
+  }
 
   /**
    * Flexbox display values.
@@ -162,21 +164,21 @@
     'box',
     '-moz-box',
     '-webkit-box'
-  ];
+  ]
 
   /**
    * Current browser CSS prefix.
    *
    * @type {String}
    */
-  var PREFIXES = ['Moz', 'Webkit', 'Khtml', 'O', 'ms'];
+  var PREFIXES = ['Moz', 'Webkit', 'Khtml', 'O', 'ms']
 
   /**
    * Cache vendor prefix lookups.
    *
    * @type {Object}
    */
-  var PREFIX_CACHE = {};
+  var PREFIX_CACHE = {}
 
   /**
    * Copy properties from `src` onto `dest`.
@@ -187,10 +189,10 @@
    */
   function assign (dest, src) {
     Object.keys(src).forEach(function (key) {
-      dest[key] = src[key];
-    });
+      dest[key] = src[key]
+    })
 
-    return dest;
+    return dest
   }
 
   /**
@@ -206,13 +208,13 @@
    * @return {Object}
    */
   function object (keys, value) {
-    var obj = {};
+    var obj = {}
 
     keys.forEach(function (key) {
-      obj[key] = value;
-    });
+      obj[key] = value
+    })
 
-    return obj;
+    return obj
   }
 
   /**
@@ -224,18 +226,18 @@
    */
   function isSupported (prop, value) {
     if (ELEM.style[prop] == null) {
-      return false;
+      return false
     }
 
     if (!value) {
-      return true;
+      return true
     }
 
     // Reset the element style and see if it sticks.
-    ELEM.style[prop] = '';
-    ELEM.style[prop] = value;
+    ELEM.style[prop] = ''
+    ELEM.style[prop] = value
 
-    return !!ELEM.style[prop];
+    return !!ELEM.style[prop]
   }
 
   /**
@@ -246,23 +248,23 @@
    * @return {String}
    */
   function getPrefix (prop, scope) {
-    scope = scope || document.documentElement.style;
+    scope = scope || document.documentElement.style
 
     if (scope[prop] != null) {
-      return prop;
+      return prop
     }
 
-    var upper = prop.charAt(0).toUpperCase() + prop.substr(1);
+    var upper = prop.charAt(0).toUpperCase() + prop.substr(1)
 
     for (var i = 0; i < PREFIXES.length; i++) {
-      var prefix = PREFIXES[i] + upper;
+      var prefix = PREFIXES[i] + upper
 
       if (scope[prefix] != null) {
-        return prefix;
+        return prefix
       }
     }
 
-    return prop;
+    return prop
   }
 
   /**
@@ -272,15 +274,15 @@
    */
   function prefixProperties (style) {
     Object.keys(style).forEach(function (key) {
-      var prefix = PREFIX_CACHE[key] || (PREFIX_CACHE[key] = getPrefix(key));
+      var prefix = PREFIX_CACHE[key] || (PREFIX_CACHE[key] = getPrefix(key))
 
       if (prefix === key) {
-        return;
+        return
       }
 
-      style[prefix] = style[key];
-      delete style[key];
-    });
+      style[prefix] = style[key]
+      delete style[key]
+    })
   }
 
   /**
@@ -291,28 +293,28 @@
    * @return {Function}
    */
   function values (prop, values) {
-    var supported;
+    var supported
 
     for (var i = 0; i < values.length; i++) {
       if (isSupported(prop, values[i])) {
-        supported = values[i];
-        break;
+        supported = values[i]
+        break
       }
     }
 
     if (!supported) {
-      return noop;
+      return noop
     }
 
-    var cache = object(values, true);
+    var cache = object(values, true)
 
     return function (style) {
-      var value = style[prop];
+      var value = style[prop]
 
       if (cache[value]) {
-        style[prop] = supported;
+        style[prop] = supported
       }
-    };
+    }
   }
 
   /**
@@ -324,7 +326,7 @@
   var TRANSFORM_FNS = [
     prefixProperties,
     values('display', DISPLAY_FLEX_VALUES)
-  ];
+  ]
 
   /**
    * Transform a style object in-place.
@@ -335,10 +337,10 @@
   function transform (style) {
     // Run each transformation sequentially.
     TRANSFORM_FNS.forEach(function (fn) {
-      fn(style);
-    });
+      fn(style)
+    })
 
-    return style;
+    return style
   }
 
   /**
@@ -348,34 +350,34 @@
    * @return {Object}
    */
   function longhand (src) {
-    var style = {};
+    var style = {}
 
     if (!src) {
-      return style;
+      return style
     }
 
     Object.keys(src).forEach(function (key) {
-      var props = TRANSFORM_LONGHAND[key];
-      var value = src[key];
+      var props = TRANSFORM_LONGHAND[key]
+      var value = src[key]
 
       if (value && !isNaN(value) && !CSS_NUMBER[key]) {
-        value += 'px';
+        value += 'px'
       }
 
       if (!props) {
-        style[key] = value;
+        style[key] = value
 
-        return;
+        return
       }
 
-      ELEM.style[key] = value;
+      ELEM.style[key] = value
 
       props.forEach(function (prop) {
-        style[prop] = ELEM.style[prop];
-      });
-    });
+        style[prop] = ELEM.style[prop]
+      })
+    })
 
-    return style;
+    return style
   }
 
   /**
@@ -386,16 +388,16 @@
    * @return {Object}
    */
   function freeStyle (/* ...styles */) {
-    var style = {};
+    var style = {}
 
     // Assign to a single object, but make sure all properties are long-hand
     // first to avoid issues with the property ordering.
     for (var i = 0; i < arguments.length; i++) {
-      assign(style, longhand(arguments[i]));
+      assign(style, longhand(arguments[i]))
     }
 
-    return transform(style);
+    return transform(style)
   }
 
-  return freeStyle;
-});
+  return freeStyle
+})
