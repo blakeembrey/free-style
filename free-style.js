@@ -203,7 +203,7 @@
    * @param {Object} styles
    */
   function Namespace (styles) {
-    this.styles = styles
+    this.style = styles
     this.className = 'n' + hash(JSON.stringify(styles))
     this.selector = '.' + this.className
   }
@@ -214,7 +214,7 @@
    * @return {String}
    */
   Namespace.prototype.getStyles = function () {
-    return stylesToString(this.styles, this.selector)
+    return stylesToString(this.style, this.selector)
   }
 
   /**
@@ -223,7 +223,7 @@
    * @param {Object} styles
    */
   function Keyframes (styles) {
-    this.styles = styles
+    this.style = styles
     this.name = 'k' + hash(JSON.stringify(styles))
   }
 
@@ -233,7 +233,7 @@
    * @return {String}
    */
   Keyframes.prototype.getStyles = function () {
-    return nestedStylesToString(this.styles, '@keyframes ' + this.name)
+    return nestedStylesToString(this.style, '@keyframes ' + this.name)
   }
 
   /**
