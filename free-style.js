@@ -1,6 +1,7 @@
 /* global define */
 
 (function (root, factory) {
+  /* istanbul ignore next */
   if (typeof define === 'function' && define.amd) {
     define([], factory)
   } else if (typeof exports === 'object') {
@@ -9,8 +10,6 @@
     root.freeStyle = factory()
   }
 })(this, function () {
-  var ELEM = document.createElement('div')
-
   /**
    * Unit-less CSS properties.
    *
@@ -35,379 +34,301 @@
   }
 
   /**
-   * Longhand transform functions.
+   * Hyphenate the CSS property.
    *
-   * Source: mdn.io/shorthand+properties
-   *
-   * @type {Object}
-   */
-  var TRANSFORM_LONGHAND = {
-    background: [
-     'backgroundClip',
-     'backgroundColor',
-     'backgroundImage',
-     'backgroundOrigin',
-     'backgroundPosition',
-     'backgroundRepeat',
-     'backgroundSize',
-     'backgroundAttachment'
-    ],
-    font: [
-      'fontStyle',
-      'fontVariant',
-      'fontWeight',
-      'fontSize',
-      'lineHeight',
-      'fontFamily'
-    ],
-    margin: [
-      'marginTop',
-      'marginRight',
-      'marginBottom',
-      'marginLeft'
-    ],
-    border: [
-      'borderTopWidth',
-      'borderTopStyle',
-      'borderTopColor',
-      'borderRightWidth',
-      'borderRightStyle',
-      'borderRightColor',
-      'borderBottomWidth',
-      'borderBottomStyle',
-      'borderBottomColor',
-      'borderLeftWidth',
-      'borderLeftStyle',
-      'borderLeftColor'
-    ],
-    borderTop: [
-      'borderTopWidth',
-      'borderTopStyle',
-      'borderTopColor'
-    ],
-    borderLeft: [
-      'borderLeftWidth',
-      'borderLeftStyle',
-      'borderLeftColor'
-    ],
-    borderBottom: [
-      'borderBottomWidth',
-      'borderBottomStyle',
-      'borderBottomColor'
-    ],
-    borderRight: [
-      'borderRightWidth',
-      'borderRightStyle',
-      'borderRightColor'
-    ],
-    borderWidth: [
-      'borderTopWidth',
-      'borderRightWidth',
-      'borderBottomWidth',
-      'borderLeftWidth'
-    ],
-    borderColor: [
-      'borderTopColor',
-      'borderRightColor',
-      'borderBottomColor',
-      'borderLeftColor'
-    ],
-    borderStyle: [
-      'borderTopStyle',
-      'borderRightStyle',
-      'borderBottomStyle',
-      'borderLeftStyle'
-    ],
-    transition: [
-      'transitionProperty',
-      'transitionDuration',
-      'transitionTimingFunction',
-      'transitionDelay'
-    ],
-    padding: [
-      'paddingTop',
-      'paddingRight',
-      'paddingBottom',
-      'paddingLeft'
-    ],
-    listStyle: [
-      'listStyleType',
-      'listStyleImage',
-      'listStylePosition'
-    ],
-    borderRadius: [
-      'borderTopLeftRadius',
-      'borderTopRightRadius',
-      'borderBottomRightRadius',
-      'borderBottomLeftRadius'
-    ],
-    flex: [
-      'flexGrow',
-      'flexShrink',
-      'flexBasis'
-    ],
-    flexFlow: [
-      'flexDirection',
-      'flexWrap'
-    ]
-  }
-
-  /**
-   * Flexbox display values.
-   *
-   * @type {Array}
-   */
-  var DISPLAY_FLEX_VALUES = [
-    'flex',
-    '-webkit-flex',
-    '-ms-flexbox',
-    'box',
-    '-moz-box',
-    '-webkit-box'
-  ]
-
-  /**
-   * Current browser CSS prefix.
-   *
-   * @type {String}
-   */
-  var PREFIXES = ['Moz', 'Webkit', 'Khtml', 'O', 'ms']
-
-  /**
-   * Cache vendor prefix lookups.
-   *
-   * @type {Object}
-   */
-  var PREFIX_CACHE = {}
-
-  /**
-   * Copy properties from `src` onto `dest`.
-   *
-   * @param  {Object} dest
-   * @param  {Object} src
-   * @return {Object}
-   */
-  function assign (dest, src) {
-    Object.keys(src).forEach(function (key) {
-      dest[key] = src[key]
-    })
-
-    return dest
-  }
-
-  /**
-   * Noop.
-   */
-  function noop () {}
-
-  /**
-   * Turn an array into an object with optional value.
-   *
-   * @param  {Array}  keys
-   * @param  {String} value
-   * @return {Object}
-   */
-  function object (keys, value) {
-    var obj = {}
-
-    keys.forEach(function (key) {
-      obj[key] = value
-    })
-
-    return obj
-  }
-
-  /**
-   * Check if a property value is supported.
-   *
-   * @param  {String}  prop
-   * @param  {String}  value
-   * @return {Boolean}
-   */
-  function isSupported (prop, value) {
-    if (ELEM.style[prop] == null) {
-      return false
-    }
-
-    if (!value) {
-      return true
-    }
-
-    // Reset the element style and see if it sticks.
-    ELEM.style[prop] = ''
-    ELEM.style[prop] = value
-
-    return !!ELEM.style[prop]
-  }
-
-  /**
-   * Get the browser prefixed property.
-   *
-   * @param  {String} prop
-   * @param  {Object} [scope]
+   * @param  {String} str
    * @return {String}
    */
-  function getPrefix (prop, scope) {
-    scope = scope || document.documentElement.style
-
-    if (scope[prop] != null) {
-      return prop
-    }
-
-    var upper = prop.charAt(0).toUpperCase() + prop.substr(1)
-
-    for (var i = 0; i < PREFIXES.length; i++) {
-      var prefix = PREFIXES[i] + upper
-
-      if (scope[prefix] != null) {
-        return prefix
-      }
-    }
-
-    return prop
+  function hyphenate (str) {
+    return str
+      .replace(/([A-Z])/g, '-$1')
+      .replace(/^ms-/, '-ms-')
+      .toLowerCase()
   }
 
   /**
-   * Return a cached lookup to the vendor prefix.
+   * Sanitize the styles value.
    *
-   * @param {Object} style
+   * @param  {String} value
+   * @return {String}
    */
-  function prefixProperties (style) {
-    Object.keys(style).forEach(function (key) {
-      var prefix = PREFIX_CACHE[key] || (PREFIX_CACHE[key] = getPrefix(key))
+  function styleValue (property, value) {
+    if (!isNaN(value) && !CSS_NUMBER[property]) {
+      value += 'px'
+    }
 
-      if (prefix === key) {
+    return String(value).replace(/([\{\}\[\]])/g, '\\$1')
+  }
+
+  /**
+   * Check if a property will render at the top level.
+   *
+   * @param  {String}  property
+   * @return {Boolean}
+   */
+  function isTopLevelProperty (property) {
+    return property.charAt(0) === '@'
+  }
+
+  /**
+   * Check if a value is a nested style definition.
+   *
+   * @param  {*}       value
+   * @return {Boolean}
+   */
+  function isNestedDefinition (value) {
+    return typeof value === 'object' && !Array.isArray(value)
+  }
+
+  /**
+   * Turn a single style into a rule.
+   *
+   * @param  {String} property
+   * @param  {String} value
+   * @return {String}
+   */
+  function styleToString (property, value) {
+    var prop = hyphenate(property)
+
+    if (!Array.isArray(value)) {
+      value = [value]
+    }
+
+    return value.map(function (value) {
+      return prop + ':' + styleValue(property, value) + ';'
+    }).join('')
+  }
+
+  /**
+   * Turn a style object into a string.
+   *
+   * @param  {Object} styles
+   * @param  {String} selector
+   * @return {String}
+   */
+  function stylesToString (styles, selector) {
+    var rules = ''
+    var toplevel = ''
+
+    Object.keys(styles).forEach(function (key) {
+      var value = styles[key]
+
+      // Support CSS @-rules (`@media`, `@supports`, etc)
+      if (isTopLevelProperty(key)) {
+        toplevel += key + '{' + stylesToString(value, selector) + '}'
+
         return
       }
 
-      style[prefix] = style[key]
-      delete style[key]
+      // Support LESS-style nested syntax.
+      if (isNestedDefinition(value)) {
+        if (key.indexOf('&') > -1) {
+          key = key.replace(/&/g, selector)
+        } else {
+          key = selector + ' ' + key
+        }
+
+        toplevel += stylesToString(value, key)
+
+        return
+      }
+
+      rules += styleToString(key, value)
     })
+
+    if (rules) {
+      rules = selector + '{' + rules + '}'
+    }
+
+    return rules + toplevel
   }
 
   /**
-   * Generate a function for transforming property values.
+   * Create a style object at the root.
    *
-   * @param  {String}   prop
-   * @param  {Array}    values
-   * @return {Function}
+   * @param  {Object} styles
+   * @return {String}
    */
-  function values (prop, values) {
-    var supported
+  function nestedStylesToString (styles, identifier) {
+    var rules = ''
+    var toplevel = ''
 
-    for (var i = 0; i < values.length; i++) {
-      if (isSupported(prop, values[i])) {
-        supported = values[i]
-        break
+    Object.keys(styles).forEach(function (key) {
+      var value = styles[key]
+
+      // Support CSS @-rules inside keyframes (`@supports`)
+      if (isTopLevelProperty(key)) {
+        toplevel += key + '{' + nestedStylesToString(value, identifier) + '}'
+
+        return
       }
-    }
 
-    if (!supported) {
-      return noop
-    }
+      if (isNestedDefinition(value)) {
+        rules += nestedStylesToString(value, key)
 
-    var cache = object(values, true)
-
-    return function (style) {
-      var value = style[prop]
-
-      if (cache[value]) {
-        style[prop] = supported
+        return
       }
+
+      rules += styleToString(key, value)
+    })
+
+    if (rules) {
+      rules = identifier + '{' + rules + '}'
     }
+
+    return rules + toplevel
   }
 
   /**
-   * Transform a style object.
+   * Hash a string for use as the class name.
    *
-   * @param  {Object} src
-   * @return {Object}
+   * @param  {String} str
+   * @param  {String} [seed]
+   * @return {String}
    */
-  var TRANSFORM_FNS = [
-    prefixProperties,
-    values('display', DISPLAY_FLEX_VALUES)
-  ]
+  function hash (str, seed) {
+    var value = seed || 0x811c9dc5
+
+    for (var i = 0; i < str.length; i++) {
+      value ^= str.charCodeAt(i)
+      value += (value << 1) + (value << 4) + (value << 7) + (value << 8) + (value << 24)
+    }
+
+    return (value >>> 0).toString(16)
+  }
 
   /**
-   * Transform a style object in-place.
+   * Create a namespaced CSS instance.
    *
-   * @param  {Object} style
-   * @return {Object}
+   * @param {Object} styles
    */
-  function transform (style) {
-    // Run each transformation sequentially.
-    TRANSFORM_FNS.forEach(function (fn) {
-      fn(style)
-    })
+  function Namespace (styles) {
+    this.styles = styles
+    this.className = 'n' + hash(JSON.stringify(styles))
+    this.selector = '.' + this.className
+  }
+
+  /**
+   * Return styles as a string.
+   *
+   * @return {String}
+   */
+  Namespace.prototype.getStyles = function () {
+    return stylesToString(this.styles, this.selector)
+  }
+
+  /**
+   * Create keyframes object.
+   *
+   * @param {Object} styles
+   */
+  function Keyframes (styles) {
+    this.styles = styles
+    this.name = 'k' + hash(JSON.stringify(styles))
+  }
+
+  /**
+   * Return keyframes style string.
+   *
+   * @return {String}
+   */
+  Keyframes.prototype.getStyles = function () {
+    return nestedStylesToString(this.styles, '@keyframes ' + this.name)
+  }
+
+  /**
+   * Global style constructor.
+   */
+  function FreeStyle () {
+    this.cache = {}
+  }
+
+  /**
+   * Create a fresh instance.
+   *
+   * @return {FreeStyle}
+   */
+  FreeStyle.prototype.fresh = function () {
+    return new FreeStyle()
+  }
+
+  /**
+   * Create a new style class.
+   *
+   * @param  {Object}    styles
+   * @return {Namespace}
+   */
+  FreeStyle.prototype.createClass = function (styles) {
+    var style = new Namespace(styles)
+
+    this.cache[style.className] = style
 
     return style
   }
 
   /**
-   * Transform shorthand expressions into longhand to merge properties.
+   * Create a keyframes style instance.
    *
-   * @param  {Object} src
-   * @return {Object}
+   * @param  {Object}    styles
+   * @return {Keyframes}
    */
-  function longhand (src) {
-    var style = {}
+  FreeStyle.prototype.createKeyframes = function (styles) {
+    var keyframes = new Keyframes(styles)
 
-    if (!src) {
-      return style
-    }
+    this.cache[keyframes.name] = keyframes
 
-    Object.keys(src).forEach(function (key) {
-      var props = TRANSFORM_LONGHAND[key]
-      var value = src[key]
-
-      if (value && !isNaN(value) && !CSS_NUMBER[key]) {
-        value += 'px'
-      }
-
-      if (!props) {
-        style[key] = value
-
-        return
-      }
-
-      ELEM.style[key] = value
-
-      props.forEach(function (prop) {
-        style[prop] = ELEM.style[prop]
-      })
-    })
-
-    return style
+    return keyframes
   }
 
   /**
-   * Transform any number of style objects into a single object that is best
-   * supported by the current browser.
-   *
-   * @param  {Object} [...styles]
-   * @return {Object}
-   */
-  function freeStyle (/* ...styles */) {
-    var style = {}
-
-    // Assign to a single object, but make sure all properties are long-hand
-    // first to avoid issues with the property ordering.
-    for (var i = 0; i < arguments.length; i++) {
-      assign(style, longhand(arguments[i]))
-    }
-
-    return transform(style)
-  }
-
-  /**
-   * Wrap a url for CSS.
+   * Create a valid CSS url string.
    *
    * @param  {String} url
    * @return {String}
    */
-  freeStyle.url = function (url) {
+  FreeStyle.prototype.url = function (url) {
     return 'url("' + encodeURI(url) + '")'
   }
 
-  return freeStyle
+  /**
+   * Join a list of class names together.
+   *
+   * @return {String}
+   */
+  FreeStyle.prototype.join = function (/* ...class */) {
+    return Array.prototype.join.call(arguments, ' ')
+  }
+
+  /**
+   * Create a CSS string from styles.
+   *
+   * @return {String}
+   */
+  FreeStyle.prototype.getStyles = function () {
+    var str = ''
+    var cache = this.cache
+
+    Object.keys(cache).forEach(function (key) {
+      str += cache[key].getStyles()
+    })
+
+    // Empty style cache.
+    this.cache = {}
+
+    return str
+  }
+
+  /**
+   * Inject the styles into the DOM.
+   */
+  FreeStyle.prototype.inject = function () {
+    var tag = document.createElement('style')
+    tag.innerHTML = this.getStyles()
+    document.head.appendChild(tag)
+  }
+
+  /**
+   * Export a `FreeStyle` instance.
+   */
+  return new FreeStyle()
 })

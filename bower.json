@@ -6,7 +6,7 @@
   "authors": [
     "Blake Embrey <hello@blakeembrey.com>"
   ],
-  "description": "Cross-browser style objects",
+  "description": "Make CSS easier and more maintainable by using inline style objects",
   "keywords": [
     "style",
     "css",

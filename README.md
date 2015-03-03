@@ -2,8 +2,10 @@
 
 [![NPM version][npm-image]][npm-url]
 [![NPM downloads][downloads-image]][downloads-url]
+[![Build status][travis-image]][travis-url]
+[![Test coverage][coveralls-image]][coveralls-url]
 
-**Free-style** is designed to make cross-browser style objects easier to work with.
+**Free-style** is designed to make CSS easier and more maintainable by using inline style objects.
 
 ## Installation
 
@@ -12,60 +14,134 @@ npm install free-style --save
 bower install free-style --save
 ```
 
-## Features
-
-* Merge multiple style objects
-  * `style({ padding: 10 }, this.props.style)`
-* Expand short hand syntax
-  * `style({ flex: '1 0 auto' }) //=> { flexGrow: 1, flexShrink: 0, flexBasis: 'auto' }`
-* Append `px` to numbers
-  * `style({ marginBottom: 10 }) //=> { marginBottom: '10px' }`
-* Support vendor prefixed properties
-  * `style({ borderRadius: 5 }) //=> { webkitBorderRadius: '5px' }`
-  * No invalid prefixes with output
-  * Also prefixes property values
-
 ## Usage
 
 ```js
-var style = require('free-style')
+var freeStyle = require('free-style')
 
-style({
-  padding: 10,
-  backgroundImage: style.url('http://example.com/background.png')
-}, {
-  paddingTop: 5
-});
-// {
-//   paddingTop: '5px',
-//   paddingRight: '10px',
-//   paddingBottom: '10px',
-//   paddingLeft: '10px',
-//   backgroundImage: 'url("http://example.com/background.png")'
-// }
+var button = freeStyle.createClass({
+  backgroundColor: 'red'
+})
+
+freeStyle.inject()
+
+React.render(
+  <div className={button.className}>Submit</button>,
+  document.body
+)
 ```
 
-### Integration with React
-
-The most common use-case for this module is with React.
+### Namespaced Styles
 
 ```js
-var React = require('react')
-var style = require('free-style')
+var button = freeStyle.createClass({
+  backgroundColor: 'red',
+  padding: 10
+})
 
-/**
- * Create a new React element that allows passed in styles.
- */
-module.exports = React.createClass({
+console.log(button.className) //=> "n1c471b35"
+```
 
-  render: function () {
-    return <div style={style({ padding: 10 }, this.props.style)} />
-  }
+#### Multiple Style Declarations
 
+```js
+freeStyle.createClass({
+  background: [
+    'red',
+    '-moz-linear-gradient(left, red 0%, blue 100%)',
+    '-webkit-linear-gradient(left, red 0%, blue 100%)',
+    '-o-linear-gradient(left, red 0%, blue 100%)',
+    '-ms-linear-gradient(left, red 0%, blue 100%)',
+    'linear-gradient(to right, red 0%, blue 100%)'
+  ]
 })
 ```
 
-### Legacy Browsers
+#### Nested @-rules
+
+```js
+freeStyle.createClass({
+  color: 'red',
+  '@media (min-width: 500px)': {
+    color: 'blue'
+  }
+})
+```
+
+#### Nested Selectors
+
+**Please note:** Even though this is possible, it's best avoided. It circumvents the usefulness of componentized styles, but is useful for styling legacy DOM components.
+
+```js
+freeStyle.createClass({
+  '.classname': {
+    color: 'blue'
+  }
+})
+```
+
+**Please note:** In ES6, you can have computed properties.
+
+```js
+var style = freeStyle.createClass({})
+
+freeStyle.createClass({
+  [style.selector]: {
+    color: 'red'
+  }
+})
+```
+
+#### Selector Parent Reference
+
+```js
+var style = freeStyle.createClass({
+  '&:hover': {
+    color: 'blue'
+  }
+})
+```
+
+### Keyframes
+
+```js
+var animation = freeStyle.createKeyframes({
+  from: { color: 'red' },
+  to: { color: 'blue' }
+})
+
+freeStyle.registerClass({
+  animationName: animation.name,
+  animationDuration: '1s'
+})
+```
+
+#### Nested @-rules
+
+```js
+freeStyle.createKeyframes({
+  '@supports (animation-name: test)': {
+    from: { color: 'red' },
+    to: { color: 'blue' }
+  }
+})
+```
+
+### Utilities
+
+#### URL
+
+```js
+freeStyle.url('http://example.com') //=> 'url("http://example.com")'
+```
+
+#### Join
+
+```js
+freeStyle.join(class.className, 'class-name') //=> "n1c471b35 class-name"
+```
+
+## Legacy Browsers
 
 To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Array.prototype.forEach` and `Object.keys`.
 
@@ -77,3 +153,7 @@ MIT
 [npm-url]: https://npmjs.org/package/free-style
 [downloads-image]: https://img.shields.io/npm/dm/free-style.svg?style=flat
 [downloads-url]: https://npmjs.org/package/free-style
+[travis-image]: https://img.shields.io/travis/blakeembrey/free-style.svg?style=flat
+[travis-url]: https://travis-ci.org/blakeembrey/free-style
+[coveralls-image]: https://img.shields.io/coveralls/blakeembrey/free-style.svg?style=flat
+[coveralls-url]: https://coveralls.io/r/blakeembrey/free-style?branch=master
