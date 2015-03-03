@@ -70,7 +70,7 @@ freeStyle.createClass({
 
 #### Nested Selectors
 
-**Please note:** Even though this is possible, it's best avoided. It circumvents the usefulness of componentized styles, but is useful for styling legacy DOM components.
+**Please note:** Although this is possible, it is not recommended. It circumvents the usefulness of componentized styles, but it is useful for styling legacy DOM components.
 
 ```js
 freeStyle.createClass({
@@ -115,6 +115,22 @@ freeStyle.createKeyframes({
 })
 ```
 
+### Output
+
+#### CSS String
+
+```js
+freeStyle.getStyles() //=> ".n1c471b35{background-color:red;padding:10px;}"
+```
+
+#### Style Element
+
+**Please note:** This is just a thin wrapper around `freeStyle.getStyles()` that creates and appends a `<style />` element to the head.
+
+```
+freeStyle.inject()
+```
+
 ### Utilities
 
 #### URL
@@ -127,6 +143,12 @@ freeStyle.url('http://example.com') //=> 'url("http://example.com")'
 
 ```js
 freeStyle.join(class.className, 'class-name') //=> "n1c471b35 class-name"
+```
+
+#### Create a new instance
+
+```js
+freeStyle.fresh()
 ```
 
 ## Legacy Browsers
