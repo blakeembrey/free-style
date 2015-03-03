@@ -80,18 +80,6 @@ freeStyle.createClass({
 })
 ```
 
-**Please note:** In ES6, you can have computed properties.
-
-```js
-var style = freeStyle.createClass({})
-
-freeStyle.createClass({
-  [style.selector]: {
-    color: 'red'
-  }
-})
-```
-
 #### Selector Parent Reference
 
 ```js
