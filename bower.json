@@ -1,7 +1,7 @@
 {
   "name": "free-style",
   "main": "free-style.js",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "homepage": "https://github.com/blakeembrey/free-style",
   "authors": [
     "Blake Embrey <hello@blakeembrey.com>"
