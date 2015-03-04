@@ -156,7 +156,7 @@ freeStyle.url('http://example.com') //=> 'url("http://example.com")'
 #### Join
 
 ```js
-freeStyle.join(class.className, 'class-name') //=> "n1c471b35 class-name"
+freeStyle.join(style.className, 'class-name') //=> "n1c471b35 class-name"
 ```
 
 #### Create a new instance
