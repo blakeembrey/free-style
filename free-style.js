@@ -359,11 +359,17 @@
 
   /**
    * Inject the styles into the DOM.
+   *
+   * @param {Element} [target]
    */
-  FreeStyle.prototype.inject = function () {
+  FreeStyle.prototype.inject = function (target) {
+    target = target || document.head
+
     var tag = document.createElement('style')
     tag.innerHTML = this.getStyles()
-    document.head.appendChild(tag)
+    target.appendChild(tag)
+
+    return tag
   }
 
   /**
