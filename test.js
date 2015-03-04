@@ -86,6 +86,18 @@ describe('free style', function () {
         style.selector + '{-ms-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;}'
       )
     })
+
+    it('should merge style defintions', function () {
+      var style = freeStyle.createClass({
+        color: 'red'
+      }, {
+        background: 'blue'
+      })
+
+      expect(freeStyle.getStyles()).to.equal(
+        style.selector + '{color:red;background:blue;}'
+      )
+    })
   })
 
   describe('keyframes', function () {

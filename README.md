@@ -83,11 +83,25 @@ freeStyle.createClass({
 #### Selector Parent Reference
 
 ```js
-var style = freeStyle.createClass({
+freeStyle.createClass({
   '&:hover': {
     color: 'blue'
   }
 })
+```
+
+#### Mixin Style Objects
+
+```js
+var ellipsisStyle = freeStyle.createClass({
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis'
+})
+
+var redEllipsisStyle = freeStyle.createClass({
+  color: 'red'
+}, ellipsisStyle.style)
 ```
 
 ### Keyframes

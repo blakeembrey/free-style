@@ -47,7 +47,7 @@
   }
 
   /**
-   * Sanitize the styles value.
+   * Sanitize the style value.
    *
    * @param  {String} value
    * @return {String}
@@ -78,6 +78,45 @@
    */
   function isNestedDefinition (value) {
     return typeof value === 'object' && !Array.isArray(value)
+  }
+
+  /**
+   * Copy properties from one object to another.
+   *
+   * @param  {Object} dest
+   * @param  {Object} src
+   * @return {Object}
+   */
+  function copy (dest, src) {
+    Object.keys(src).forEach(function (key) {
+      var value = src[key]
+
+      if (isNestedDefinition(value)) {
+        dest[key] = copy(dest[key] || {}, value)
+
+        return
+      }
+
+      dest[key] = value
+    })
+
+    return dest
+  }
+
+  /**
+   * Merge one or more objects.
+   *
+   * @param  {Object} ...src
+   * @return {Object}
+   */
+  function merge (/* ...src */) {
+    var dest = {}
+
+    for (var i = 0; i < arguments.length; i++) {
+      copy(dest, arguments[i])
+    }
+
+    return dest
   }
 
   /**
@@ -200,11 +239,11 @@
   /**
    * Create a namespaced CSS instance.
    *
-   * @param {Object} styles
+   * @param {Object} style
    */
-  function Namespace (styles) {
-    this.style = styles
-    this.className = 'n' + hash(JSON.stringify(styles))
+  function Namespace (style) {
+    this.style = style
+    this.className = 'n' + hash(JSON.stringify(this.style))
     this.selector = '.' + this.className
   }
 
@@ -220,11 +259,11 @@
   /**
    * Create keyframes object.
    *
-   * @param {Object} styles
+   * @param {Object} style
    */
-  function Keyframes (styles) {
-    this.style = styles
-    this.name = 'k' + hash(JSON.stringify(styles))
+  function Keyframes (style) {
+    this.style = style
+    this.name = 'k' + hash(JSON.stringify(this.style))
   }
 
   /**
@@ -255,11 +294,11 @@
   /**
    * Create a new style class.
    *
-   * @param  {Object}    styles
+   * @param  {Object}    ...style
    * @return {Namespace}
    */
-  FreeStyle.prototype.createClass = function (styles) {
-    var style = new Namespace(styles)
+  FreeStyle.prototype.createClass = function () {
+    var style = new Namespace(merge.apply(null, arguments))
 
     this.cache[style.className] = style
 
@@ -269,11 +308,11 @@
   /**
    * Create a keyframes style instance.
    *
-   * @param  {Object}    styles
+   * @param  {Object}    ...style
    * @return {Keyframes}
    */
-  FreeStyle.prototype.createKeyframes = function (styles) {
-    var keyframes = new Keyframes(styles)
+  FreeStyle.prototype.createKeyframes = function () {
+    var keyframes = new Keyframes(merge.apply(null, arguments))
 
     this.cache[keyframes.name] = keyframes
 
