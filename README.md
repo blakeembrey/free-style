@@ -44,7 +44,9 @@ var button = freeStyle.createClass({
   padding: 10
 })
 
+console.log(button.selector) //=> ".n1c471b35"
 console.log(button.className) //=> "n1c471b35"
+console.log(button.style) //=> { backgroundColor: 'red', padding: 10 }
 ```
 
 #### Multiple Style Declarations
