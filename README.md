@@ -27,6 +27,7 @@ var button = freeStyle.createClass({
   backgroundColor: 'red'
 })
 
+// Injects a `<style />` element into the DOM.
 freeStyle.inject()
 
 React.render(
