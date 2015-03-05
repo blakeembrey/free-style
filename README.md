@@ -16,8 +16,12 @@ bower install free-style --save
 
 ## Usage
 
+Available using **Common.js**, **AMD** and **`window`**.
+
 ```js
 var freeStyle = require('free-style')
+// var freeStyle = window.freeStyle
+// define(['free-style'], function () { ... })
 
 var button = freeStyle.createClass({
   backgroundColor: 'red'
