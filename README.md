@@ -178,9 +178,9 @@ freeStyle.fresh()
 var STYLE = freeStyle.createClass({ ... })
 var ANIM = freeStyle.createKeyframes({ ... })
 
-freeStyle.add(STYLE)    //=> Added to internal cache and `getStyles` output.
-freeStyle.remove(STYLE) //=> Removed from internal cache.
-freeStyle.empty()       //=> Empties the internal cache.
+freeStyle.add(STYLE) // Added to internal cache and `getStyles` output.
+freeStyle.remove(STYLE) // Removed from internal cache.
+freeStyle.empty() // Empties the internal cache.
 ```
 
 #### Create Style Sheet
@@ -188,8 +188,8 @@ freeStyle.empty()       //=> Empties the internal cache.
 ```js
 var css = freeStyle.createStyleSheet()
 
-css.attach() //=> Appends to `document.head`.
-css.detach() //=> Removes from the DOM.
+css.attach() // Appends to `document.head`.
+css.detach() // Removes from the DOM.
 ```
 
 ## Legacy Browsers
