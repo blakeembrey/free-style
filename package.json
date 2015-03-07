@@ -1,6 +1,6 @@
 {
   "name": "free-style",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Make CSS easier and more maintainable by using inline style objects",
   "main": "free-style.js",
   "files": [
