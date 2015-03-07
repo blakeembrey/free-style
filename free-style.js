@@ -272,7 +272,10 @@
    * @return {String}
    */
   Keyframes.prototype.getStyles = function () {
-    return nestedStylesToString(this.style, '@keyframes ' + this.name)
+    return [
+      nestedStylesToString(this.style, '@-webkit-keyframes ' + this.name),
+      nestedStylesToString(this.style, '@keyframes ' + this.name)
+    ].join('')
   }
 
   /**
@@ -362,6 +365,7 @@
    *
    * @param {Element} [target]
    */
+  /* istanbul ignore next */
   FreeStyle.prototype.inject = function (target) {
     target = target || document.head
 

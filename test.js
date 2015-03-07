@@ -108,6 +108,7 @@ describe('free style', function () {
       })
 
       expect(freeStyle.getStyles()).to.equal(
+        '@-webkit-keyframes ' + style.name + '{from{color:red;}to{color:blue;}}' +
         '@keyframes ' + style.name + '{from{color:red;}to{color:blue;}}'
       )
     })
@@ -121,6 +122,7 @@ describe('free style', function () {
       })
 
       expect(freeStyle.getStyles()).to.equal(
+        '@supports (animation-name: test){@-webkit-keyframes ' + style.name + '{from{color:red;}to{color:blue;}}}' +
         '@supports (animation-name: test){@keyframes ' + style.name + '{from{color:red;}to{color:blue;}}}'
       )
     })
@@ -137,6 +139,7 @@ describe('free style', function () {
       })
 
       expect(freeStyle.getStyles()).to.equal(
+        '@-webkit-keyframes ' + animation.name + '{from{color:red;}to{color:blue;}}' +
         '@keyframes ' + animation.name + '{from{color:red;}to{color:blue;}}' +
         style.selector + '{animation-name:' + animation.name + ';animation-duration:1s;}'
       )
