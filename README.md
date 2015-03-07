@@ -23,7 +23,7 @@ var freeStyle = require('free-style')
 // var freeStyle = window.freeStyle
 // define(['free-style'], function () { ... })
 
-var button = freeStyle.createClass({
+var STYLE = freeStyle.registerClass({
   backgroundColor: 'red'
 })
 
@@ -31,7 +31,7 @@ var button = freeStyle.createClass({
 freeStyle.inject()
 
 React.render(
-  <div className={button.className}>Submit</button>,
+  <div className={STYLE.className}>Hello world!</div>,
   document.body
 )
 ```
@@ -39,20 +39,20 @@ React.render(
 ### Namespaced Styles
 
 ```js
-var button = freeStyle.createClass({
+var BUTTON_STYLE = freeStyle.registerClass({
   backgroundColor: 'red',
   padding: 10
 })
 
-console.log(button.selector) //=> ".n1c471b35"
-console.log(button.className) //=> "n1c471b35"
-console.log(button.style) //=> { backgroundColor: 'red', padding: 10 }
+console.log(BUTTON_STYLE.selector) //=> ".n1c471b35"
+console.log(BUTTON_STYLE.className) //=> "n1c471b35"
+console.log(BUTTON_STYLE.style) //=> { backgroundColor: 'red', padding: '10px' }
 ```
 
 #### Multiple Style Declarations
 
 ```js
-freeStyle.createClass({
+freeStyle.registerClass({
   background: [
     'red',
     '-moz-linear-gradient(left, red 0%, blue 100%)',
@@ -67,7 +67,7 @@ freeStyle.createClass({
 #### Nested @-rules
 
 ```js
-freeStyle.createClass({
+freeStyle.registerClass({
   color: 'red',
   '@media (min-width: 500px)': {
     color: 'blue'
@@ -80,7 +80,7 @@ freeStyle.createClass({
 **Please note:** Although this is possible, it is not recommended. It circumvents the usefulness of componentized styles, but it is useful for styling legacy DOM components.
 
 ```js
-freeStyle.createClass({
+freeStyle.registerClass({
   '.classname': {
     color: 'blue'
   }
@@ -90,7 +90,7 @@ freeStyle.createClass({
 #### Selector Parent Reference
 
 ```js
-freeStyle.createClass({
+freeStyle.registerClass({
   '&:hover': {
     color: 'blue'
   }
@@ -100,13 +100,13 @@ freeStyle.createClass({
 #### Mixin Style Objects
 
 ```js
-var ellipsisStyle = freeStyle.createClass({
+var ellipsisStyle = freeStyle.registerClass({
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis'
 })
 
-var redEllipsisStyle = freeStyle.createClass({
+var redEllipsisStyle = freeStyle.registerClass({
   color: 'red'
 }, ellipsisStyle.style)
 ```
@@ -114,13 +114,13 @@ var redEllipsisStyle = freeStyle.createClass({
 ### Keyframes
 
 ```js
-var animation = freeStyle.createKeyframes({
+var ANIM = freeStyle.registerKeyframes({
   from: { color: 'red' },
   to: { color: 'blue' }
 })
 
 freeStyle.registerClass({
-  animationName: animation.name,
+  animationName: ANIM.name,
   animationDuration: '1s'
 })
 ```
@@ -128,7 +128,7 @@ freeStyle.registerClass({
 #### Nested @-rules
 
 ```js
-freeStyle.createKeyframes({
+freeStyle.registerKeyframes({
   '@supports (animation-name: test)': {
     from: { color: 'red' },
     to: { color: 'blue' }
@@ -163,13 +163,33 @@ freeStyle.url('http://example.com') //=> 'url("http://example.com")'
 #### Join
 
 ```js
-freeStyle.join(style.className, 'class-name') //=> "n1c471b35 class-name"
+freeStyle.join(style.className, 'string', { yes: true, no: false }) //=> "n1c471b35 string yes"
 ```
 
-#### Create a new instance
+#### Create a New Instance
 
 ```js
 freeStyle.fresh()
+```
+
+#### Manually Create Rules
+
+```js
+var STYLE = freeStyle.createClass({ ... })
+var ANIM = freeStyle.createKeyframes({ ... })
+
+freeStyle.add(STYLE)    //=> Added to internal cache and `getStyles` output.
+freeStyle.remove(STYLE) //=> Removed from internal cache.
+freeStyle.empty()       //=> Empties the internal cache.
+```
+
+#### Create Style Sheet
+
+```js
+var css = freeStyle.createStyleSheet()
+
+css.attach() //=> Appends to `document.head`.
+css.detach() //=> Removes from the DOM.
 ```
 
 ## Legacy Browsers

@@ -16,21 +16,21 @@
    * @type {Object}
    */
   var CSS_NUMBER = {
-    columnCount: true,
-    fillOpacity: true,
-    flex: true,
-    flexGrow: true,
-    flexShrink: true,
-    fontWeight: true,
-    lineClamp: true,
-    lineHeight: true,
-    opacity: true,
-    order: true,
-    orphans: true,
-    strokeOpacity: true,
-    widows: true,
-    zIndex: true,
-    zoom: true
+    'column-count': true,
+    'fill-opacity': true,
+    'flex': true,
+    'flex-grow': true,
+    'flex-shrink': true,
+    'font-weight': true,
+    'line-clamp': true,
+    'line-height': true,
+    'opacity': true,
+    'order': true,
+    'orphans': true,
+    'stroke-opacity': true,
+    'widows': true,
+    'z-index': true,
+    'zoom': true
   }
 
   /**
@@ -44,20 +44,6 @@
       .replace(/([A-Z])/g, '-$1')
       .replace(/^ms-/, '-ms-')
       .toLowerCase()
-  }
-
-  /**
-   * Sanitize the style value.
-   *
-   * @param  {String} value
-   * @return {String}
-   */
-  function styleValue (property, value) {
-    if (!isNaN(value) && !CSS_NUMBER[property]) {
-      value += 'px'
-    }
-
-    return String(value).replace(/([\{\}\[\]])/g, '\\$1')
   }
 
   /**
@@ -77,65 +63,141 @@
    * @return {Boolean}
    */
   function isNestedDefinition (value) {
-    return typeof value === 'object' && !Array.isArray(value)
+    return value != null && typeof value === 'object' && !Array.isArray(value)
   }
 
   /**
-   * Copy properties from one object to another.
+   * Normalize a CSS property.
+   *
+   * @param  {String} str
+   * @return {String}
+   */
+  function normalizeProperty (str) {
+    return hyphenate(str.trim())
+  }
+
+  /**
+   * Normalize a CSS value string.
+   *
+   * @param  {String} value
+   * @param  {String} property
+   * @return {String}
+   */
+  function normalizeValueString (value, property) {
+    if (value == null) {
+      return null
+    }
+
+    value = String(value)
+
+    if (!isNaN(value) && !CSS_NUMBER[property]) {
+      value += 'px'
+    }
+
+    return value.replace(/([\{\}\[\]])/g, '\\$1')
+  }
+
+  /**
+   * Normalize a CSS value.
+   *
+   * @param  {(String|Array)} value
+   * @param  {String}         property
+   * @return {(String|Array)}
+   */
+  function normalizeValue (value, property) {
+    if (Array.isArray(value)) {
+      return value.map(function (str) {
+        return normalizeValueString(str, property)
+      })
+    }
+
+    return normalizeValueString(value, property)
+  }
+
+  /**
+   * Copy styles from one object to another.
    *
    * @param  {Object} dest
    * @param  {Object} src
    * @return {Object}
    */
-  function copy (dest, src) {
+  function copyStyles (dest, src) {
     Object.keys(src).forEach(function (key) {
+      var prop = normalizeProperty(key)
       var value = src[key]
 
       if (isNestedDefinition(value)) {
-        dest[key] = copy(dest[key] || {}, value)
+        dest[prop] = normalizeStyles(dest[prop] || {}, value)
 
         return
       }
 
-      dest[key] = value
+      if (value != null) {
+        dest[prop] = normalizeValue(value, prop)
+      }
     })
 
     return dest
   }
 
   /**
-   * Merge one or more objects.
+   * Sort an object keys.
+   *
+   * @param  {Object} obj
+   * @return {Object}
+   */
+  function sortKeys (obj) {
+    var sorted = {}
+
+    Object.keys(obj).sort().forEach(function (key) {
+      sorted[key] = obj[key]
+    })
+
+    return sorted
+  }
+
+  /**
+   * Normalize one or more objects.
    *
    * @param  {Object} ...src
    * @return {Object}
    */
-  function merge (/* ...src */) {
+  function normalizeStyles (/* ...src */) {
     var dest = {}
 
     for (var i = 0; i < arguments.length; i++) {
-      copy(dest, arguments[i])
+      copyStyles(dest, arguments[i])
     }
 
-    return dest
+    return sortKeys(dest)
   }
 
   /**
-   * Turn a single style into a rule.
+   * Turn a single style into a string.
+   *
+   * @param  {String} property
+   * @param  {String} value
+   * @return {String}
+   */
+  function styleStringToString (property, value) {
+    return value == null ? '' : property + ':' + value + ';'
+  }
+
+  /**
+   * Turn a style declaration into a rule.
    *
    * @param  {String} property
    * @param  {String} value
    * @return {String}
    */
   function styleToString (property, value) {
-    var prop = hyphenate(property)
-
-    if (!Array.isArray(value)) {
-      value = [value]
+    if (Array.isArray(value)) {
+      return value.map(function (value) {
+        return styleStringToString(property, value)
+      }).join('')
     }
 
-    return value.map(function (value) {
-      return prop + ':' + styleValue(property, value) + ';'
-    }).join('')
+    return styleStringToString(property, value)
   }
 
   /**
@@ -237,14 +299,33 @@
   }
 
   /**
+   * Hash a style object.
+   *
+   * @param  {Object} style
+   * @return {String}
+   */
+  function hashStyle (style) {
+    return hash(JSON.stringify(style))
+  }
+
+  /**
    * Create a namespaced CSS instance.
    *
    * @param {Object} style
    */
   function Namespace (style) {
     this.style = style
-    this.className = 'n' + hash(JSON.stringify(this.style))
+    this.className = 'n' + hashStyle(this.style)
     this.selector = '.' + this.className
+  }
+
+  /**
+   * Get the unique hash.
+   *
+   * @return {String}
+   */
+  Namespace.prototype.getHash = function () {
+    return this.className
   }
 
   /**
@@ -263,7 +344,16 @@
    */
   function Keyframes (style) {
     this.style = style
-    this.name = 'k' + hash(JSON.stringify(this.style))
+    this.name = 'k' + hashStyle(this.style)
+  }
+
+  /**
+   * Get the unique hash.
+   *
+   * @return {String}
+   */
+  Keyframes.prototype.getHash = function () {
+    return this.name
   }
 
   /**
@@ -276,6 +366,59 @@
       nestedStylesToString(this.style, '@-webkit-keyframes ' + this.name),
       nestedStylesToString(this.style, '@keyframes ' + this.name)
     ].join('')
+  }
+
+  /**
+   * Create a new stylesheet object.
+   */
+  function StyleSheet () {
+    this.styles = ''
+  }
+
+  /**
+   * Set the styles string.
+   *
+   * @param {String} styles
+   */
+  StyleSheet.prototype.setStyles = function (styles) {
+    if (this.node) {
+      this.node.innerHTML = styles
+    }
+
+    this.styles = styles
+  }
+
+  /**
+   * Attach the stylesheet to the DOM.
+   *
+   * @param  {Element}    target
+   * @return {StyleSheet}
+   */
+  StyleSheet.prototype.attach = function (target) {
+    var node = document.createElement('style')
+    node.innerHTML = this.getStyles()
+    target.appendChild(node)
+
+    this.node = node
+
+    return this
+  }
+
+  /**
+   * Detach the stylesheet from the DOM.
+   *
+   * @return {StyleSheet}
+   */
+  StyleSheet.prototype.detach = function () {
+    if (this.node) {
+      if (this.node.parentNode) {
+        this.node.parentNode.removeChild(this.node)
+      }
+
+      this.node = undefined
+    }
+
+    return this
   }
 
   /**
@@ -295,31 +438,80 @@
   }
 
   /**
+   * Add an object to the style cache.
+   *
+   * @param {Object} o
+   */
+  FreeStyle.prototype.add = function (o) {
+    this.cache[o.getHash()] = o
+
+    return o
+  }
+
+  /**
+   * Check if the style exists in the cache.
+   *
+   * @param  {Object}  o
+   * @return {Boolean}
+   */
+  FreeStyle.prototype.has = function (o) {
+    return !!this.cache[o.getHash()]
+  }
+
+  /**
+   * Remove item from the cache.
+   *
+   * @param {Object} o
+   */
+  FreeStyle.prototype.remove = function (o) {
+    delete this.cache[o.getHash()]
+  }
+
+  /**
+   * Clear the cache.
+   */
+  FreeStyle.prototype.empty = function () {
+    this.cache = {}
+  }
+
+  /**
    * Create a new style class.
    *
    * @param  {Object}    ...style
    * @return {Namespace}
    */
-  FreeStyle.prototype.createClass = function () {
-    var style = new Namespace(merge.apply(null, arguments))
-
-    this.cache[style.className] = style
-
-    return style
+  FreeStyle.prototype.createClass = function (/* ...style */) {
+    return new Namespace(normalizeStyles.apply(null, arguments))
   }
 
   /**
-   * Create a keyframes style instance.
+   * Create and register a new style class.
+   *
+   * @param  {Object}    ...style
+   * @return {Namespace}
+   */
+  FreeStyle.prototype.registerClass = function (/* ...style */) {
+    return this.add(this.createClass.apply(this, arguments))
+  }
+
+  /**
+   * Create a keyframes object.
    *
    * @param  {Object}    ...style
    * @return {Keyframes}
    */
-  FreeStyle.prototype.createKeyframes = function () {
-    var keyframes = new Keyframes(merge.apply(null, arguments))
+  FreeStyle.prototype.createKeyframes = function (/* ...style */) {
+    return new Keyframes(normalizeStyles.apply(null, arguments))
+  }
 
-    this.cache[keyframes.name] = keyframes
-
-    return keyframes
+  /**
+   * Create and register a keyframes object.
+   *
+   * @param  {Object}    ...style
+   * @return {Keyframes}
+   */
+  FreeStyle.prototype.registerKeyframes = function (/* ...style */) {
+    return this.add(this.createKeyframes.apply(this, arguments))
   }
 
   /**
@@ -335,10 +527,27 @@
   /**
    * Join a list of class names together.
    *
+   * @param  {String} ...class
    * @return {String}
    */
   FreeStyle.prototype.join = function (/* ...class */) {
-    return Array.prototype.join.call(arguments, ' ')
+    var classNames = []
+
+    for (var i = 0; i < arguments.length; i++) {
+      var value = arguments[i]
+
+      if (typeof value === 'string') {
+        classNames.push(value)
+      } else if (value != null) {
+        Object.keys(value).forEach(function (key) {
+          if (value[key]) {
+            classNames.push(key)
+          }
+        })
+      }
+    }
+
+    return classNames.join(' ')
   }
 
   /**
@@ -347,17 +556,24 @@
    * @return {String}
    */
   FreeStyle.prototype.getStyles = function () {
-    var str = ''
     var cache = this.cache
 
-    Object.keys(cache).forEach(function (key) {
-      str += cache[key].getStyles()
-    })
+    return Object.keys(cache).map(function (key) {
+      return cache[key].getStyles()
+    }).join('')
+  }
 
-    // Empty style cache.
-    this.cache = {}
+  /**
+   * Return a stylesheet interface for browsers.
+   *
+   * @return {Stylesheet}
+   */
+  FreeStyle.prototype.createStyleSheet = function () {
+    var styleSheet = new StyleSheet()
 
-    return str
+    styleSheet.setStyles(this.getStyles())
+
+    return styleSheet
   }
 
   /**
@@ -365,15 +581,8 @@
    *
    * @param {Element} [target]
    */
-  /* istanbul ignore next */
   FreeStyle.prototype.inject = function (target) {
-    target = target || document.head
-
-    var tag = document.createElement('style')
-    tag.innerHTML = this.getStyles()
-    target.appendChild(tag)
-
-    return tag
+    return this.createStyleSheet().attach(target)
   }
 
   /**

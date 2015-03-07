@@ -1,23 +1,27 @@
-/* global describe, it */
+/* global describe, it, afterEach */
 
 var expect = require('chai').expect
 var freeStyle = require('./')
 
 describe('free style', function () {
+  afterEach(function () {
+    freeStyle.empty()
+  })
+
   describe('class', function () {
     it('should create a class', function () {
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         color: 'red',
         backgroundColor: 'blue'
       })
 
       expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{color:red;background-color:blue;}'
+        style.selector + '{background-color:blue;color:red;}'
       )
     })
 
     it('should support multiple style values', function () {
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         background: [
           'red',
           'linear-gradient(to right, red 0%, green 100%)'
@@ -30,7 +34,7 @@ describe('free style', function () {
     })
 
     it('should support nested @-rules', function () {
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         color: 'red',
         '@media (min-width: 500px)': {
           color: 'blue'
@@ -43,7 +47,7 @@ describe('free style', function () {
     })
 
     it('should support nested selectors', function () {
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         color: 'red',
         'span': {
           color: 'blue'
@@ -56,7 +60,7 @@ describe('free style', function () {
     })
 
     it('should support nested styles with parent references', function () {
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         color: 'red',
         '&:hover': {
           color: 'blue'
@@ -69,14 +73,14 @@ describe('free style', function () {
     })
 
     it('should omit empty rules', function () {
-      var style = freeStyle.createClass({})
+      var style = freeStyle.registerClass({})
 
       expect(style.getStyles()).to.equal('')
       expect(freeStyle.getStyles()).to.equal('')
     })
 
     it('should support vendor prefixes', function () {
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         msBorderRadius: 5,
         WebkitBorderRadius: 5,
         borderRadius: 5
@@ -88,21 +92,52 @@ describe('free style', function () {
     })
 
     it('should merge style defintions', function () {
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         color: 'red'
       }, {
         background: 'blue'
       })
 
       expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{color:red;background:blue;}'
+        style.selector + '{background:blue;color:red;}'
       )
+    })
+
+    it('should result to the same hash of similar objects', function () {
+      var firstStyle = freeStyle.registerClass({
+        color: 'red',
+        backgroundColor: 'blue'
+      })
+
+      var secondStyle = freeStyle.registerClass({
+        backgroundColor: 'blue',
+        color: 'red'
+      })
+
+      expect(firstStyle.className).to.equal(secondStyle.className)
+    })
+
+    it('should omit empty styles', function () {
+      var style = freeStyle.registerClass({
+        color: 'red',
+        backgroundColor: null
+      })
+
+      expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
+    })
+
+    it('should omit empty values in an array', function () {
+      var style = freeStyle.registerClass({
+        color: ['red', null]
+      })
+
+      expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
     })
   })
 
   describe('keyframes', function () {
     it('should create keyframes instance', function () {
-      var style = freeStyle.createKeyframes({
+      var style = freeStyle.registerKeyframes({
         from: { color: 'red' },
         to: { color: 'blue' }
       })
@@ -114,7 +149,7 @@ describe('free style', function () {
     })
 
     it('should support @-rules', function () {
-      var style = freeStyle.createKeyframes({
+      var style = freeStyle.registerKeyframes({
         '@supports (animation-name: test)': {
           from: { color: 'red' },
           to: { color: 'blue' }
@@ -128,12 +163,12 @@ describe('free style', function () {
     })
 
     it('should be able to combine keyframes with styles', function () {
-      var animation = freeStyle.createKeyframes({
+      var animation = freeStyle.registerKeyframes({
         from: { color: 'red' },
         to: { color: 'blue' }
       })
 
-      var style = freeStyle.createClass({
+      var style = freeStyle.registerClass({
         animationName: animation.name,
         animationDuration: '1s'
       })
@@ -141,28 +176,63 @@ describe('free style', function () {
       expect(freeStyle.getStyles()).to.equal(
         '@-webkit-keyframes ' + animation.name + '{from{color:red;}to{color:blue;}}' +
         '@keyframes ' + animation.name + '{from{color:red;}to{color:blue;}}' +
-        style.selector + '{animation-name:' + animation.name + ';animation-duration:1s;}'
+        style.selector + '{animation-duration:1s;animation-name:' + animation.name + ';}'
       )
     })
   })
 
   describe('utils', function () {
-    it('should create a url attribute', function () {
-      expect(freeStyle.url('http://example.com')).to.equal('url("http://example.com")')
+    describe('url', function () {
+      it('should create a url attribute', function () {
+        expect(freeStyle.url('http://example.com')).to.equal('url("http://example.com")')
+      })
     })
 
-    it('should join strings together', function () {
-      expect(freeStyle.join('test', 'class')).to.equal('test class')
+    describe('join', function () {
+      it('should join strings together', function () {
+        expect(freeStyle.join('test', 'class')).to.equal('test class')
+      })
+
+      it('should join maps', function () {
+        expect(freeStyle.join('test', { yes: true, no: false }, undefined)).to.equal('test yes')
+      })
     })
 
-    it('fresh', function () {
-      var newStyle = freeStyle.fresh()
+    describe('fresh', function () {
+      it('fresh', function () {
+        var newStyle = freeStyle.fresh()
 
-      var newClass = newStyle.createClass({ color: 'red' })
-      var oldClass = freeStyle.createClass({ color: 'blue' })
+        var newClass = newStyle.registerClass({ color: 'red' })
+        var oldClass = freeStyle.registerClass({ color: 'blue' })
 
-      expect(newStyle.getStyles()).to.equal(newClass.selector + '{color:red;}')
-      expect(freeStyle.getStyles()).to.equal(oldClass.selector + '{color:blue;}')
+        expect(newStyle.getStyles()).to.equal(newClass.selector + '{color:red;}')
+        expect(freeStyle.getStyles()).to.equal(oldClass.selector + '{color:blue;}')
+      })
+    })
+
+    describe('add, remove, empty', function () {
+      it('should remove a style', function () {
+        var style = freeStyle.registerClass({
+          color: 'red'
+        })
+
+        expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
+
+        freeStyle.remove(style)
+
+        expect(freeStyle.getStyles()).to.equal('')
+      })
+    })
+
+    describe('style sheet', function () {
+      it('should return a style sheet', function () {
+        var css = freeStyle.createStyleSheet()
+
+        expect(css).to.be.an('object')
+        expect(css.attach).to.be.a('function')
+        expect(css.detach).to.be.a('function')
+        expect(css.setStyles).to.be.a('function')
+      })
     })
   })
 })
