@@ -391,10 +391,12 @@
   /**
    * Attach the stylesheet to the DOM.
    *
-   * @param  {Element}    target
+   * @param  {Element}    [target]
    * @return {StyleSheet}
    */
   StyleSheet.prototype.attach = function (target) {
+    target = target || document.head
+
     var node = document.createElement('style')
     node.innerHTML = this.styles
     target.appendChild(node)
