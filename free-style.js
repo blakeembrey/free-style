@@ -396,7 +396,7 @@
    */
   StyleSheet.prototype.attach = function (target) {
     var node = document.createElement('style')
-    node.innerHTML = this.getStyles()
+    node.innerHTML = this.styles
     target.appendChild(node)
 
     this.node = node
