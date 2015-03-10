@@ -223,16 +223,5 @@ describe('free style', function () {
         expect(freeStyle.getStyles()).to.equal('')
       })
     })
-
-    describe('style sheet', function () {
-      it('should return a style sheet', function () {
-        var css = freeStyle.createStyleSheet()
-
-        expect(css).to.be.an('object')
-        expect(css.attach).to.be.a('function')
-        expect(css.detach).to.be.a('function')
-        expect(css.setStyles).to.be.a('function')
-      })
-    })
   })
 })

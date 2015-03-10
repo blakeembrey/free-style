@@ -183,15 +183,6 @@ freeStyle.remove(STYLE) // Removed from internal cache.
 freeStyle.empty() // Empties the internal cache.
 ```
 
-#### Create Style Sheet
-
-```js
-var css = freeStyle.createStyleSheet()
-
-css.attach() // Appends to `document.head`.
-css.detach() // Removes from the DOM.
-```
-
 ## Legacy Browsers
 
 To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Array.prototype.forEach` and `Object.keys`.

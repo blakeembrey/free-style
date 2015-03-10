@@ -369,61 +369,6 @@
   }
 
   /**
-   * Create a new stylesheet object.
-   */
-  function StyleSheet () {
-    this.styles = ''
-  }
-
-  /**
-   * Set the styles string.
-   *
-   * @param {String} styles
-   */
-  StyleSheet.prototype.setStyles = function (styles) {
-    if (this.node) {
-      this.node.innerHTML = styles
-    }
-
-    this.styles = styles
-  }
-
-  /**
-   * Attach the stylesheet to the DOM.
-   *
-   * @param  {Element}    [target]
-   * @return {StyleSheet}
-   */
-  StyleSheet.prototype.attach = function (target) {
-    target = target || document.head
-
-    var node = document.createElement('style')
-    node.innerHTML = this.styles
-    target.appendChild(node)
-
-    this.node = node
-
-    return this
-  }
-
-  /**
-   * Detach the stylesheet from the DOM.
-   *
-   * @return {StyleSheet}
-   */
-  StyleSheet.prototype.detach = function () {
-    if (this.node) {
-      if (this.node.parentNode) {
-        this.node.parentNode.removeChild(this.node)
-      }
-
-      this.node = undefined
-    }
-
-    return this
-  }
-
-  /**
    * Global style constructor.
    */
   function FreeStyle () {
@@ -564,27 +509,20 @@
       return cache[key].getStyles()
     }).join('')
   }
-
-  /**
-   * Return a stylesheet interface for browsers.
-   *
-   * @return {Stylesheet}
-   */
-  FreeStyle.prototype.createStyleSheet = function () {
-    var styleSheet = new StyleSheet()
-
-    styleSheet.setStyles(this.getStyles())
-
-    return styleSheet
-  }
-
   /**
    * Inject the styles into the DOM.
    *
    * @param {Element} [target]
    */
+  /* istanbul ignore next */
   FreeStyle.prototype.inject = function (target) {
-    return this.createStyleSheet().attach(target)
+    target = target || document.head
+
+    var node = document.createElement('style')
+    node.innerHTML = this.getStyles()
+    target.appendChild(node)
+
+    return node
   }
 
   /**
