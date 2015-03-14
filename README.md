@@ -1,11 +1,11 @@
-# Free-style
+# Free Style
 
 [![NPM version][npm-image]][npm-url]
 [![NPM downloads][downloads-image]][downloads-url]
 [![Build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
-**Free-style** is designed to make CSS easier and more maintainable by using inline style objects.
+**Free Style** is designed to make CSS easier and more maintainable by using inline style objects.
 
 ## Installation
 
