@@ -144,7 +144,7 @@ freeStyle.registerKeyframes({
 freeStyle.getStyles() //=> ".n1c471b35{background-color:red;padding:10px;}"
 ```
 
-#### Style Element
+#### Inject Styles
 
 **Please note:** This is just a thin wrapper around `freeStyle.getStyles()` that creates and appends a `<style />` element to the head.
 
