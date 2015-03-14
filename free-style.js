@@ -376,6 +376,13 @@
   }
 
   /**
+   * Expose constructors.
+   */
+  FreeStyle.prototype.FreeStyle = FreeStyle
+  FreeStyle.prototype.Namespace = Namespace
+  FreeStyle.prototype.Keyframes = Keyframes
+
+  /**
    * Create a fresh instance.
    *
    * @return {FreeStyle}
