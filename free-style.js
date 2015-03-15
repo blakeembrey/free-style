@@ -122,20 +122,22 @@
    * @return {Object}
    */
   function copyStyles (dest, src) {
-    Object.keys(src).forEach(function (key) {
-      var prop = normalizeProperty(key)
-      var value = src[key]
+    if (src) {
+      Object.keys(src).forEach(function (key) {
+        var prop = normalizeProperty(key)
+        var value = src[key]
 
-      if (isNestedDefinition(value)) {
-        dest[prop] = normalizeStyles(dest[prop] || {}, value)
+        if (isNestedDefinition(value)) {
+          dest[prop] = normalizeStyles(dest[prop] || {}, value)
 
-        return
-      }
+          return
+        }
 
-      if (value != null) {
-        dest[prop] = normalizeValue(value, prop)
-      }
-    })
+        if (value != null) {
+          dest[prop] = normalizeValue(value, prop)
+        }
+      })
+    }
 
     return dest
   }
