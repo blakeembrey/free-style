@@ -10,7 +10,7 @@ describe('free style', function () {
 
   describe('class', function () {
     it('should create a class', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         color: 'red',
         backgroundColor: 'blue'
       })
@@ -21,7 +21,7 @@ describe('free style', function () {
     })
 
     it('should support multiple style values', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         background: [
           'red',
           'linear-gradient(to right, red 0%, green 100%)'
@@ -34,7 +34,7 @@ describe('free style', function () {
     })
 
     it('should support nested @-rules', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         color: 'red',
         '@media (min-width: 500px)': {
           color: 'blue'
@@ -47,7 +47,7 @@ describe('free style', function () {
     })
 
     it('should support nested selectors', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         color: 'red',
         'span': {
           color: 'blue'
@@ -60,7 +60,7 @@ describe('free style', function () {
     })
 
     it('should support nested styles with parent references', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         color: 'red',
         '&:hover': {
           color: 'blue'
@@ -73,13 +73,13 @@ describe('free style', function () {
     })
 
     it('should omit empty rules', function () {
-      var style = freeStyle.registerClass({})
+      var style = freeStyle.registerStyle({})
 
       expect(freeStyle.getStyles()).to.equal('')
     })
 
     it('should support vendor prefixes', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         msBorderRadius: 5,
         WebkitBorderRadius: 5,
         borderRadius: 5
@@ -91,7 +91,7 @@ describe('free style', function () {
     })
 
     it('should merge style defintions', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         color: 'red'
       }, {
         background: 'blue'
@@ -103,12 +103,12 @@ describe('free style', function () {
     })
 
     it('should result to the same hash of similar objects', function () {
-      var firstStyle = freeStyle.registerClass({
+      var firstStyle = freeStyle.registerStyle({
         color: 'red',
         backgroundColor: 'blue'
       })
 
-      var secondStyle = freeStyle.registerClass({
+      var secondStyle = freeStyle.registerStyle({
         backgroundColor: 'blue',
         color: 'red'
       })
@@ -117,7 +117,7 @@ describe('free style', function () {
     })
 
     it('should omit empty styles', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         color: 'red',
         backgroundColor: null
       })
@@ -126,7 +126,7 @@ describe('free style', function () {
     })
 
     it('should omit empty values in an array', function () {
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         color: ['red', null]
       })
 
@@ -167,7 +167,7 @@ describe('free style', function () {
         to: { color: 'blue' }
       })
 
-      var style = freeStyle.registerClass({
+      var style = freeStyle.registerStyle({
         animationName: animation.name,
         animationDuration: '1s'
       })
@@ -201,8 +201,8 @@ describe('free style', function () {
       it('fresh', function () {
         var newStyle = freeStyle.fresh()
 
-        var newClass = newStyle.registerClass({ color: 'red' })
-        var oldClass = freeStyle.registerClass({ color: 'blue' })
+        var newClass = newStyle.registerStyle({ color: 'red' })
+        var oldClass = freeStyle.registerStyle({ color: 'blue' })
 
         expect(newStyle.getStyles()).to.equal(newClass.selector + '{color:red;}')
         expect(freeStyle.getStyles()).to.equal(oldClass.selector + '{color:blue;}')
@@ -211,7 +211,7 @@ describe('free style', function () {
 
     describe('add, remove, empty', function () {
       it('should remove a style', function () {
-        var style = freeStyle.registerClass({
+        var style = freeStyle.registerStyle({
           color: 'red'
         })
 

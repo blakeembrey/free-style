@@ -313,7 +313,7 @@
    *
    * @param {Object} style
    */
-  function Namespace (style) {
+  function Style (style) {
     this.style = style
     this.className = this.hash = 'n' + hashStyle(this.style)
     this.selector = '.' + this.className
@@ -347,7 +347,7 @@
    * Expose constructors.
    */
   FreeStyle.prototype.FreeStyle = FreeStyle
-  FreeStyle.prototype.Namespace = Namespace
+  FreeStyle.prototype.Style = Style
   FreeStyle.prototype.Keyframes = Keyframes
 
   /**
@@ -399,21 +399,21 @@
   /**
    * Create a new style class.
    *
-   * @param  {Object}    ...style
-   * @return {Namespace}
+   * @param  {Object} ...style
+   * @return {Style}
    */
-  FreeStyle.prototype.createClass = function (/* ...style */) {
-    return new Namespace(normalizeStyles.apply(null, arguments))
+  FreeStyle.prototype.createStyle = function (/* ...style */) {
+    return new Style(normalizeStyles.apply(null, arguments))
   }
 
   /**
    * Create and register a new style class.
    *
-   * @param  {Object}    ...style
-   * @return {Namespace}
+   * @param  {Object} ...style
+   * @return {Style}
    */
-  FreeStyle.prototype.registerClass = function (/* ...style */) {
-    return this.add(this.createClass.apply(this, arguments))
+  FreeStyle.prototype.registerStyle = function (/* ...style */) {
+    return this.add(this.createStyle.apply(this, arguments))
   }
 
   /**

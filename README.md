@@ -23,7 +23,7 @@ var freeStyle = require('free-style')
 // var freeStyle = window.freeStyle
 // define(['free-style'], function () { ... })
 
-var STYLE = freeStyle.registerClass({
+var STYLE = freeStyle.registerStyle({
   backgroundColor: 'red'
 })
 
@@ -39,7 +39,7 @@ React.render(
 ### Namespaced Styles
 
 ```js
-var BUTTON_STYLE = freeStyle.registerClass({
+var BUTTON_STYLE = freeStyle.registerStyle({
   backgroundColor: 'red',
   padding: 10
 })
@@ -52,7 +52,7 @@ console.log(BUTTON_STYLE.style) //=> { backgroundColor: 'red', padding: '10px' }
 #### Multiple Style Declarations
 
 ```js
-freeStyle.registerClass({
+freeStyle.registerStyle({
   background: [
     'red',
     '-moz-linear-gradient(left, red 0%, blue 100%)',
@@ -67,7 +67,7 @@ freeStyle.registerClass({
 #### Nested @-rules
 
 ```js
-freeStyle.registerClass({
+freeStyle.registerStyle({
   color: 'red',
   '@media (min-width: 500px)': {
     color: 'blue'
@@ -80,7 +80,7 @@ freeStyle.registerClass({
 **Please note:** Although this is possible, it is not recommended. It circumvents the usefulness of componentized styles, but it is useful for styling legacy DOM components.
 
 ```js
-freeStyle.registerClass({
+freeStyle.registerStyle({
   '.classname': {
     color: 'blue'
   }
@@ -90,7 +90,7 @@ freeStyle.registerClass({
 #### Selector Parent Reference
 
 ```js
-freeStyle.registerClass({
+freeStyle.registerStyle({
   '&:hover': {
     color: 'blue'
   }
@@ -100,13 +100,13 @@ freeStyle.registerClass({
 #### Mixin Style Objects
 
 ```js
-var ellipsisStyle = freeStyle.registerClass({
+var ellipsisStyle = freeStyle.registerStyle({
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis'
 })
 
-var redEllipsisStyle = freeStyle.registerClass({
+var redEllipsisStyle = freeStyle.registerStyle({
   color: 'red'
 }, ellipsisStyle.style)
 ```
@@ -119,7 +119,7 @@ var ANIM = freeStyle.registerKeyframes({
   to: { color: 'blue' }
 })
 
-freeStyle.registerClass({
+freeStyle.registerStyle({
   animationName: ANIM.name,
   animationDuration: '1s'
 })
@@ -175,7 +175,7 @@ freeStyle.fresh()
 #### Manually Create Rules
 
 ```js
-var STYLE = freeStyle.createClass({ ... })
+var STYLE = freeStyle.createStyle({ ... })
 var ANIM = freeStyle.createKeyframes({ ... })
 
 freeStyle.add(STYLE) // Added to internal cache and `getStyles` output.
