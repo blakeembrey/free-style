@@ -340,7 +340,9 @@
    * Global style constructor.
    */
   function FreeStyle () {
-    this.cache = {}
+    this._cache = {}
+    this._counters = {}
+    this._listeners = []
   }
 
   /**
@@ -365,7 +367,16 @@
    * @param {Object} o
    */
   FreeStyle.prototype.add = function (o) {
-    this.cache[o.hash] = o
+    var count = this._counters[o.hash] || 0
+
+    // Increment the reference count.
+    this._counters[o.hash] = count + 1
+
+    // Add to cache and emit change on first add.
+    if (count === 0) {
+      this._cache[o.hash] = o
+      this.emitChange()
+    }
 
     return o
   }
@@ -377,7 +388,7 @@
    * @return {Boolean}
    */
   FreeStyle.prototype.has = function (o) {
-    return !!this.cache[o.hash]
+    return this._counters[o.hash] > 0
   }
 
   /**
@@ -386,14 +397,27 @@
    * @param {Object} o
    */
   FreeStyle.prototype.remove = function (o) {
-    delete this.cache[o.hash]
+    var count = this._counters[o.hash]
+
+    if (count > 0) {
+      // Decrement the number of references.
+      this._counters[o.hash] = count - 1
+
+      if (count === 1) {
+        delete this._cache[o.hash]
+        this.emitChange()
+      }
+    }
   }
 
   /**
    * Clear the cache.
    */
   FreeStyle.prototype.empty = function () {
-    this.cache = {}
+    this._cache = {}
+    this._counters = {}
+
+    this.emitChange()
   }
 
   /**
@@ -434,6 +458,45 @@
    */
   FreeStyle.prototype.registerKeyframes = function (/* ...style */) {
     return this.add(this.createKeyframes.apply(this, arguments))
+  }
+
+  /**
+   * Add a change listener.
+   *
+   * @param {Function} fn
+   */
+  FreeStyle.prototype.addChangeListener = function (fn) {
+    if (typeof fn !== 'function') {
+      throw new TypeError('Expected change listener to be a function')
+    }
+
+    this._listeners.push(fn)
+  }
+
+  /**
+   * Remove a change listener.
+   *
+   * @param {Function} fn
+   */
+  FreeStyle.prototype.removeChangeListener = function (fn) {
+    var listeners = this._listeners
+    var index = listeners.indexOf(fn)
+
+    if (index > -1) {
+      listeners.splice(index, 1)
+    }
+  }
+
+  /**
+   * Emit a style change.
+   */
+  FreeStyle.prototype.emitChange = function () {
+    var listeners = this._listeners
+
+    for (var i = 0; i < listeners.length; i++) {
+      var fn = listeners[i]
+      fn()
+    }
   }
 
   /**
@@ -478,12 +541,13 @@
    * @return {String}
    */
   FreeStyle.prototype.getStyles = function () {
-    var cache = this.cache
+    var cache = this._cache
 
     return Object.keys(cache).map(function (key) {
       return cache[key].styleString
     }).join('')
   }
+
   /**
    * Inject the styles into the DOM.
    *

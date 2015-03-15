@@ -209,16 +209,77 @@ describe('free style', function () {
       })
     })
 
-    describe('add, remove, empty', function () {
-      it('should remove a style', function () {
+    describe('change events', function () {
+      it('should register function to trigger on change', function () {
+        var triggered = false
+
+        function onChange () {
+          triggered = true
+        }
+
+        freeStyle.addChangeListener(onChange)
+
+        freeStyle.registerStyle({ color: 'red' })
+
+        freeStyle.removeChangeListener(onChange)
+
+        expect(triggered).to.be.true
+      })
+
+      it('should throw an error when adding a non-function', function () {
+        expect(function () {
+          freeStyle.addChangeListener('test')
+        }).to.throw(/Expected change listener to be a function/)
+      })
+
+      it('should silently succeed when removing a non-existent listener', function () {
+        freeStyle.removeChangeListener(function () {})
+      })
+    })
+
+    describe('third party methods', function () {
+      it('should manually run lifecycle', function () {
         var style = freeStyle.registerStyle({
           color: 'red'
         })
 
+        expect(freeStyle.has(style)).to.be.true
         expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
 
         freeStyle.remove(style)
 
+        expect(freeStyle.has(style)).to.be.false
+        expect(freeStyle.getStyles()).to.equal('')
+      })
+
+      it('should only remove after the same number of adds', function () {
+        var style = freeStyle.createStyle({
+          color: 'red'
+        })
+
+        var str = style.selector + '{color:red;}'
+
+        // 0
+        expect(freeStyle.getStyles()).to.equal('')
+
+        // 1
+        freeStyle.add(style)
+        expect(freeStyle.getStyles()).to.equal(str)
+
+        // 2
+        freeStyle.add(style)
+        expect(freeStyle.getStyles()).to.equal(str)
+
+        // 1
+        freeStyle.remove(style)
+        expect(freeStyle.getStyles()).to.equal(str)
+
+        // 0
+        freeStyle.remove(style)
+        expect(freeStyle.getStyles()).to.equal('')
+
+        // Already removed.
+        freeStyle.remove(style)
         expect(freeStyle.getStyles()).to.equal('')
       })
     })

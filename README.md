@@ -172,15 +172,25 @@ freeStyle.join(style.className, 'string', { yes: true, no: false }) //=> "n1c471
 freeStyle.fresh()
 ```
 
-#### Manually Create Rules
+#### Change Events
+
+```js
+freeStyle.addChangeListener(fn)
+freeStyle.removeChangeListener(fn)
+```
+
+#### Third-Party Methods
+
+**Please note:** These methods should only be used by third-party implementers.
 
 ```js
 var STYLE = freeStyle.createStyle({ ... })
 var ANIM = freeStyle.createKeyframes({ ... })
 
-freeStyle.add(STYLE) // Added to internal cache and `getStyles` output.
-freeStyle.remove(STYLE) // Removed from internal cache.
-freeStyle.empty() // Empties the internal cache.
+freeStyle.add(STYLE) // Add to internal cache and emit change.
+freeStyle.remove(STYLE) // Remove from internal cache and emit change.
+freeStyle.has(STYLE) // Check if the style already exists.
+freeStyle.empty() // Empty the internal cache.
 ```
 
 ## Legacy Browsers
