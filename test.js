@@ -73,7 +73,7 @@ describe('free style', function () {
     })
 
     it('should omit empty rules', function () {
-      var style = freeStyle.registerStyle({})
+      freeStyle.registerStyle({})
 
       expect(freeStyle.getStyles()).to.equal('')
     })
