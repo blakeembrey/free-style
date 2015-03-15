@@ -75,7 +75,6 @@ describe('free style', function () {
     it('should omit empty rules', function () {
       var style = freeStyle.registerClass({})
 
-      expect(style.getStyles()).to.equal('')
       expect(freeStyle.getStyles()).to.equal('')
     })
 

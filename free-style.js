@@ -315,26 +315,10 @@
    */
   function Namespace (style) {
     this.style = style
-    this.className = 'n' + hashStyle(this.style)
+    this.className = this.hash = 'n' + hashStyle(this.style)
     this.selector = '.' + this.className
-  }
 
-  /**
-   * Get the unique hash.
-   *
-   * @return {String}
-   */
-  Namespace.prototype.getHash = function () {
-    return this.className
-  }
-
-  /**
-   * Return styles as a string.
-   *
-   * @return {String}
-   */
-  Namespace.prototype.getStyles = function () {
-    return stylesToString(this.style, this.selector)
+    this.styleString = stylesToString(this.style, this.selector)
   }
 
   /**
@@ -344,25 +328,9 @@
    */
   function Keyframes (style) {
     this.style = style
-    this.name = 'k' + hashStyle(this.style)
-  }
+    this.name = this.hash = 'k' + hashStyle(this.style)
 
-  /**
-   * Get the unique hash.
-   *
-   * @return {String}
-   */
-  Keyframes.prototype.getHash = function () {
-    return this.name
-  }
-
-  /**
-   * Return keyframes style string.
-   *
-   * @return {String}
-   */
-  Keyframes.prototype.getStyles = function () {
-    return [
+    this.styleString = [
       nestedStylesToString(this.style, '@-webkit-keyframes ' + this.name),
       nestedStylesToString(this.style, '@keyframes ' + this.name)
     ].join('')
@@ -397,7 +365,7 @@
    * @param {Object} o
    */
   FreeStyle.prototype.add = function (o) {
-    this.cache[o.getHash()] = o
+    this.cache[o.hash] = o
 
     return o
   }
@@ -409,7 +377,7 @@
    * @return {Boolean}
    */
   FreeStyle.prototype.has = function (o) {
-    return !!this.cache[o.getHash()]
+    return !!this.cache[o.hash]
   }
 
   /**
@@ -418,7 +386,7 @@
    * @param {Object} o
    */
   FreeStyle.prototype.remove = function (o) {
-    delete this.cache[o.getHash()]
+    delete this.cache[o.hash]
   }
 
   /**
@@ -513,7 +481,7 @@
     var cache = this.cache
 
     return Object.keys(cache).map(function (key) {
-      return cache[key].getStyles()
+      return cache[key].styleString
     }).join('')
   }
   /**
