@@ -19,9 +19,11 @@ bower install free-style --save
 Available using **Common.js**, **AMD** and **`window`**.
 
 ```js
-var freeStyle = require('free-style')
-// var freeStyle = window.freeStyle
-// define(['free-style'], function () { ... })
+var FreeStyle = require('free-style')
+// var FreeStyle = window.FreeStyle
+
+// Create a new instance.
+var freeStyle = FreeStyle.create()
 
 var STYLE = freeStyle.registerStyle({
   backgroundColor: 'red'
@@ -191,6 +193,11 @@ freeStyle.add(STYLE) // Add to internal cache and emit change.
 freeStyle.remove(STYLE) // Remove from internal cache and emit change.
 freeStyle.has(STYLE) // Check if the style already exists.
 freeStyle.empty() // Empty the internal cache.
+
+var child = freeStyle.create()
+
+freeStyle.attach(child) // Attach the child styles and listen for changes.
+freeStyle.detach(child) // Detach the child styles and stop listening for changes.
 ```
 
 ## Legacy Browsers

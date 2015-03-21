@@ -2,26 +2,35 @@
   "name": "free-style",
   "version": "0.4.1",
   "description": "Make CSS easier and more maintainable by using inline style objects",
-  "main": "free-style.js",
+  "main": "dist/free-style.js",
   "files": [
-    "free-style.js",
+    "dist/",
+    "typings/",
+    "free-style.d.ts",
     "LICENSE"
   ],
   "scripts": {
-    "lint": "standard",
+    "lint": "# TODO",
+    "build": "npm run build-ts",
+    "build-ts": "tsc src/*.ts --declaration --sourceMap --removeComments --noImplicitAny --outDir dist --target es5 --module commonjs",
     "test-spec": "mocha -R spec --bail",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec --bail",
-    "test": "npm run lint && npm run test-cov"
+    "test": "npm run build && npm run lint && npm run test-cov",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/blakeembrey/free-style.git"
   },
+  "typescript": {
+    "definition": "free-style.d.ts"
+  },
   "keywords": [
     "style",
     "css",
     "object",
-    "react"
+    "react",
+    "inline"
   ],
   "author": {
     "name": "Blake Embrey",
@@ -37,7 +46,8 @@
     "chai": "^2.1.0",
     "istanbul": "^0.3.6",
     "mocha": "^2.1.0",
-    "pre-commit": "^1.0.4",
-    "standard": "^2.6.3"
+    "pre-commit": "^1.0.6",
+    "standard": "^2.6.3",
+    "typescript": "^1.4.1"
   }
 }

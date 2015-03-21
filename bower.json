@@ -1,6 +1,6 @@
 {
   "name": "free-style",
-  "main": "free-style.js",
+  "main": "dist/free-style.js",
   "version": "0.4.1",
   "homepage": "https://github.com/blakeembrey/free-style",
   "authors": [
@@ -13,6 +13,9 @@
     "object",
     "react"
   ],
+  "scripts": {
+    "postinstall": "npm install && npm run build"
+  },
   "license": "MIT",
   "ignore": [
     "**/.*",
@@ -20,5 +23,8 @@
     "bower_components",
     "test",
     "coverage"
-  ]
+  ],
+  "typescript": {
+    "definition": "free-style.d.ts"
+  }
 }

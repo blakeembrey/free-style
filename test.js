@@ -1,11 +1,13 @@
 /* global describe, it, afterEach */
 
 var expect = require('chai').expect
-var freeStyle = require('./')
+var FreeStyle = require('./')
 
 describe('free style', function () {
-  afterEach(function () {
-    freeStyle.empty()
+  var freeStyle
+
+  beforeEach(function () {
+    freeStyle = FreeStyle.create()
   })
 
   describe('class', function () {
@@ -197,18 +199,6 @@ describe('free style', function () {
       })
     })
 
-    describe('fresh', function () {
-      it('fresh', function () {
-        var newStyle = freeStyle.fresh()
-
-        var newClass = newStyle.registerStyle({ color: 'red' })
-        var oldClass = freeStyle.registerStyle({ color: 'blue' })
-
-        expect(newStyle.getStyles()).to.equal(newClass.selector + '{color:red;}')
-        expect(freeStyle.getStyles()).to.equal(oldClass.selector + '{color:blue;}')
-      })
-    })
-
     describe('change events', function () {
       it('should register function to trigger on change', function () {
         var triggered = false
@@ -224,12 +214,6 @@ describe('free style', function () {
         freeStyle.removeChangeListener(onChange)
 
         expect(triggered).to.be.true
-      })
-
-      it('should throw an error when adding a non-function', function () {
-        expect(function () {
-          freeStyle.addChangeListener('test')
-        }).to.throw(/Expected change listener to be a function/)
       })
 
       it('should silently succeed when removing a non-existent listener', function () {
@@ -281,6 +265,48 @@ describe('free style', function () {
         // Already removed.
         freeStyle.remove(style)
         expect(freeStyle.getStyles()).to.equal('')
+      })
+
+      it('should attach and detach children', function (done) {
+        var child = FreeStyle.create()
+
+        var style = child.registerStyle({
+          color: 'red'
+        })
+
+        freeStyle.addChangeListener(function listener () {
+          expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
+
+          freeStyle.removeChangeListener(listener)
+          freeStyle.detach(child)
+
+          expect(freeStyle.getStyles()).to.equal('')
+
+          return done()
+        })
+
+        freeStyle.attach(child)
+      })
+
+      it('should emit changes when the child changes', function (done) {
+        var child = FreeStyle.create()
+
+        freeStyle.addChangeListener(function listener (type, style) {
+          expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
+
+          freeStyle.removeChangeListener(listener)
+          freeStyle.detach(child)
+
+          expect(freeStyle.getStyles()).to.equal('')
+
+          return done()
+        })
+
+        freeStyle.attach(child)
+
+        child.registerStyle({
+          color: 'red'
+        })
       })
     })
   })
