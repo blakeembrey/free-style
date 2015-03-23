@@ -183,16 +183,15 @@ freeStyle.removeChangeListener(fn)
 
 #### Third-Party Methods
 
-**Please note:** These methods should only be used by third-party implementers.
+**Please note:** These methods should only be used by third-party implementers. The `add/remove` and `attach/detach` combinations keep track of counts so you need to remove the same number of times you add, if you want to remove it entirely.
 
 ```js
 var STYLE = freeStyle.createStyle({ ... })
 var ANIM = freeStyle.createKeyframes({ ... })
 
 freeStyle.add(STYLE) // Add to internal cache and emit change.
-freeStyle.remove(STYLE) // Remove from internal cache and emit change.
 freeStyle.has(STYLE) // Check if the style already exists.
-freeStyle.empty() // Empty the internal cache.
+freeStyle.remove(STYLE) // Remove from internal cache and emit change.
 
 var child = freeStyle.create()
 

@@ -327,11 +327,20 @@ export class Keyframes {
  * Create a style handling object.
  */
 export class FreeStyle {
-  add (o: StyleType): StyleType {
-    var count = this._counters[o.id] || 0
+  id: string = 'f' + id++
 
-    // Increment the reference count.
-    this._counters[o.id] = count + 1
+  private _cache: { [id: string]: StyleType } = {}
+  private _cacheCount: { [id: string]: number } = {}
+  private _children: { [id: string]: FreeStyle } = {}
+  private _childrenCount: { [id: string]: number } = {}
+  private _listeners: Array<ChangeListenerFunction> = []
+  private _styleString: string = ''
+  private _invalidStyleString: boolean = false
+
+  add (o: StyleType): StyleType {
+    var count = this._cacheCount[o.id] || 0
+
+    this._cacheCount[o.id] = count + 1
 
     if (count === 0) {
       this._cache[o.id] = o
@@ -342,15 +351,14 @@ export class FreeStyle {
   }
 
   has (o: StyleType): boolean {
-    return this._counters[o.id] > 0
+    return this._cacheCount[o.id] > 0
   }
 
   remove (o: StyleType): void {
-    var count = this._counters[o.id]
+    var count = this._cacheCount[o.id]
 
     if (count > 0) {
-      // Decrement the number of references.
-      this._counters[o.id] = count - 1
+      this._cacheCount[o.id] = count - 1
 
       if (count === 1) {
         delete this._cache[o.id]
@@ -360,31 +368,37 @@ export class FreeStyle {
   }
 
   attach (f: FreeStyle): void {
-    if (this._children[f.id]) {
-      return
+    var count = this._childrenCount[f.id] || 0
+
+    this._childrenCount[f.id] = count + 1
+
+    if (count === 0) {
+      this._children[f.id] = f
+
+      f.addChangeListener(this._childListener)
+
+      f.values().forEach((style) => {
+        this.add(style)
+      })
     }
-
-    this._children[f.id] = f
-
-    f.addChangeListener(this._childListener)
-
-    f.values().forEach((style) => {
-      this.add(style)
-    })
   }
 
   detach (f: FreeStyle): void {
-    if (!this._children[f.id]) {
-      return
+    var count = this._childrenCount[f.id]
+
+    if (count > 0) {
+      this._childrenCount[f.id] = count - 1
+
+      if (count === 1) {
+        this._children[f.id] = undefined
+
+        f.removeChangeListener(this._childListener)
+
+        f.values().forEach((style) => {
+          this.remove(style)
+        })
+      }
     }
-
-    this._children[f.id] = undefined
-
-    f.removeChangeListener(this._childListener)
-
-    f.values().forEach((style) => {
-      this.remove(style)
-    })
   }
 
   createStyle (...style: StyleObject[]): Style {
@@ -487,15 +501,6 @@ export class FreeStyle {
       this.remove(o)
     }
   }
-
-  id: string = 'f' + id++
-
-  private _cache: { [id: string]: StyleType } = {}
-  private _counters: { [id: string]: number } = {}
-  private _children: { [id: string]: FreeStyle } = {}
-  private _listeners: Array<ChangeListenerFunction> = []
-  private _styleString: string = ''
-  private _invalidStyleString: boolean = false
 }
 
 /**
