@@ -24,22 +24,22 @@ There's a really [great presentation by Christopher Chedeau](https://speakerdeck
 * Built in dependency system (CommonJS, Require.js, `<script />`)
 * Dead code elimination (automatically remove associated styles)
 * Minification (minify JS with existing tools)
-* Shared constants (just use variables)
+* Shared constants (using variables)
 * Isolation (every style is uniquely namespaced)
-* Extensible (just use JavaScript - use anything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/gka/chroma.js) and more!)
+* Extensible (just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/gka/chroma.js) built in!)
 
 **Also solved by using Free Style**
 
-* Works with legacy components (you can still nest `.class-name`)
-* Expose third-party theming hooks through semantic classes (`.button`)
-* Consistently generated styles and class names (generate on the server and merge duplicate styles)
-* Work with the styles next to the component (no more hunting for that `ul > li > a`)
+* Works with legacy DOM components (you can nest `.class-name` in your style)
+* Easily expose third-party theming hooks through semantic class names (`.button`)
+* Consistently generated styles and class names (generate on the server and merges duplicate style definitions)
+* Develop the component right beside the style (no more hunting for that `ul > li > a`)
 * Create isomorphic JavaScript applications by serving styles for *only* the components rendered (see [React Free Style](http://github.com/blakeembrey/react-free-style))
-* Continue using simple psuedo classes (`{ '&:hover': { ... } }`)
-* Use componentized `@`-rules (`{ '@media (min-width: 500px)': { ... } }`)
-* Merge multiple style definitions (`FreeStyle#registerStyle(a, b, c)`)
-* Define multiple rules using arrays (`{ backgroundColor: ['red', 'blue'] }`)
-* Integrate with any third-party system (currently React)
+* Continue using the CSS you know (`{ '&:hover': { ... } }`)
+* Automatically namespaced `@`-rules (`{ '@media (min-width: 500px)': { ... } }`)
+* Easily merge multiple style definitions (`FreeStyle#registerStyle(a, b, c)`)
+* Define duplicate rules using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
+* Integrates with any third-party system
 
 ## Usage
 
