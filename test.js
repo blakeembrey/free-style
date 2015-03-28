@@ -199,6 +199,20 @@ describe('free style', function () {
       })
     })
 
+    describe('empty', function () {
+      it('should empty the style cache', function () {
+        var style = freeStyle.registerStyle({
+          color: 'red'
+        })
+
+        expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
+
+        freeStyle.empty()
+
+        expect(freeStyle.getStyles()).to.equal('')
+      })
+    })
+
     describe('change events', function () {
       it('should register function to trigger on change', function () {
         var triggered = false

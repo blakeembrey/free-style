@@ -350,8 +350,12 @@ export class FreeStyle {
     return o
   }
 
+  count (o: StyleType): number {
+    return this._cacheCount[o.id] || 0
+  }
+
   has (o: StyleType): boolean {
-    return this._cacheCount[o.id] > 0
+    return this.count(o) > 0
   }
 
   remove (o: StyleType): void {
@@ -456,6 +460,19 @@ export class FreeStyle {
     }
 
     return this._styleString
+  }
+
+  empty (): void {
+    var cache = this._cache
+
+    Object.keys(cache).forEach((key) => {
+      var item = this._cache[key]
+      var len = this.count(item)
+
+      while (len--) {
+        this.remove(item)
+      }
+    })
   }
 
   /* istanbul ignore next */
