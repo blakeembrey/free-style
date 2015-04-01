@@ -266,16 +266,22 @@ function freeStyleToString (f: FreeStyle): string {
   }).join('')
 }
 
-export type StyleObject = { [propertyName: string]: any }
+export interface StyleObject {
+  [propertyName: string]: any
+}
 
-export type StyleType = Style | Keyframes
+export interface StyleType {
+  id: string
+  style: StyleObject
+  getStyles(): string
+}
 
 export type ChangeListenerFunction = (type?: string, style?: StyleType, src?: FreeStyle) => void
 
 /**
  * Create a namespaced style object.
  */
-export class Style {
+export class Style implements StyleType {
   constructor (style: StyleObject) {
     this.style = style
     this.className = 'n' + hashStyle(this.style)
@@ -300,7 +306,7 @@ export class Style {
 /**
  * Create a keyframes object.
  */
-export class Keyframes {
+export class Keyframes implements StyleType {
   constructor (style: StyleObject) {
     this.style = style
     this.name = 'k' + hashStyle(this.style)
