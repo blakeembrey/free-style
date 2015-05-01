@@ -198,7 +198,7 @@ freeStyle.join(style.className, 'string', { yes: true, no: false }) //=> "n1c471
 #### Create a New Instance
 
 ```js
-freeStyle.fresh()
+new FreeStyle.FreeStyle()
 ```
 
 #### Change Events
