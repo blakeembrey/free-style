@@ -13,22 +13,38 @@ var id: number = 0
  * Allowed unit-less CSS properties.
  */
 var CSS_NUMBER: CssNumber = {
+  'box-flex': true,
+  'box-flex-group': true,
   'column-count': true,
-  'fill-opacity': true,
   'flex': true,
   'flex-grow': true,
+  'flex-positive': true,
   'flex-shrink': true,
+  'flex-negative': true,
   'font-weight': true,
   'line-clamp': true,
   'line-height': true,
   'opacity': true,
   'order': true,
   'orphans': true,
-  'stroke-opacity': true,
+  'tab-zize': true,
   'widows': true,
   'z-index': true,
-  'zoom': true
+  'zoom': true,
+
+  // SVG properties.
+  'fill-opacity': true,
+  'stroke-dashoffset': true,
+  'stroke-opacity': true,
+  'stroke-width': true
 }
+
+// Add vendor prefixes to all unit-less properties.
+;['-webkit-', '-ms-', '-moz-', '-o-'].forEach(function (prefix) {
+  Object.keys(CSS_NUMBER).forEach(function (property) {
+    CSS_NUMBER[prefix + property] = true
+  })
+})
 
 /**
  * Transform a JavaScript property into a CSS property.
@@ -71,6 +87,7 @@ function normalizePropertyValueString (value: string, propertyName: PropertyName
 
   value = String(value)
 
+  // Avoid adding the `px` suffix to `0` and any `NaN`.
   if (Number(value) && !CSS_NUMBER[propertyName]) {
     value += 'px'
   }

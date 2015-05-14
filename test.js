@@ -48,6 +48,17 @@ describe('free style', function () {
       )
     })
 
+    it('should not append "px" to certain properties', function () {
+      var style = freeStyle.registerStyle({
+        flexGrow: 2,
+        WebkitFlexGrow: 2
+      })
+
+      expect(freeStyle.getStyles()).to.equal(
+        style.selector + '{-webkit-flex-grow:2;flex-grow:2;}'
+      )
+    })
+
     it('should support nested selectors', function () {
       var style = freeStyle.registerStyle({
         color: 'red',
