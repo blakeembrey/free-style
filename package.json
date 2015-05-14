@@ -12,7 +12,7 @@
   "scripts": {
     "lint": "# TODO",
     "build": "npm run build-ts",
-    "build-ts": "tsc src/*.ts --declaration --sourceMap --removeComments --noImplicitAny --outDir dist --target es5 --module commonjs",
+    "build-ts": "tsc",
     "test-spec": "mocha -R spec --bail",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec --bail",
     "test": "npm run build && npm run lint && npm run test-cov",
@@ -48,6 +48,6 @@
     "mocha": "^2.1.0",
     "pre-commit": "^1.0.6",
     "standard": "^2.6.3",
-    "typescript": "^1.4.1"
+    "typescript": "^1.5.0-beta"
   }
 }
