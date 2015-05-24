@@ -283,9 +283,7 @@ function freeStyleToString (f: FreeStyle): string {
   }).join('')
 }
 
-export interface StyleObject {
-  [propertyName: string]: any
-}
+export type StyleObject = any
 
 export interface StyleType {
   id: string
