@@ -7,12 +7,12 @@ type PropertyValue = string | Array<string>
 /**
  * Add an ID to each instance.
  */
-var id: number = 0
+let id: number = 0
 
 /**
  * Allowed unit-less CSS properties.
  */
-var CSS_NUMBER: CssNumber = {
+const CSS_NUMBER: CssNumber = {
   'box-flex': true,
   'box-flex-group': true,
   'column-count': true,
@@ -114,7 +114,7 @@ function normalizePropertyValue (value: PropertyValue, propertyName: PropertyNam
 function copyStyles (dest: StyleObject, src?: StyleObject): StyleObject {
   if (src) {
     Object.keys(src).forEach(function (key) {
-      var propertyValue = src[key]
+      const propertyValue = src[key]
 
       if (isNestedDefinition(propertyValue)) {
         dest[key] = normalizeStyles(dest[key] || {}, propertyValue)
@@ -122,7 +122,7 @@ function copyStyles (dest: StyleObject, src?: StyleObject): StyleObject {
         return
       }
 
-      var propertyName = normalizePropertyName(key)
+      const propertyName = normalizePropertyName(key)
 
       if (propertyValue != null) {
         dest[propertyName] = normalizePropertyValue(propertyValue, propertyName)
@@ -137,7 +137,7 @@ function copyStyles (dest: StyleObject, src?: StyleObject): StyleObject {
  * Consistently sort object key order.
  */
 function sortKeys (obj: StyleObject): StyleObject {
-  var sorted: StyleObject = {}
+  const sorted: StyleObject = {}
 
   Object.keys(obj).sort().forEach(function (key) {
     sorted[key] = obj[key]
@@ -150,9 +150,9 @@ function sortKeys (obj: StyleObject): StyleObject {
  * Normalize one or more style objects.
  */
 function normalizeStyles (...src: StyleObject[]): StyleObject {
-  var dest: StyleObject = {}
+  const dest: StyleObject = {}
 
-  for (var i = 0; i < src.length; i++) {
+  for (let i = 0; i < src.length; i++) {
     copyStyles(dest, src[i])
   }
 
@@ -183,11 +183,11 @@ function styleToString (propertyName: PropertyName, value: string | string[] | v
  * Transform a style object to a string.
  */
 function stylesToString (style: StyleObject, selector: string): string {
-  var rules = ''
-  var toplevel = ''
+  let rules = ''
+  let toplevel = ''
 
   Object.keys(style).forEach(function (key) {
-    var value = style[key]
+    const value = style[key]
 
     // Support CSS @-rules (`@media`, `@supports`, etc)
     if (isTopLevelProperty(key)) {
@@ -225,11 +225,11 @@ function stylesToString (style: StyleObject, selector: string): string {
  * E.g. `@keyframes`, `@supports`, etc.
  */
 function nestedStylesToString (style: StyleObject, identifier: string): string {
-  var rules = ''
-  var toplevel = ''
+  let rules = ''
+  let toplevel = ''
 
   Object.keys(style).forEach(function (key) {
-    var value = style[key]
+    const value = style[key]
 
     // Support CSS @-rules inside keyframes (`@supports`).
     if (isTopLevelProperty(key)) {
@@ -258,9 +258,9 @@ function nestedStylesToString (style: StyleObject, identifier: string): string {
  * Generate a hash value from a string.
  */
 function hash (str: string, seed?: string): string {
-  var value = seed ? parseInt(seed, 16) : 0x811c9dc5
+  let value = seed ? parseInt(seed, 16) : 0x811c9dc5
 
-  for (var i = 0; i < str.length; i++) {
+  for (let i = 0; i < str.length; i++) {
     value ^= str.charCodeAt(i)
     value += (value << 1) + (value << 4) + (value << 7) + (value << 8) + (value << 24)
   }
@@ -360,7 +360,7 @@ export class FreeStyle {
   private _invalidStyleString: boolean = false
 
   add (o: StyleType): StyleType {
-    var count = this._cacheCount[o.id] || 0
+    const count = this._cacheCount[o.id] || 0
 
     this._cacheCount[o.id] = count + 1
 
@@ -381,7 +381,7 @@ export class FreeStyle {
   }
 
   remove (o: StyleType): void {
-    var count = this._cacheCount[o.id]
+    const count = this._cacheCount[o.id]
 
     if (count > 0) {
       this._cacheCount[o.id] = count - 1
@@ -394,7 +394,7 @@ export class FreeStyle {
   }
 
   attach (f: FreeStyle): void {
-    var count = this._childrenCount[f.id] || 0
+    const count = this._childrenCount[f.id] || 0
 
     this._childrenCount[f.id] = count + 1
 
@@ -410,7 +410,7 @@ export class FreeStyle {
   }
 
   detach (f: FreeStyle): void {
-    var count = this._childrenCount[f.id]
+    const count = this._childrenCount[f.id]
 
     if (count > 0) {
       this._childrenCount[f.id] = count - 1
@@ -448,19 +448,19 @@ export class FreeStyle {
   }
 
   join (...classList: Array<string | Object | void>): string {
-    var classNames: string[] = []
+    const classNames: string[] = []
 
-    for (var i = 0; i < arguments.length; i++) {
-      var value = arguments[i]
+    for (let i = 0; i < arguments.length; i++) {
+      const value = arguments[i]
 
       if (typeof value === 'string') {
         classNames.push(value)
       } else if (value != null) {
-        Object.keys(value).forEach(function (key) {
-          if (value[key]) {
-            classNames.push(key)
+        for (let prop in value) {
+          if (value[prop]) {
+            classNames.push(prop)
           }
-        })
+        }
       }
     }
 
@@ -468,7 +468,7 @@ export class FreeStyle {
   }
 
   values (): StyleType[] {
-    var cache = this._cache
+    const cache = this._cache
 
     return Object.keys(cache).map(function (key) {
       return cache[key]
@@ -485,11 +485,11 @@ export class FreeStyle {
   }
 
   empty (): void {
-    var cache = this._cache
+    const cache = this._cache
 
     Object.keys(cache).forEach((key) => {
-      var item = this._cache[key]
-      var len = this.count(item)
+      const item = this._cache[key]
+      let len = this.count(item)
 
       while (len--) {
         this.remove(item)
@@ -501,7 +501,7 @@ export class FreeStyle {
   inject (target?: HTMLElement): HTMLElement {
     target = target || document.head
 
-    var node = document.createElement('style')
+    const node = document.createElement('style')
     node.innerHTML = this.getStyles()
     target.appendChild(node)
 
@@ -513,8 +513,8 @@ export class FreeStyle {
   }
 
   removeChangeListener (fn: ChangeListenerFunction): void {
-    var listeners = this._listeners
-    var index = listeners.indexOf(fn)
+    const listeners = this._listeners
+    const index = listeners.indexOf(fn)
 
     if (index > -1) {
       listeners.splice(index, 1)
@@ -522,13 +522,13 @@ export class FreeStyle {
   }
 
   emitChange (type: string, o: StyleType): void {
-    var listeners = this._listeners
+    const listeners = this._listeners
 
     // Invalidate the current style string (add/remove occured).
     this._invalidStyleString = true
 
-    for (var i = 0; i < listeners.length; i++) {
-      var fn = listeners[i]
+    for (let i = 0; i < listeners.length; i++) {
+      const fn = listeners[i]
       fn(type, o, this)
     }
   }
