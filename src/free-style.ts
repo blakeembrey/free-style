@@ -114,14 +114,15 @@ function normalizePropertyValue (value: PropertyValue, propertyName: PropertyNam
 function copyStyles (dest: StyleObject, src?: StyleObject): StyleObject {
   if (src) {
     Object.keys(src).forEach(function (key) {
-      var propertyName = normalizePropertyName(key)
       var propertyValue = src[key]
 
       if (isNestedDefinition(propertyValue)) {
-        dest[propertyName] = normalizeStyles(dest[propertyName] || {}, propertyValue)
+        dest[key] = normalizeStyles(dest[key] || {}, propertyValue)
 
         return
       }
+
+      var propertyName = normalizePropertyName(key)
 
       if (propertyValue != null) {
         dest[propertyName] = normalizePropertyValue(propertyValue, propertyName)

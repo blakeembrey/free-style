@@ -1,4 +1,4 @@
-/* global describe, it, afterEach */
+/* global describe, it, beforeEach */
 
 var expect = require('chai').expect
 var FreeStyle = require('./')
@@ -69,6 +69,18 @@ describe('free style', function () {
 
       expect(freeStyle.getStyles()).to.equal(
         style.selector + '{color:red;}' + style.selector + ' span{color:blue;}'
+      )
+    })
+
+    it('should not transform nested selector keys', function () {
+      var style = freeStyle.registerStyle({
+        '.noteText': {
+          color: 'red'
+        }
+      })
+
+      expect(freeStyle.getStyles()).to.equal(
+        style.selector + ' .noteText{color:red;}'
       )
     })
 
