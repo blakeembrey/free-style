@@ -20,21 +20,21 @@ There's a really [great presentation by Christopher Chedeau](https://speakerdeck
 
 **Solved by using CSS in JS**
 
-* No global variables (what is `.button`?)
+* No global variables (Where and what is `.button`? Why does it conflict?)
 * Built in dependency system (CommonJS, Require.js, `<script />`)
-* Dead code elimination (automatically remove associated styles)
-* Minification (minify JS with existing tools)
-* Shared constants (using variables)
-* Isolation (every style is uniquely namespaced)
-* Extensible (just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/gka/chroma.js) built in!)
+* Dead code elimination (Automatically remove associated styles)
+* Minification (Minify JS with existing tools)
+* Shared constants (Using variables)
+* Isolation (Every style is uniquely namespaced)
+* Extensible (Just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/gka/chroma.js) built in!)
 
 **Also solved by using Free Style**
 
-* Works with legacy DOM components (you can nest `.class-name` in your style)
+* Works with legacy DOM components (You can nest `.class-name` in your style)
 * Easily expose third-party theming hooks through semantic class names (`.button`)
-* Consistently generated styles and class names (generate on the server and merges duplicate style definitions)
-* Develop the component right beside the style (no more hunting for that `ul > li > a`)
-* Create isomorphic JavaScript applications by serving styles for *only* the components rendered (see [React Free Style](http://github.com/blakeembrey/react-free-style))
+* Consistently generated styles and class names (Generate on the server and merges duplicate style definitions)
+* Develop the component right beside the style (No more hunting for that `ul > li > a`)
+* Create isomorphic JavaScript applications by serving styles for *only* the components rendered (See [React Free Style](http://github.com/blakeembrey/react-free-style))
 * Continue using the CSS you know (`{ '&:hover': { ... } }`)
 * Automatically namespaced `@`-rules (`{ '@media (min-width: 500px)': { ... } }`)
 * Easily merge multiple style definitions (`FreeStyle#registerStyle(a, b, c)`)
