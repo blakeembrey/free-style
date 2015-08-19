@@ -44,7 +44,7 @@ There's a really [great presentation by Christopher Chedeau](https://speakerdeck
 
 **How?**
 
-**Free Style** generates a consistent hash from the style contents, after alphabetical ordering and reformatting, to use as the class name. The allows duplicate styles to automatically merge by key. Every style is "registered" and assigned to a variable to get the most out of linters and dead code minification, which warn on unused variables. Using "create" returns a `FreeStyle` instance and enables the composure of instances at runtime to only ever render pieces we need. Every instance is created outside of the application run loop (E.g. `render`) which improves overall performance (only calculate the CSS string and hash once).
+**Free Style** generates a consistent hash from the style contents, after alphabetical ordering and reformatting, to use as the class name. The allows duplicate styles to automatically merge by key. Every style is "registered" and assigned to a variable to get the most out of linters and dead code minification, which warn on unused variables. Using "create" returns a `FreeStyle` instance and enables the composure of instances at runtime to render only the styles we used (See [React Free Style](http://github.com/blakeembrey/react-free-style)). Every style instance is created outside of the application run loop (E.g. `render`) which improves overall performance by only calculating the CSS string and hash once. Any time a style is registered/attached/detached an event is triggered which allows other libraries to live update styles.
 
 ## Usage
 
