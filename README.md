@@ -40,6 +40,11 @@ There's a really [great presentation by Christopher Chedeau](https://speakerdeck
 * Easily merge multiple style definitions (`FreeStyle#registerStyle(a, b, c)`)
 * Define duplicate rules using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
 * Integrates with any third-party system
+* Extremely small and powerful API that works in any ecosystem
+
+**How?**
+
+**Free Style** generates a consistent hash from the style contents, after alphabetical ordering and reformatting, to use as the class name. The allows duplicate styles to automatically merge by key. Every style is "registered" and assigned to a variable to get the most out of linters and dead code minification, which warn on unused variables. Using "create" returns a `FreeStyle` instance and enables the composure of instances at runtime to only ever render pieces we need. Every instance is created outside of the application run loop (E.g. `render`) which improves overall performance (only calculate the CSS string and hash once).
 
 ## Usage
 
