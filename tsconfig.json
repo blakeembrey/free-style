@@ -9,6 +9,8 @@
     "sourceMap": true
   },
   "files": [
-    "./src/free-style.ts"
+    "src/free-style.ts",
+    "src/free-style.spec.ts",
+    "typings/tsd.d.ts"
   ]
 }

@@ -1,10 +1,10 @@
 /* global describe, it, beforeEach */
 
-var expect = require('chai').expect
-var FreeStyle = require('./')
+import { expect } from 'chai'
+import * as FreeStyle from './free-style'
 
 describe('free style', function () {
-  var freeStyle
+  let freeStyle: FreeStyle.FreeStyle
 
   beforeEach(function () {
     freeStyle = FreeStyle.create()
@@ -328,7 +328,7 @@ describe('free style', function () {
       it('should emit changes when the child changes', function (done) {
         var child = FreeStyle.create()
 
-        freeStyle.addChangeListener(function listener (type, style) {
+        freeStyle.addChangeListener(function listener (type: string, style: FreeStyle.Style) {
           expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
 
           freeStyle.removeChangeListener(listener)

@@ -13,8 +13,8 @@
     "lint": "# TODO",
     "build": "npm run build-ts",
     "build-ts": "tsc",
-    "test-spec": "mocha -R spec --bail",
-    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec --bail",
+    "test-spec": "mocha \"dist/**/*.spec.js\" -R spec --bail",
+    "test-cov": "istanbul cover -x \"dist/**/*.spec.js\" node_modules/mocha/bin/_mocha -- \"dist/**/*.spec.js\" -R spec --bail",
     "test": "npm run build && npm run lint && npm run test-cov",
     "prepublish": "npm run build"
   },
