@@ -11,6 +11,6 @@
   "files": [
     "src/free-style.ts",
     "src/free-style.spec.ts",
-    "typings/tsd.d.ts"
+    "typings/main.d.ts"
   ]
 }

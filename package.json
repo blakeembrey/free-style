@@ -3,20 +3,19 @@
   "version": "0.5.6",
   "description": "Make CSS easier and more maintainable by using inline style objects",
   "main": "dist/free-style.js",
+  "typings": "dist/free-style.d.ts",
   "files": [
     "dist/",
-    "typings/",
-    "free-style.d.ts",
     "LICENSE"
   ],
   "scripts": {
     "lint": "# TODO",
-    "build": "npm run build-ts",
-    "build-ts": "tsc",
-    "test-spec": "mocha \"dist/**/*.spec.js\" -R spec --bail",
-    "test-cov": "istanbul cover -x \"dist/**/*.spec.js\" node_modules/mocha/bin/_mocha -- \"dist/**/*.spec.js\" -R spec --bail",
+    "build": "rm -rf dist/ && tsc",
+    "benchmarks": "ts-node benchmarks/index.ts",
+    "test-spec": "blue-tape dist/**/*.spec.js",
+    "test-cov": "istanbul cover --print none -x dist/**/*.spec.js blue-tape -- dist/**/*.spec.js | faucet",
     "test": "npm run build && npm run lint && npm run test-cov",
-    "prepublish": "npm run build"
+    "prepublish": "typings install && npm run build"
   },
   "repository": {
     "type": "git",
@@ -26,11 +25,12 @@
     "definition": "free-style.d.ts"
   },
   "keywords": [
-    "style",
+    "inline",
     "css",
-    "object",
-    "react",
-    "inline"
+    "style",
+    "js",
+    "hash",
+    "server"
   ],
   "author": {
     "name": "Blake Embrey",
@@ -43,11 +43,12 @@
   },
   "homepage": "https://github.com/blakeembrey/free-style",
   "devDependencies": {
-    "chai": "^2.1.0",
+    "blue-tape": "^0.1.10",
+    "faucet": "0.0.1",
     "istanbul": "^0.3.6",
-    "mocha": "^2.1.0",
+    "just-css-properties": "^1.0.0",
     "pre-commit": "^1.0.6",
-    "standard": "^2.6.3",
-    "typescript": "^1.5.0-beta"
+    "typescript": "^1.5.3",
+    "typings": "^0.3.5"
   }
 }

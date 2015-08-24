@@ -1,350 +1,337 @@
-/* global describe, it, beforeEach */
+import test = require('blue-tape')
+import { create } from './free-style'
 
-import { expect } from 'chai'
-import * as FreeStyle from './free-style'
+test('free style', (t) => {
+  t.test('output hashed classes', t => {
+    const Style = create()
 
-describe('free style', function () {
-  let freeStyle: FreeStyle.FreeStyle
+    const className = Style.registerStyle({
+      color: 'red'
+    })
 
-  beforeEach(function () {
-    freeStyle = FreeStyle.create()
+    t.equal(Style.getStyles(), `.${className}{color:red}`)
+
+    t.end()
   })
 
-  describe('class', function () {
-    it('should create a class', function () {
-      var style = freeStyle.registerStyle({
-        color: 'red',
-        backgroundColor: 'blue'
-      })
+  t.test('multiple values', t => {
+    const Style = create()
 
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{background-color:blue;color:red;}'
-      )
+    const className = Style.registerStyle({
+      background: [
+        'red',
+        'linear-gradient(to right, red 0%, green 100%)'
+      ]
     })
 
-    it('should support multiple style values', function () {
-      var style = freeStyle.registerStyle({
-        background: [
-          'red',
-          'linear-gradient(to right, red 0%, green 100%)'
-        ]
-      })
+    t.equal(
+      Style.getStyles(),
+      `.${className}{background:red;background:linear-gradient(to right, red 0%, green 100%)}`
+    )
 
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{background:red;background:linear-gradient(to right, red 0%, green 100%);}'
-      )
+    t.end()
+  })
+
+  t.test('dash-case property names', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      backgroundColor: 'red'
     })
 
-    it('should support nested @-rules', function () {
-      var style = freeStyle.registerStyle({
-        color: 'red',
-        '@media (min-width: 500px)': {
-          color: 'blue'
+    t.equal(Style.getStyles(), `.${className}{background-color:red}`)
+
+    t.end()
+  })
+
+  t.test('nest @-rules', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      color: 'red',
+      '@media (min-width: 500px)': {
+        color: 'blue'
+      }
+    })
+
+    t.equal(
+      Style.getStyles(),
+      `.${className}{color:red}@media (min-width: 500px){.${className}{color:blue}}`
+    )
+
+    t.end()
+  })
+
+  t.test('interpolate selectors', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      color: 'red',
+      '& > &': {
+        color: 'blue',
+        '.class-name': {
+          background: 'green'
         }
-      })
-
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{color:red;}@media (min-width: 500px){' + style.selector + '{color:blue;}}'
-      )
+      }
     })
 
-    it('should not append "px" to certain properties', function () {
-      var style = freeStyle.registerStyle({
-        flexGrow: 2,
-        WebkitFlexGrow: 2
-      })
+    t.equal(
+      Style.getStyles(),
+      `.${className}{color:red}.${className} > .${className}{color:blue}.${className} > .${className} .class-name{background:green}`
+    )
 
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{-webkit-flex-grow:2;flex-grow:2;}'
-      )
+    t.end()
+  })
+
+  t.test('do not append "px" to whitelisted properties', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      flexGrow: 2,
+      WebkitFlexGrow: 2
     })
 
-    it('should support nested selectors', function () {
-      var style = freeStyle.registerStyle({
-        color: 'red',
-        'span': {
-          color: 'blue'
-        }
-      })
+    t.equal(Style.getStyles(), `.${className}{-webkit-flex-grow:2;flex-grow:2}`)
 
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{color:red;}' + style.selector + ' span{color:blue;}'
-      )
+    t.end()
+  })
+
+  t.test('merge duplicate styles', t => {
+    const Style = create()
+
+    const className1 = Style.registerStyle({
+      background: 'blue',
+      color: 'red'
     })
 
-    it('should not transform nested selector keys', function () {
-      var style = freeStyle.registerStyle({
-        '.noteText': {
-          color: 'red'
-        }
-      })
-
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + ' .noteText{color:red;}'
-      )
+    const className2 = Style.registerStyle({
+      color: 'red',
+      background: 'blue'
     })
 
-    it('should support nested styles with parent references', function () {
-      var style = freeStyle.registerStyle({
-        color: 'red',
-        '&:hover': {
-          color: 'blue'
-        }
-      })
+    t.equal(className1, className2)
+    t.equal(Style.getStyles(), `.${className1}{background:blue;color:red}`)
 
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{color:red;}' + style.selector + ':hover{color:blue;}'
-      )
+    t.end()
+  })
+
+  t.test('sort keys alphabetically after hyphenating', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      borderRadius: 5,
+      msBorderRadius: 5
     })
 
-    it('should omit empty rules', function () {
-      freeStyle.registerStyle({})
+    t.equal(Style.getStyles(), `.${className}{-ms-border-radius:5px;border-radius:5px}`)
 
-      expect(freeStyle.getStyles()).to.equal('')
-    })
+    t.end()
+  })
 
-    it('should support vendor prefixes', function () {
-      var style = freeStyle.registerStyle({
-        msBorderRadius: 5,
-        WebkitBorderRadius: 5,
-        borderRadius: 5
-      })
+  t.test('merge duplicate nested styles', t => {
+    const Style = create()
 
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{-ms-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;}'
-      )
-    })
-
-    it('should merge style defintions', function () {
-      var style = freeStyle.registerStyle({
+    const className = Style.registerStyle({
+      color: 'red',
+      '.foo': {
         color: 'red'
-      }, {
-        background: 'blue'
-      })
-
-      expect(freeStyle.getStyles()).to.equal(
-        style.selector + '{background:blue;color:red;}'
-      )
+      }
     })
 
-    it('should result to the same hash of similar objects', function () {
-      var firstStyle = freeStyle.registerStyle({
-        color: 'red',
-        backgroundColor: 'blue'
-      })
+    t.equal(
+      Style.getStyles(),
+      `.${className},.${className} .foo{color:red}`
+    )
 
-      var secondStyle = freeStyle.registerStyle({
-        backgroundColor: 'blue',
+    t.end()
+  })
+
+  t.test('merge @-rules', t => {
+    const Style = create()
+    const mediaQuery = '@media (min-width: 600px)'
+
+    const className1 = Style.registerStyle({
+      [mediaQuery]: {
+        color: 'red'
+      }
+    })
+
+    const className2 = Style.registerStyle({
+      [mediaQuery]: {
+        color: 'blue'
+      }
+    })
+
+    t.equal(
+      Style.getStyles(),
+      `@media (min-width: 600px){.${className1}{color:red}.${className2}{color:blue}}`)
+
+    t.end()
+  })
+
+  t.test('do not output empty styles', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      color: null
+    })
+
+    t.equal(Style.getStyles(), '')
+
+    t.end()
+  })
+
+  t.test('support @-rules within @-rules', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      '@media (min-width: 100em)': {
+        '@supports (display: flexbox)': {
+          maxWidth: 100
+        }
+      }
+    })
+
+    t.equal(
+      Style.getStyles(),
+      `@media (min-width: 100em){@supports (display: flexbox){.${className}{max-width:100px}}}`
+    )
+
+    t.end()
+  })
+
+  t.test('merge duplicate styles across instances', t => {
+    const Style1 = create()
+    const Style2 = create()
+    const Style3 = create()
+
+    const className1 = Style1.registerStyle({
+      color: 'red'
+    })
+
+    const className3 = Style3.registerStyle({
+      color: 'red',
+      '@media (max-width: 600px)': {
+        color: 'blue'
+      }
+    })
+
+    Style2.merge(Style3)
+    Style1.merge(Style2)
+
+    t.equal(
+      Style1.getStyles(),
+      `.${className1},.${className3}{color:red}@media (max-width: 600px){.${className3}{color:blue}}`
+    )
+
+    Style1.unmerge(Style2)
+
+    t.equal(
+      Style1.getStyles(),
+      `.${className1}{color:red}`
+    )
+
+    Style1.empty()
+
+    t.equal(Style1.getStyles(), '')
+
+    t.end()
+  })
+
+  t.test('keyframes', t => {
+    const Style = create()
+
+    const keyframes = Style.registerKeyframes({
+      from: { color: 'red' },
+      to: { color: 'blue' }
+    })
+
+    t.equal(Style.getStyles(), `@keyframes ${keyframes}{from{color:red}to{color:blue}}`)
+
+    t.end()
+  })
+
+  t.test('merge duplicate keyframes', t => {
+    const Style = create()
+
+    const keyframes1 = Style.registerKeyframes({
+      from: { color: 'red' },
+      to: { color: 'blue' }
+    })
+
+    const keyframes2 = Style.registerKeyframes({
+      to: { color: 'blue' },
+      from: { color: 'red' }
+    })
+
+    t.equal(keyframes1, keyframes2)
+    t.equal(Style.getStyles(), `@keyframes ${keyframes1}{from{color:red}to{color:blue}}`)
+
+    t.end()
+  })
+
+  t.test('register arbitrary at rule', t => {
+    const Style = create()
+
+    Style.registerRule('@font-face', {
+      fontFamily: '"Bitstream Vera Serif Bold"',
+      src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
+    })
+
+    t.equal(Style.getStyles(), '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}')
+
+    t.end()
+  })
+
+  t.test('register at rule with nesting', t => {
+    const Style = create()
+
+    Style.registerRule('@media print', {
+      body: {
+        color: 'red'
+      }
+    })
+
+    t.equal(Style.getStyles(), '@media print{body{color:red}}')
+
+    t.end()
+  })
+
+  t.test('events', t => {
+    t.test('propagate changes', t => {
+      const Style1 = create()
+      const Style2 = create()
+
+      Style1.merge(Style2)
+
+      t.equal(Style1.getStyles(), '')
+
+      const className2 = Style2.registerStyle({
         color: 'red'
       })
 
-      expect(firstStyle.className).to.equal(secondStyle.className)
-    })
+      t.equal(Style1.getStyles(), `.${className2}{color:red}`)
 
-    it('should omit empty styles', function () {
-      var style = freeStyle.registerStyle({
-        color: 'red',
-        backgroundColor: null
-      })
-
-      expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
-    })
-
-    it('should omit empty values in an array', function () {
-      var style = freeStyle.registerStyle({
-        color: ['red', null]
-      })
-
-      expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
+      t.end()
     })
   })
 
-  describe('keyframes', function () {
-    it('should create keyframes instance', function () {
-      var style = freeStyle.registerKeyframes({
-        from: { color: 'red' },
-        to: { color: 'blue' }
-      })
+  t.test('utils', t => {
+    const Style = create()
 
-      expect(freeStyle.getStyles()).to.equal(
-        '@-webkit-keyframes ' + style.name + '{from{color:red;}to{color:blue;}}' +
-        '@keyframes ' + style.name + '{from{color:red;}to{color:blue;}}'
+    t.test('url', t => {
+      t.equal(Style.url('http://example.com'), 'url("http://example.com")')
+
+      t.end()
+    })
+
+    t.test('join', t => {
+      t.equal(
+        Style.join('a', { b: true, noop: false }, null, ['c', 'd']),
+        'a b c d'
       )
-    })
 
-    it('should support @-rules', function () {
-      var style = freeStyle.registerKeyframes({
-        '@supports (animation-name: test)': {
-          from: { color: 'red' },
-          to: { color: 'blue' }
-        }
-      })
-
-      expect(freeStyle.getStyles()).to.equal(
-        '@supports (animation-name: test){@-webkit-keyframes ' + style.name + '{from{color:red;}to{color:blue;}}}' +
-        '@supports (animation-name: test){@keyframes ' + style.name + '{from{color:red;}to{color:blue;}}}'
-      )
-    })
-
-    it('should be able to combine keyframes with styles', function () {
-      var animation = freeStyle.registerKeyframes({
-        from: { color: 'red' },
-        to: { color: 'blue' }
-      })
-
-      var style = freeStyle.registerStyle({
-        animationName: animation.name,
-        animationDuration: '1s'
-      })
-
-      expect(freeStyle.getStyles()).to.equal(
-        '@-webkit-keyframes ' + animation.name + '{from{color:red;}to{color:blue;}}' +
-        '@keyframes ' + animation.name + '{from{color:red;}to{color:blue;}}' +
-        style.selector + '{animation-duration:1s;animation-name:' + animation.name + ';}'
-      )
-    })
-  })
-
-  describe('utils', function () {
-    describe('url', function () {
-      it('should create a url attribute', function () {
-        expect(freeStyle.url('http://example.com')).to.equal('url("http://example.com")')
-      })
-    })
-
-    describe('join', function () {
-      it('should join strings together', function () {
-        expect(freeStyle.join('test', 'class')).to.equal('test class')
-      })
-
-      it('should join maps', function () {
-        expect(freeStyle.join('test', { yes: true, no: false }, undefined)).to.equal('test yes')
-      })
-    })
-
-    describe('empty', function () {
-      it('should empty the style cache', function () {
-        var style = freeStyle.registerStyle({
-          color: 'red'
-        })
-
-        expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
-
-        freeStyle.empty()
-
-        expect(freeStyle.getStyles()).to.equal('')
-      })
-    })
-
-    describe('change events', function () {
-      it('should register function to trigger on change', function () {
-        var triggered = false
-
-        function onChange () {
-          triggered = true
-        }
-
-        freeStyle.addChangeListener(onChange)
-
-        freeStyle.registerStyle({ color: 'red' })
-
-        freeStyle.removeChangeListener(onChange)
-
-        expect(triggered).to.be.true
-      })
-
-      it('should silently succeed when removing a non-existent listener', function () {
-        freeStyle.removeChangeListener(function () {})
-      })
-    })
-
-    describe('third party methods', function () {
-      it('should manually run lifecycle', function () {
-        var style = freeStyle.registerStyle({
-          color: 'red'
-        })
-
-        expect(freeStyle.has(style)).to.be.true
-        expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
-
-        freeStyle.remove(style)
-
-        expect(freeStyle.has(style)).to.be.false
-        expect(freeStyle.getStyles()).to.equal('')
-      })
-
-      it('should only remove after the same number of adds', function () {
-        var style = freeStyle.createStyle({
-          color: 'red'
-        })
-
-        var str = style.selector + '{color:red;}'
-
-        // 0
-        expect(freeStyle.getStyles()).to.equal('')
-
-        // 1
-        freeStyle.add(style)
-        expect(freeStyle.getStyles()).to.equal(str)
-
-        // 2
-        freeStyle.add(style)
-        expect(freeStyle.getStyles()).to.equal(str)
-
-        // 1
-        freeStyle.remove(style)
-        expect(freeStyle.getStyles()).to.equal(str)
-
-        // 0
-        freeStyle.remove(style)
-        expect(freeStyle.getStyles()).to.equal('')
-
-        // Already removed.
-        freeStyle.remove(style)
-        expect(freeStyle.getStyles()).to.equal('')
-      })
-
-      it('should attach and detach children', function (done) {
-        var child = FreeStyle.create()
-
-        var style = child.registerStyle({
-          color: 'red'
-        })
-
-        freeStyle.addChangeListener(function listener () {
-          expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
-
-          freeStyle.removeChangeListener(listener)
-          freeStyle.detach(child)
-
-          expect(freeStyle.getStyles()).to.equal('')
-
-          return done()
-        })
-
-        freeStyle.attach(child)
-      })
-
-      it('should emit changes when the child changes', function (done) {
-        var child = FreeStyle.create()
-
-        freeStyle.addChangeListener(function listener (type: string, style: FreeStyle.Style) {
-          expect(freeStyle.getStyles()).to.equal(style.selector + '{color:red;}')
-
-          freeStyle.removeChangeListener(listener)
-          freeStyle.detach(child)
-
-          expect(freeStyle.getStyles()).to.equal('')
-
-          return done()
-        })
-
-        freeStyle.attach(child)
-
-        child.registerStyle({
-          color: 'red'
-        })
-      })
+      t.end()
     })
   })
 })
