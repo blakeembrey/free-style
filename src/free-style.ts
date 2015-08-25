@@ -27,7 +27,7 @@ const CSS_NUMBER: CssNumber = {
   'opacity': true,
   'order': true,
   'orphans': true,
-  'tab-zize': true,
+  'tab-size': true,
   'widows': true,
   'z-index': true,
   'zoom': true,
