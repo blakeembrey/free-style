@@ -25,7 +25,7 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 * Minification (Minify JS with existing tools)
 * Shared constants and reusable styles (Using variables and objects)
 * Isolation (Every style is automatically namespaced)
-* Extensible (Just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/gka/chroma.js) built in!)
+* Extensible (Just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/MoOx/color) already exists!)
 
 **Also solved by using Free Style**
 
