@@ -11,7 +11,6 @@
 
 ```
 npm install free-style --save
-bower install free-style --save
 ```
 
 ## Why?
