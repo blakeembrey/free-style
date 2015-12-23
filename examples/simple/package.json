@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "bundle": "browserify app.js -o bundle.js",
+    "serve": "http-server"
+  },
+  "devDependencies": {
+    "browserify": "^12.0.1",
+    "http-server": "^0.8.5"
+  }
+}
