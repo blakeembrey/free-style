@@ -211,6 +211,13 @@ Style.url('http://example.com') //=> 'url("http://example.com")'
 Style.join(STYLE, 'string', { yes: true, no: false }) //=> "f1e8b20b string yes"
 ```
 
+### Other Helpful libraries
+
+* [color](https://github.com/MoOx/color)
+* [postcss-js](https://github.com/postcss/postcss-js)
+* [prefix-lite](https://github.com/namuol/prefix-lite)
+* [Add yours!](https://github.com/blakeembrey/free-style/issues/new)
+
 ### Lower Level Methods
 
 #### Creating Instances Manually
