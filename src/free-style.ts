@@ -487,7 +487,7 @@ export class Style extends Cache<Selector> implements IStyle<Style> {
  */
 export class Rule extends Cache<Rule | Style> implements IStyle<Rule> {
 
-  constructor (public rule: string, public style = '', public id = `a${hashString(rule)}`) {
+  constructor (public rule: string, public style = '', public id = `a${hashString(rule + style)}`) {
     super()
   }
 

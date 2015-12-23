@@ -283,6 +283,24 @@ test('free style', (t) => {
     t.end()
   })
 
+  t.test('does not merge arbitrary at rules', t => {
+    const Style = create()
+
+    Style.registerRule('@font-face', {
+      fontFamily: '"Bitstream Vera Serif Bold"',
+      src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
+    })
+
+    Style.registerRule('@font-face', {
+      fontFamily: '"MyWebFont"',
+      src: 'url("myfont.woff2")'
+    })
+
+    t.equal(Style.getStyles(), '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}')
+
+    t.end()
+  })
+
   t.test('register at rule with nesting', t => {
     const Style = create()
 
