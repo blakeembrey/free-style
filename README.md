@@ -5,7 +5,7 @@
 [![Build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
-**Free Style** is designed to make CSS easier and more maintainable by using inline style objects.
+> **Free Style** is designed to make CSS easier and more maintainable by using inline style objects.
 
 ## Installation
 
@@ -16,77 +16,72 @@ bower install free-style --save
 
 ## Why?
 
-There's a really [great presentation by Christopher Chedeau](https://speakerdeck.com/vjeux/react-css-in-js) you should check out.
+There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vjeux/react-css-in-js) you should check out.
 
 **Solved by using CSS in JS**
 
 * No global variables (Where and what is `.button`? Why does it conflict?)
 * Built in dependency system (CommonJS, Require.js, `<script />`)
-* Dead code elimination (Automatically remove associated styles)
+* Dead code elimination (Automatically remove unused styles)
 * Minification (Minify JS with existing tools)
-* Shared constants (Using variables)
-* Isolation (Every style is uniquely namespaced)
+* Shared constants and reusable styles (Using variables and objects)
+* Isolation (Every style is automatically namespaced)
 * Extensible (Just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/gka/chroma.js) built in!)
 
 **Also solved by using Free Style**
 
 * Works with legacy DOM components (You can nest `.class-name` in your style)
-* Easily expose third-party theming hooks through semantic class names (`.button`)
-* Consistently generated styles and class names (Generate on the server and merges duplicate style definitions)
+* Easily expose third-party and semantic hooks through normal class names (`.button`)
+* Consistently generate styles and class names (Generates the exact same on the client and server, and will magically merges duplicate styles)
 * Develop the component right beside the style (No more hunting for that `ul > li > a`)
-* Create isomorphic JavaScript applications by serving styles for *only* the components rendered (See [React Free Style](http://github.com/blakeembrey/react-free-style))
-* Continue using the CSS you know (`{ '&:hover': { ... } }`)
-* Automatically namespaced `@`-rules (`{ '@media (min-width: 500px)': { ... } }`)
-* Easily merge multiple style definitions (`FreeStyle#registerStyle(a, b, c)`)
+* Create isomorphic applications by serving styles for *only* the components rendered (See [React Free Style](http://github.com/blakeembrey/react-free-style))
+* Continue using the CSS you already know (`{ '&:hover': { ... } }`)
+* Automatically namespace `@`-rules (`{ '@media (min-width: 500px)': { ... } }`)
 * Define duplicate rules using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
 * Integrates with any third-party system
-* Extremely small and powerful API that works in any ecosystem
+* Extremely small and powerful API that works with any ecosystem
 
 **How?**
 
-**Free Style** generates a consistent hash from the style contents, after alphabetical ordering and reformatting, to use as the class name. The allows duplicate styles to automatically merge by key. Every style is "registered" and assigned to a variable to get the most out of linters and dead code minification, which warn on unused variables. Using "create" returns a `FreeStyle` instance and enables the composure of instances at runtime to render only the styles we used (See [React Free Style](http://github.com/blakeembrey/react-free-style)). Every style instance is created outside of the application run loop (E.g. `render`) which improves overall performance by only calculating the CSS string and hash once. Any time a style is registered/attached/detached an event is triggered which allows other libraries to live update styles.
+**Free Style** generates a consistent hash from the style contents, after alphabetical property ordering and formatting, to use as the class name. The allows duplicate styles to automatically be merged by duplicate hash. Every style is "registered" and assigned to a variable to get the most out of linters and features like dead code minification, which warn on unused variables. Using "create" returns the class name to the `Style` instance and multiple style instances (`create()`) enables the composure of stylesheets at runtime to render _only_ the styles we used (See [React Free Style](http://github.com/blakeembrey/react-free-style)). Every style instance is created outside of the application run loop (E.g. `render`) which improves performance by calculating the CSS string and hash once only. Any time a style is added/removed/merge/unmerged an event is triggered which allows other libraries and instances to propagate style changes.
 
 ## Usage
 
-Available using **Common.js**, **AMD** and **`window`**.
-
 ```js
 var FreeStyle = require('free-style')
-// var FreeStyle = window.FreeStyle
 
 // Create a new instance.
-var freeStyle = FreeStyle.create()
+var Style = FreeStyle.create()
 
-var STYLE = freeStyle.registerStyle({
+var STYLE = Style.registerStyle({
   backgroundColor: 'red'
-})
+}) //=> "f14svl5e"
 
-// Injects a `<style />` element into the DOM.
-freeStyle.inject()
+// Injects a `<style />` element into the `<head>`.
+// Note: This is an extremely simple integration.
+Style.inject()
 
 React.render(
-  <div className={STYLE.className}>Hello world!</div>,
+  <div className={STYLE}>Hello world!</div>,
   document.body
 )
 ```
 
-### Namespaced Styles
+### Namespace Styles
 
 ```js
-var BUTTON_STYLE = freeStyle.registerStyle({
+var BUTTON_STYLE = Style.registerStyle({
   backgroundColor: 'red',
   padding: 10
 })
 
-console.log(BUTTON_STYLE.selector) //=> ".n1c471b35"
-console.log(BUTTON_STYLE.className) //=> "n1c471b35"
-console.log(BUTTON_STYLE.style) //=> { backgroundColor: 'red', padding: '10px' }
+console.log(BUTTON_STYLE) //=> "f65pi0b"
 ```
 
-#### Multiple Style Declarations
+#### Multiple CSS Values
 
 ```js
-freeStyle.registerStyle({
+Style.registerStyle({
   background: [
     'red',
     '-moz-linear-gradient(left, red 0%, blue 100%)',
@@ -95,79 +90,95 @@ freeStyle.registerStyle({
     '-ms-linear-gradient(left, red 0%, blue 100%)',
     'linear-gradient(to right, red 0%, blue 100%)'
   ]
-})
+}) //=> "f1n85iiq"
 ```
 
 #### Nested @-rules
 
 ```js
-freeStyle.registerStyle({
+Style.registerStyle({
   color: 'red',
   '@media (min-width: 500px)': {
     color: 'blue'
   }
-})
+}) //=> "fk9tfor"
 ```
 
 #### Nested Selectors
 
-**Please note:** Although this is possible, it is not recommended. It circumvents the usefulness of componentized styles, but it is useful for styling legacy DOM components.
-
 ```js
-freeStyle.registerStyle({
+Style.registerStyle({
   '.classname': {
     color: 'blue'
   }
-})
+}) //=> "fc1zv17"
 ```
 
-#### Selector Parent Reference
+#### Parent Selector Reference
 
 ```js
-freeStyle.registerStyle({
+Style.registerStyle({
   '&:hover': {
     color: 'blue'
   }
-})
+}) //=> "f1h42yg6"
 ```
 
-#### Mixin Style Objects
+#### Use JavaScript to Mix Styles
 
 ```js
-var ellipsisStyle = freeStyle.registerStyle({
+var extend = require('xtend')
+
+var ellipsisStyle = {
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis'
-})
+}
 
-var redEllipsisStyle = freeStyle.registerStyle({
+var RED_ELLIPSIS_STYLE = Style.registerStyle(extend({
   color: 'red'
-}, ellipsisStyle.style)
+}, ellipsisStyle)) //=> "fvxl8qs"
 ```
 
 ### Keyframes
 
 ```js
-var ANIM = freeStyle.registerKeyframes({
+var COLOR_ANIM = Style.registerKeyframes({
   from: { color: 'red' },
   to: { color: 'blue' }
+}) //=> "h1j3ughx"
+
+var STYLE = Style.registerStyle({
+  animationName: COLOR_ANIM,
+  animationDuration: '1s'
+}) //=> "fibanyf"
+```
+
+### Other @-rules
+
+```js
+Style.registerRule('@font-face', {
+  fontFamily: '"Bitstream Vera Serif Bold"',
+  src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
 })
 
-freeStyle.registerStyle({
-  animationName: ANIM.name,
-  animationDuration: '1s'
+Style.registerRule('@media print', {
+  body: {
+    color: 'red'
+  }
 })
 ```
 
-#### Nested @-rules
+### Multiple Instances
 
 ```js
-freeStyle.registerKeyframes({
-  '@supports (animation-name: test)': {
-    from: { color: 'red' },
-    to: { color: 'blue' }
-  }
-})
+var Style1 = FreeStyle.create()
+var Style2 = FreeStyle.create()
+
+// Changes in `Style2` get reflected in `Style1`.
+// Use this to compose entire stylesheets or components!
+Style1.merge(Style2)
+Style1.unmerge(Style2)
 ```
 
 ### Output
@@ -175,15 +186,15 @@ freeStyle.registerKeyframes({
 #### CSS String
 
 ```js
-freeStyle.getStyles() //=> ".n1c471b35{background-color:red;padding:10px;}"
+Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 ```
 
 #### Inject Styles
 
-**Please note:** This is just a thin wrapper around `freeStyle.getStyles()` that creates and appends a `<style />` element to the head.
+**Please note:** This is a thin wrapper around `Style.getStyles()` that creates and appends a `<style />` element to the head (or target element). A more complex solution would listen and react to change events.
 
 ```js
-freeStyle.inject(/* optional target */)
+Style.inject(/* optional target */)
 ```
 
 ### Utilities
@@ -191,49 +202,51 @@ freeStyle.inject(/* optional target */)
 #### URL
 
 ```js
-freeStyle.url('http://example.com') //=> 'url("http://example.com")'
+Style.url('http://example.com') //=> 'url("http://example.com")'
 ```
 
 #### Join
 
 ```js
-freeStyle.join(style.className, 'string', { yes: true, no: false }) //=> "n1c471b35 string yes"
+Style.join(STYLE, 'string', { yes: true, no: false }) //=> "f1e8b20b string yes"
 ```
 
-#### Create a New Instance
+### Lower Level Methods
+
+#### Creating Instances Manually
 
 ```js
-new FreeStyle.FreeStyle() // Same as "FreeStyle.create()"
+FreeStyle.FreeStyle // Main stylesheet instance - returned from `create()`.
+FreeStyle.Style // Style's hold CSS and a generate a consistent hash of the contents.
+FreeStyle.AtRule // AtRule's are lighter-weight containers that can be nested inside `FreeStyle`.
+FreeStyle.Selector // Selector's hold the CSS selector and can be nested inside `Style`.
+FreeStyle.Cache // `FreeStyle`, `Style` and `AtRule` all extend the cache which maintains reference counts.
 ```
 
 #### Change Events
 
 ```js
-freeStyle.addChangeListener(fn)
-freeStyle.removeChangeListener(fn)
+Style.addChangeListener(fn)
+Style.removeChangeListener(fn)
 ```
 
-#### Third-Party Methods
-
-**Please note:** These methods should only be used by third-party implementers. The `add/remove` and `attach/detach` combinations keep track of counts so you need to remove the same number of times you add, if you want to remove it entirely.
+#### Other Methods
 
 ```js
-var STYLE = freeStyle.createStyle({ ... })
-var ANIM = freeStyle.createKeyframes({ ... })
+Style.add(Style | AtRule) // Add to internal cache and emit change.
+Style.has(Style | AtRule) // Check if the style already exists.
+Style.remove(Style | AtRule) // Remove from internal cache and emit change.
+Style.count(Style | AtRule) // Return the number of instances mounted.
 
-freeStyle.add(STYLE) // Add to internal cache and emit change.
-freeStyle.has(STYLE) // Check if the style already exists.
-freeStyle.remove(STYLE) // Remove from internal cache and emit change.
+var ChildStyle = Style.create()
 
-var child = freeStyle.create()
-
-freeStyle.attach(child) // Attach the child styles and listen for changes.
-freeStyle.detach(child) // Detach the child styles and stop listening for changes.
+Style.merge(ChildStyle) // Merge the child styles and manage changes from instance.
+Style.unmerge(ChildStyle) // Unmerge the child styles and stop listening for changes.
 ```
 
 ## Legacy Browsers
 
-To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Array.prototype.forEach` and `Object.keys`.
+To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Object.keys`, `Array.isArray` and `Array.prototype.map`.
 
 ## License
 
