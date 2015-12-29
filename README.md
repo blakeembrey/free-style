@@ -29,12 +29,12 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 **Also solved by using Free Style**
 
-* Works with legacy DOM components (You can nest `.class-name` in your style)
-* Easily expose third-party and semantic hooks through normal class names (`.button`)
-* Consistently generate styles and class names (Generates the exact same on the client and server, and will magically merges duplicate styles)
-* Develop the component right beside the style (No more hunting for that `ul > li > a`)
-* Create isomorphic applications by serving styles for *only* the components rendered (See [React Free Style](http://github.com/blakeembrey/react-free-style))
-* Continue using the CSS you already know (`{ '&:hover': { ... } }`)
+* Works with legacy DOM components (You can nest `.class-name` in your styles)
+* Easily expose third-party and semantic hooks/theming through ordinary class names (`.button`)
+* Consistently generate styles and class names (Generates the exact same on client and server, and will magically merges duplicate styles)
+* Develop components right next to the style (No more hunting CSS files for that `ul > li > a`)
+* Create isomorphic applications by serving styles for *only* the components rendered (Third-parties, see [React Free Style](http://github.com/blakeembrey/react-free-style))
+* Continue using the CSS features you already know (`{ '&:hover': { ... } }`)
 * Automatically namespace `@`-rules (`{ '@media (min-width: 500px)': { ... } }`)
 * Define duplicate rules using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
 * Integrates with any third-party system
@@ -44,29 +44,36 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 **Free Style** generates a consistent hash from the style contents, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged by checking for duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters and features like dead code minification that will warn on unused variables. Using "create" returns the class name to the `Style` instance and style instances (`create()`) can be comped together at runtime to render _only_ the styles used on page (see [React Free Style](http://github.com/blakeembrey/react-free-style)). Every style should be created outside of the application run loop (E.g. `render`) which will generate the CSS string and hash once. Any time a style is added/removed/merge/unmerged an event is triggered which allows libraries and other instances to propagate style changes around.
 
+## Ways to Use
+
+* [easy-style](https://github.com/jkroso/easy-style) Light-weight singleton API design for browsers
+* [react-free-style](https://github.com/blakeembrey/react-free-style) React implementation that automatically renders the styles on the current page
+* **This module!** Create, compose and manipulate multiple instances
+
 ## Usage
 
 ```js
 var FreeStyle = require('free-style')
 
-// Create a new instance.
+// Create a new container instance.
 var Style = FreeStyle.create()
 
+// Create a new, uniquely hashed style.
 var STYLE = Style.registerStyle({
   backgroundColor: 'red'
 }) //=> "f14svl5e"
 
 // Injects a `<style />` element into the `<head>`.
-// Note: This is an extremely simple integration.
 Style.inject()
 
+// Choose how to render the class name from registering.
 React.render(
   <div className={STYLE}>Hello world!</div>,
   document.body
 )
 ```
 
-### Namespace Styles
+### Hashed Styles
 
 ```js
 var BUTTON_STYLE = Style.registerStyle({
@@ -92,7 +99,7 @@ Style.registerStyle({
 }) //=> "f1n85iiq"
 ```
 
-#### Nested @-rules
+#### Nest @-rules
 
 ```js
 Style.registerStyle({
@@ -103,7 +110,7 @@ Style.registerStyle({
 }) //=> "fk9tfor"
 ```
 
-#### Nested Selectors
+#### Nest Selectors
 
 ```js
 Style.registerStyle({
@@ -113,7 +120,7 @@ Style.registerStyle({
 }) //=> "fc1zv17"
 ```
 
-#### Parent Selector Reference
+#### Reference The Parent Selector (using `&`)
 
 ```js
 Style.registerStyle({
@@ -123,7 +130,7 @@ Style.registerStyle({
 }) //=> "f1h42yg6"
 ```
 
-#### Use JavaScript to Mix Styles
+#### Use JavaScript to Merge Styles
 
 ```js
 var extend = require('xtend')
@@ -139,7 +146,7 @@ var RED_ELLIPSIS_STYLE = Style.registerStyle(extend({
 }, ellipsisStyle)) //=> "fvxl8qs"
 ```
 
-### Keyframes
+### Register Keyframes
 
 ```js
 var COLOR_ANIM = Style.registerKeyframes({
@@ -153,7 +160,7 @@ var STYLE = Style.registerStyle({
 }) //=> "fibanyf"
 ```
 
-### Other @-rules
+### Register Other Rules
 
 ```js
 Style.registerRule('@font-face', {
@@ -168,7 +175,7 @@ Style.registerRule('@media print', {
 })
 ```
 
-### Multiple Instances
+### Manage Multiple Instances
 
 ```js
 var Style1 = FreeStyle.create()
@@ -190,7 +197,7 @@ Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 
 #### Inject Styles
 
-**Please note:** This is a thin wrapper around `Style.getStyles()` that creates and appends a `<style />` element to the head (or target element). A more complex solution would listen and react to change events.
+**Please note:** This is a thin wrapper around `Style.getStyles()` that creates and appends a `<style />` element to the head (or a target element). A more complex solution would listen and react to style change events.
 
 ```js
 Style.inject(/* optional target */)
@@ -210,7 +217,7 @@ Style.url('http://example.com') //=> 'url("http://example.com")'
 Style.join(STYLE, 'string', { yes: true, no: false }) //=> "f1e8b20b string yes"
 ```
 
-### Other Helpful libraries
+### Useful Libraries
 
 * [color](https://github.com/MoOx/color)
 * [postcss-js](https://github.com/postcss/postcss-js)
