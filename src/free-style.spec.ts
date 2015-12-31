@@ -283,7 +283,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('does not merge arbitrary at rules', t => {
+  t.test('does not merge arbitrary at rules with different styles', t => {
     const Style = create()
 
     Style.registerRule('@font-face', {
@@ -297,6 +297,19 @@ test('free style', (t) => {
     })
 
     t.equal(Style.getStyles(), '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}')
+
+    t.end()
+  })
+
+  t.test('register base rule', t => {
+    const Style = create()
+
+    Style.registerRule('body', {
+      margin: 0,
+      padding: 0
+    })
+
+    t.equal(Style.getStyles(), 'body{margin:0;padding:0}')
 
     t.end()
   })

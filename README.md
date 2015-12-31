@@ -173,7 +173,14 @@ Style.registerRule('@media print', {
     color: 'red'
   }
 })
+
+Style.registerRule('body', {
+  margin: 0,
+  padding: 0
+})
 ```
+
+**Please note:** Registering rules does not do interpolation. interpolation is only available when registering styles.
 
 ### Manage Multiple Instances
 
