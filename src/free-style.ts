@@ -128,7 +128,7 @@ function styleStringToString (name: PropertyName, value: string | number | void)
     return ''
   }
 
-  if (typeof value === 'number' && !CSS_NUMBER[name]) {
+  if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[name]) {
     value += 'px'
   }
 
