@@ -235,6 +235,11 @@ test('free style', (t) => {
 
     t.equal(Style1.getStyles(), '')
 
+    // Check private properties for remaining state.
+    t.deepEqual((Style1 as any)._keys, [])
+    t.deepEqual((Style1 as any)._counts, {})
+    t.deepEqual((Style1 as any)._children, {})
+
     t.end()
   })
 
@@ -324,6 +329,28 @@ test('free style', (t) => {
     })
 
     t.equal(Style.getStyles(), '@media print{body{color:red}}')
+
+    t.end()
+  })
+
+  t.test('cache order by latest insertion', t => {
+    const Style = create()
+
+    const x = Style.registerStyle({
+      background: 'red',
+      '@media (min-width: 400px)': {
+        background: 'yellow'
+      }
+    })
+
+    const y = Style.registerStyle({
+      background: 'palegreen',
+      '@media (min-width: 400px)': {
+        background: 'pink'
+      }
+    })
+
+    t.equal(Style.getStyles(), `.${x}{background:red}.${y}{background:palegreen}@media (min-width: 400px){.${x}{background:yellow}.${y}{background:pink}}`)
 
     t.end()
   })
