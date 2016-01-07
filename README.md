@@ -180,7 +180,7 @@ Style.registerRule('body', {
 })
 ```
 
-**Please note:** Registering rules does not do interpolation. interpolation is only available when registering styles.
+**Please note:** Registering rules does not support interpolation. Interpolation is only available when registering styles.
 
 ### Manage Multiple Instances
 
