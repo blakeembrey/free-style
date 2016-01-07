@@ -12,8 +12,8 @@
     "lint": "# TODO",
     "build": "rm -rf dist/ && tsc",
     "benchmarks": "ts-node benchmarks/index.ts",
-    "test-spec": "blue-tape dist/**/*.spec.js",
-    "test-cov": "istanbul cover --print none -x dist/**/*.spec.js blue-tape -- dist/**/*.spec.js | faucet",
+    "test-spec": "blue-tape dist/**/*.spec.js | tap-spec",
+    "test-cov": "istanbul cover --print none -x dist/**/*.spec.js blue-tape -- dist/**/*.spec.js | tap-spec",
     "test": "npm run build && npm run lint && npm run test-cov",
     "prepublish": "typings install && npm run build"
   },
@@ -44,11 +44,11 @@
   "homepage": "https://github.com/blakeembrey/free-style",
   "devDependencies": {
     "blue-tape": "^0.1.10",
-    "faucet": "0.0.1",
     "istanbul": "^0.3.6",
     "just-css-properties": "^1.0.0",
     "pre-commit": "^1.0.6",
-    "typescript": "^1.5.3",
+    "tap-spec": "^4.1.1",
+    "typescript": "^1.7.5",
     "typings": "^0.3.5"
   }
 }

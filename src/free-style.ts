@@ -14,11 +14,9 @@ export type PropertyName = string
 export type PropertyValue = void | number | string | string[] | number[]
 
 /**
- * CSS styles object.
+ * User styles object.
  */
-export interface Styles {
-  [propertyName: string]: PropertyValue
-}
+export type UserStyles = any
 
 /**
  * Storing properties alphabetically ordered during parse.
@@ -284,11 +282,6 @@ function getStyles (container: FreeStyle | Rule) {
 }
 
 /**
- * User styles object.
- */
-export type UserStyles = any
-
-/**
  * Cacheable interface.
  */
 export interface ICacheable <T> {
@@ -316,7 +309,8 @@ export interface ChangeListenerFunction {
 export class Cache <T extends ICacheable<any>> {
 
   private _children: { [id: string]: T } = {}
-  private _childrenCount: { [id: string]: number } = {}
+  private _keys: string[] = []
+  private _counts: { [id: string]: number } = {}
   private _listeners: Array<ChangeListenerFunction> = []
   private _mergeListener: ChangeListenerFunction
   private _childListener: ChangeListenerFunction
@@ -339,11 +333,11 @@ export class Cache <T extends ICacheable<any>> {
   }
 
   values (): T[] {
-    return Object.keys(this._children).map(x => this._children[x])
+    return this._keys.map(x => this._children[x])
   }
 
   empty () {
-    for (const key of Object.keys(this._children)) {
+    for (const key of this._keys) {
       const item = this._children[key]
       let len = this.count(item)
 
@@ -354,13 +348,17 @@ export class Cache <T extends ICacheable<any>> {
   }
 
   add <U extends T> (style: U): U {
-    const count = this._childrenCount[style.id] || 0
+    const count = this._counts[style.id] || 0
 
-    this._childrenCount[style.id] = count + 1
+    this._counts[style.id] = count + 1
 
     if (count === 0) {
+      this._keys.push(style.id)
       this._children[style.id] = style.clone()
       this.emitChange('add', [style])
+    } else {
+      this._keys.splice(this._keys.indexOf(style.id), 1)
+      this._keys.push(style.id)
     }
 
     const item = <U> this._children[style.id]
@@ -383,19 +381,21 @@ export class Cache <T extends ICacheable<any>> {
   }
 
   count (style: T): number {
-    return this._childrenCount[style.id] || 0
+    return this._counts[style.id] || 0
   }
 
   remove (style: T): void {
-    const count = this._childrenCount[style.id]
+    const count = this._counts[style.id]
 
     if (count > 0) {
-      this._childrenCount[style.id] = count - 1
+      this._counts[style.id] = count - 1
 
       const item = this._children[style.id]
 
       if (count === 1) {
+        delete this._counts[style.id]
         delete this._children[style.id]
+        this._keys.splice(this._keys.indexOf(style.id), 1)
         this.emitChange('remove', [style])
       }
 
