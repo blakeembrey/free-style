@@ -229,6 +229,7 @@ Style.join(STYLE, 'string', { yes: true, no: false }) //=> "f1e8b20b string yes"
 * [color](https://github.com/MoOx/color)
 * [postcss-js](https://github.com/postcss/postcss-js)
 * [prefix-lite](https://github.com/namuol/prefix-lite)
+* [inline-style-prefixer](https://github.com/rofrischmann/inline-style-prefixer)
 * [Add yours!](https://github.com/blakeembrey/free-style/issues/new)
 
 ### Lower Level Methods
