@@ -5,7 +5,7 @@
 [![Build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
-> **Free Style** is designed to make CSS easier and more maintainable by using inline style objects.
+> **Free Style** is designed to make CSS easier and more maintainable by using JavaScript.
 
 ## Installation
 
@@ -17,7 +17,7 @@ npm install free-style --save
 
 There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vjeux/react-css-in-js) you should check out.
 
-**Solved by using CSS in JS**
+### Solved by using CSS in JS
 
 * No global variables (Where and what is `.button`? Why does it conflict?)
 * Built in dependency system (CommonJS, Require.js, `<script />`)
@@ -27,24 +27,24 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 * Isolation (Every style is automatically namespaced)
 * Extensible (Just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/MoOx/color) already exists!)
 
-**Also solved by using Free Style**
+### Also solved with Free Style
 
-* Works with legacy DOM components (You can nest `.class-name` in your styles)
-* Easily expose third-party and semantic hooks/theming through ordinary class names (`.button`)
-* Consistently generate styles and class names (Generates the exact same on client and server, and will magically merges duplicate styles)
-* Develop components right next to the style (No more hunting CSS files for that `ul > li > a`)
-* Create isomorphic applications by serving styles for *only* the components rendered (Third-parties, see [React Free Style](http://github.com/blakeembrey/react-free-style))
-* Continue using the CSS features you already know (`{ '&:hover': { ... } }`)
-* Automatically namespace `@`-rules (`{ '@media (min-width: 500px)': { ... } }`)
-* Define duplicate rules using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
+* Working with legacy DOM components (You can nest `.class-name` in your styles)
+* Expose third-party and semantic hooks/theming through ordinary class names (`.button`)
+* Consistently generates styles and class names (Generates the exact same on client and server, and will magically merges duplicate styles)
+* Develop components alongside the style (No more hunting CSS files for estranged `ul > li > a`)
+* Create isomorphic applications by serving styles for *only* the components rendered (With third-parties, see [React Free Style](http://github.com/blakeembrey/react-free-style))
+* Continue using CSS you already know (`{ '&:hover': { ... } }`)
+* Automatically namespace `@`-rule styles (`{ '@media (min-width: 500px)': { ... } }`)
+* Define multiple rules with arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
 * Integrates with any third-party system
-* Extremely small and powerful API that works with any ecosystem
+* Extremely small and powerful API that works with any ecosystem (~360 SLOC)
 
-**How?**
+### But How?
 
-**Free Style** generates a consistent hash from the style contents, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged by checking for duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters and features like dead code minification that will warn on unused variables. Using "create" returns the class name to the `Style` instance and style instances (`create()`) can be comped together at runtime to render _only_ the styles used on page (see [React Free Style](http://github.com/blakeembrey/react-free-style)). Every style should be created outside of the application run loop (E.g. `render`) which will generate the CSS string and hash once. Any time a style is added/removed/merge/unmerged an event is triggered which allows libraries and other instances to propagate style changes around.
+**Free Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged by checking for duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters and features like dead code minification that will warn on unused variables. Using "register" returns the class name to the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free Style](http://github.com/blakeembrey/react-free-style)). Styles should generally be created outside of the application run loop (E.g. `render`) so the CSS string and hash are generated once only. Any time a style is added/removed/merge/unmerged an event is triggered that allows libraries and other `FreeStyle` instances to propagate style changes.
 
-## Ways to Use
+### Ways to Use
 
 * [easy-style](https://github.com/jkroso/easy-style) Light-weight singleton API design for browsers
 * [react-free-style](https://github.com/blakeembrey/react-free-style) React implementation that automatically renders the styles on the current page
@@ -55,25 +55,25 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 ```js
 var FreeStyle = require('free-style')
 
-// Create a new container instance.
+// Create a container instance.
 var Style = FreeStyle.create()
 
-// Create a new, uniquely hashed style.
+// Register a new, uniquely hashed style.
 var STYLE = Style.registerStyle({
   backgroundColor: 'red'
 }) //=> "f14svl5e"
 
-// Injects a `<style />` element into the `<head>`.
+// Inject a `<style />` element into the `<head>`.
 Style.inject()
 
-// Choose how to render the class name from registering.
+// Figure out how to render the class name after registering.
 React.render(
   <div className={STYLE}>Hello world!</div>,
   document.body
 )
 ```
 
-### Hashed Styles
+### Styles
 
 ```js
 var BUTTON_STYLE = Style.registerStyle({
@@ -83,6 +83,8 @@ var BUTTON_STYLE = Style.registerStyle({
 
 console.log(BUTTON_STYLE) //=> "f65pi0b"
 ```
+
+**Tip:** The string returned by `registerStyle` is a unique hash of the content and should be used as a class in HTML.
 
 #### Multiple CSS Values
 
@@ -120,7 +122,7 @@ Style.registerStyle({
 }) //=> "fc1zv17"
 ```
 
-#### Reference The Parent Selector (using `&`)
+#### Parent Selector Reference
 
 ```js
 Style.registerStyle({
@@ -130,7 +132,9 @@ Style.registerStyle({
 }) //=> "f1h42yg6"
 ```
 
-#### Use JavaScript to Merge Styles
+**Tip:** The ampersand (`&`) will be replaced by the parent selector at runtime. In this example, the result is `.f1h42yg6:hover`.
+
+#### Use JavaScript
 
 ```js
 var extend = require('xtend')
@@ -146,7 +150,20 @@ var RED_ELLIPSIS_STYLE = Style.registerStyle(extend({
 }, ellipsisStyle)) //=> "fvxl8qs"
 ```
 
-### Register Keyframes
+**Tip:** This is a shallow extend example. There are modules on NPM for deep extending objects. You can also take advantage of new JavaScript features, such as `const` and computed properties:
+
+```js
+const mediaQuery = '@media (min-width: 400px)'
+
+const style = Style.registerStyle({
+  backgroundColor: 'red',
+  [mediaQuery]: {
+    backgroundColor: 'pink'
+  }
+})
+```
+
+### Keyframes
 
 ```js
 var COLOR_ANIM = Style.registerKeyframes({
@@ -160,7 +177,9 @@ var STYLE = Style.registerStyle({
 }) //=> "fibanyf"
 ```
 
-### Register Other Rules
+**Tip:** The string returned by `registerKeyframes` is a hash of the contents, and the name of the animation.
+
+### Rules
 
 ```js
 Style.registerRule('@font-face', {
@@ -180,9 +199,9 @@ Style.registerRule('body', {
 })
 ```
 
-**Please note:** Registering rules does not support interpolation. Interpolation is only available when registering styles.
+**Tip:** Interpolation is not supported with `registerRule`.
 
-### Manage Multiple Instances
+### Multiple Instances
 
 ```js
 var Style1 = FreeStyle.create()
@@ -204,7 +223,7 @@ Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 
 #### Inject Styles
 
-**Please note:** This is a thin wrapper around `Style.getStyles()` that creates and appends a `<style />` element to the head (or a target element). A more complex solution would listen and react to style change events.
+**Please note:** This is a thin wrapper around `Style.getStyles()` that creates and appends a `<style />` element to the head (or a target element). A more complex solution would listen and react to style changes.
 
 ```js
 Style.inject(/* optional target */)
