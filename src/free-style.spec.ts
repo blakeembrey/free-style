@@ -392,4 +392,22 @@ test('free style', (t) => {
       t.end()
     })
   })
+
+  t.test('keep order of nested params', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      width: '20rem',
+      '@media screen and (min-width: 500px)': {
+        width: 500
+      },
+      '@media screen and (min-width: 1000px)': {
+        width: 1000
+      }
+    })
+
+    t.equal(Style.getStyles(), `.${className}{width:20rem}@media screen and (min-width: 500px){.${className}{width:500px}}@media screen and (min-width: 1000px){.${className}{width:1000px}}`)
+
+    t.end()
+  })
 })

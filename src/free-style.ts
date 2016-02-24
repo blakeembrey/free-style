@@ -156,7 +156,7 @@ function sortTuples <T> (value: T[]): T[] {
 /**
  * Categorize user styles.
  */
-function parseUserStyles (styles: UserStyles) {
+function parseUserStyles (styles: UserStyles, hasNestedStyles: boolean) {
   const properties: Properties = []
   const nestedStyles: NestedStyles = []
 
@@ -173,7 +173,7 @@ function parseUserStyles (styles: UserStyles) {
 
   return {
     properties: sortTuples(properties),
-    nestedStyles: sortTuples(nestedStyles)
+    nestedStyles: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles)
   }
 }
 
@@ -198,13 +198,13 @@ function interpolate (selector: string, parent: string) {
 /**
  * Register all styles, but collect for post-selector correction using the hash.
  */
-function collectHashedStyles (container: Cache<any>, styles: UserStyles, shouldInterpolate: boolean) {
+function collectHashedStyles (container: Cache<any>, styles: UserStyles, hasNestedStyles: boolean) {
   const instances: [string, Style][] = []
 
   let currentHash = 0
 
   function stylize (container: Cache<any>, styles: UserStyles, selector: string) {
-    const { properties, nestedStyles } = parseUserStyles(styles)
+    const { properties, nestedStyles } = parseUserStyles(styles, hasNestedStyles)
     const styleString = stringifyProperties(properties)
     const style = container.add(new Style(styleString))
 
@@ -217,7 +217,7 @@ function collectHashedStyles (container: Cache<any>, styles: UserStyles, shouldI
       if (isAtRule(name)) {
         stylize(container.add(new Rule(name)), value, selector)
       } else {
-        stylize(container, value, shouldInterpolate ? interpolate(name, selector) : name)
+        stylize(container, value, hasNestedStyles ? interpolate(name, selector) : name)
       }
     }
   }
@@ -248,7 +248,7 @@ function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles): s
  */
 function registerUserRule (container: FreeStyle | Rule, selector: string, styles: UserStyles): void {
   const instances: [string, Style][] = []
-  const { properties, nestedStyles } = parseUserStyles(styles)
+  const { properties, nestedStyles } = parseUserStyles(styles, false)
   const styleString = stringifyProperties(properties)
   const rule = container.add(new Rule(selector, styleString))
 
