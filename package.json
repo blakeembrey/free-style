@@ -43,12 +43,12 @@
   },
   "homepage": "https://github.com/blakeembrey/free-style",
   "devDependencies": {
-    "blue-tape": "^0.1.10",
-    "istanbul": "^0.3.6",
+    "blue-tape": "^0.2.0",
+    "istanbul": "^0.4.2",
     "just-css-properties": "^1.0.0",
     "pre-commit": "^1.0.6",
     "tap-spec": "^4.1.1",
     "typescript": "^1.7.5",
-    "typings": "^0.3.5"
+    "typings": "^0.6.8"
   }
 }
