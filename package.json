@@ -9,11 +9,11 @@
     "LICENSE"
   ],
   "scripts": {
-    "lint": "# TODO",
-    "build": "rm -rf dist/ && tsc",
+    "lint": "tslint src/**/*.ts",
+    "build": "rimraf dist/ && tsc",
     "benchmarks": "ts-node benchmarks/index.ts",
     "test-spec": "blue-tape dist/**/*.spec.js | tap-spec",
-    "test-cov": "istanbul cover --print none -x dist/**/*.spec.js blue-tape -- dist/**/*.spec.js | tap-spec",
+    "test-cov": "istanbul cover --print none -x dist/**/*.spec.js node_modules/blue-tape/bin/blue-tape.js -- dist/**/*.spec.js | tap-spec",
     "test": "npm run build && npm run lint && npm run test-cov",
     "prepublish": "typings install && npm run build"
   },
@@ -47,7 +47,10 @@
     "istanbul": "^0.4.2",
     "just-css-properties": "^1.0.0",
     "pre-commit": "^1.0.6",
+    "rimraf": "^2.5.2",
     "tap-spec": "^4.1.1",
+    "ts-node": "^0.7.0",
+    "tslint": "^3.6.0",
     "typescript": "^1.7.5",
     "typings": "^0.6.8"
   }
