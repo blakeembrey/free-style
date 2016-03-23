@@ -172,7 +172,7 @@ test('free style', (t) => {
   t.test('do not output empty styles', t => {
     const Style = create()
 
-    const className = Style.registerStyle({
+    Style.registerStyle({
       color: null
     })
 
@@ -283,7 +283,10 @@ test('free style', (t) => {
       src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
     })
 
-    t.equal(Style.getStyles(), '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}')
+    t.equal(
+      Style.getStyles(),
+      '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}'
+    )
 
     t.end()
   })
@@ -301,7 +304,11 @@ test('free style', (t) => {
       src: 'url("myfont.woff2")'
     })
 
-    t.equal(Style.getStyles(), '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}')
+    t.equal(
+      Style.getStyles(),
+      '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}' +
+        '@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}'
+    )
 
     t.end()
   })
@@ -350,7 +357,10 @@ test('free style', (t) => {
       }
     })
 
-    t.equal(Style.getStyles(), `.${x}{background:red}.${y}{background:palegreen}@media (min-width: 400px){.${x}{background:yellow}.${y}{background:pink}}`)
+    t.equal(
+      Style.getStyles(),
+      `.${x}{background:red}.${y}{background:palegreen}@media (min-width: 400px){.${x}{background:yellow}.${y}{background:pink}}`
+    )
 
     t.end()
   })
@@ -406,7 +416,11 @@ test('free style', (t) => {
       }
     })
 
-    t.equal(Style.getStyles(), `.${className}{width:20rem}@media screen and (min-width: 500px){.${className}{width:500px}}@media screen and (min-width: 1000px){.${className}{width:1000px}}`)
+    t.equal(
+      Style.getStyles(),
+      `.${className}{width:20rem}@media screen and (min-width: 500px){.${className}{width:500px}}` +
+        `@media screen and (min-width: 1000px){.${className}{width:1000px}}`
+    )
 
     t.end()
   })

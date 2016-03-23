@@ -101,7 +101,7 @@ function hash (str: string, seed?: number): number {
     value = (value * 33) ^ str.charCodeAt(--i)
   }
 
-  return value >>> 0;
+  return value >>> 0
 }
 
 /**
@@ -247,7 +247,6 @@ function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles): s
  * Create user rule. Simplified collect styles, since it doesn't need hashing.
  */
 function registerUserRule (container: FreeStyle | Rule, selector: string, styles: UserStyles): void {
-  const instances: [string, Style][] = []
   const { properties, nestedStyles } = parseUserStyles(styles, false)
   const styleString = stringifyProperties(properties)
   const rule = container.add(new Rule(selector, styleString))
