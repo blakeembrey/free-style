@@ -424,4 +424,22 @@ test('free style', (t) => {
 
     t.end()
   })
+
+  t.test('throw when using properties and nested styles with rule', t => {
+    const Style = create()
+
+    t.throws(
+      () => {
+        Style.registerRule('body', {
+          height: '100%',
+          a: {
+            color: 'red'
+          }
+        })
+      },
+      TypeError
+    )
+
+    t.end()
+  })
 })

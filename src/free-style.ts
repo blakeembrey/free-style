@@ -248,6 +248,12 @@ function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles): s
  */
 function registerUserRule (container: FreeStyle | Rule, selector: string, styles: UserStyles): void {
   const { properties, nestedStyles } = parseUserStyles(styles, false)
+
+  // Throw when using properties and nested styles together in rule.
+  if (properties.length && nestedStyles.length) {
+    throw new TypeError(`Registering a CSS rule can not use properties with nested styles`)
+  }
+
   const styleString = stringifyProperties(properties)
   const rule = container.add(new Rule(selector, styleString))
 
