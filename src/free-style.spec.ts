@@ -1,4 +1,5 @@
 import test = require('blue-tape')
+import crypto = require('crypto')
 import { create } from './free-style'
 
 test('free style', (t) => {
@@ -438,6 +439,100 @@ test('free style', (t) => {
         })
       },
       TypeError
+    )
+
+    t.end()
+  })
+
+  t.test('customise hash algorithm', t => {
+    const Style = create((str: string) => {
+      return crypto.createHash('sha256').update(str).digest('hex')
+    })
+
+    const className1 = Style.registerStyle({
+      color: 'red'
+    })
+
+    const className2 = Style.registerStyle({
+      color: 'blue'
+    })
+
+    const keyframes = Style.registerKeyframes({
+      from: {
+        color: 'red'
+      },
+      to: {
+        color: 'blue'
+      }
+    })
+
+    t.equal(className2.length, 65)
+    t.equal(className1.length, 65)
+    t.equal(keyframes.length, 65)
+
+    t.equal(
+      Style.getStyles(),
+      `.${className1}{color:red}.${className2}{color:blue}@keyframes ${keyframes}{from{color:red}to{color:blue}}`
+    )
+
+    t.end()
+  })
+
+  t.test('detect hash collisions', t => {
+    const Style = create()
+    let className: string
+
+    t.throws(
+      () => {
+        className = Style.registerStyle({ color: '#0008d0' })
+
+        Style.registerStyle({ color: '#000f82' })
+      },
+      /Hash collision/
+    )
+
+    t.equal(Style.getStyles(), `.${className}{color:#0008d0}`)
+
+    t.end()
+  })
+
+  t.test('detect hash collision for nested styles', t => {
+    const Style = create()
+
+    t.throws(
+      () => {
+        Style.registerStyle({
+          div: { color: '#0009e8' },
+          span: { color: 'red' }
+        })
+
+        Style.registerStyle({
+          div: { color: '#000f75' },
+          span: { color: 'red' }
+        })
+      },
+      /Hash collision/
+    )
+
+    t.end()
+  })
+
+  t.test('detect hash collision for keyframes', t => {
+    const Style = create()
+
+    t.throws(
+      () => {
+        Style.registerKeyframes({
+          from: { color: '#0008da' },
+          to: { color: 'red' }
+        })
+
+        Style.registerKeyframes({
+          from: { color: '#000f8c' },
+          to: { color: 'red' }
+        })
+      },
+      /Hash collision/
     )
 
     t.end()

@@ -91,31 +91,22 @@ function isNestedStyle (value: any): boolean {
 }
 
 /**
+ * Hash algorithm interface.
+ */
+export type HashFunction = (str: string) => string
+
+/**
  * Generate a hash value from a string.
  */
-function hash (str: string, seed?: number): number {
-  let value = seed || 5381
+export function stringHash (str: string): string {
+  let value = 5381
   let i = str.length
 
   while (i) {
     value = (value * 33) ^ str.charCodeAt(--i)
   }
 
-  return value >>> 0
-}
-
-/**
- * Convert a hash to a string.
- */
-function hashToString (hash: number): string {
-  return hash.toString(36)
-}
-
-/**
- * Generate a hash string from a string.
- */
-function hashString (str: string): string {
-  return hashToString(hash(str))
+  return (value >>> 0).toString(36)
 }
 
 /**
@@ -149,8 +140,8 @@ function styleToString (name: PropertyName, value: PropertyValue): string {
 /**
  * Sort an array of tuples by first value.
  */
-function sortTuples <T> (value: T[]): T[] {
-  return value.sort((a: any, b: any) => a[0] > b[0] ? 1 : -1)
+function sortTuples <T extends Array<any>> (value: T[]): T[] {
+  return value.sort((a, b) => a[0] > b[0] ? 1 : -1)
 }
 
 /**
@@ -201,21 +192,21 @@ function interpolate (selector: string, parent: string) {
 function collectHashedStyles (container: Cache<any>, styles: UserStyles, hasNestedStyles: boolean) {
   const instances: [string, Style][] = []
 
-  let currentHash = 0
+  let hashString = ''
 
   function stylize (container: Cache<any>, styles: UserStyles, selector: string) {
     const { properties, nestedStyles } = parseUserStyles(styles, hasNestedStyles)
     const styleString = stringifyProperties(properties)
-    const style = container.add(new Style(styleString))
+    const style = container.add(new Style(styleString, container.hash))
 
-    currentHash = hash(styleString, currentHash)
+    hashString += styleString
     instances.push([selector, style])
 
     for (const [name, value] of nestedStyles) {
-      currentHash = hash(name, currentHash)
+      hashString += name
 
       if (isAtRule(name)) {
-        stylize(container.add(new Rule(name)), value, selector)
+        stylize(container.add(new Rule(name, undefined, container.hash)), value, selector)
       } else {
         stylize(container, value, hasNestedStyles ? interpolate(name, selector) : name)
       }
@@ -224,20 +215,20 @@ function collectHashedStyles (container: Cache<any>, styles: UserStyles, hasNest
 
   stylize(container, styles, '&')
 
-  return { currentHash, instances }
+  return { hashString, instances }
 }
 
 /**
  * Recursively register styles on a container instance.
  */
 function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles): string {
-  const { currentHash, instances } = collectHashedStyles(container, styles, true)
+  const { hashString, instances } = collectHashedStyles(container, styles, true)
 
-  const currentClassName = `f${hashToString(currentHash)}`
+  const currentClassName = `f${container.hash(hashString)}`
   const currentSelector = `.${currentClassName}`
 
   for (const [selector, style] of instances) {
-    style.add(new Selector(interpolate(selector, currentSelector)))
+    style.add(new Selector(interpolate(selector, currentSelector), style.hash, undefined, hashString))
   }
 
   return currentClassName
@@ -255,7 +246,7 @@ function registerUserRule (container: FreeStyle | Rule, selector: string, styles
   }
 
   const styleString = stringifyProperties(properties)
-  const rule = container.add(new Rule(selector, styleString))
+  const rule = container.add(new Rule(selector, styleString, container.hash))
 
   for (const [name, value] of nestedStyles) {
     registerUserRule(rule, name, value)
@@ -266,15 +257,15 @@ function registerUserRule (container: FreeStyle | Rule, selector: string, styles
  * Parse and register keyframes on the current instance.
  */
 function registerUserHashedRule (container: FreeStyle | Rule, selector: string, styles: UserStyles) {
-  const bucket = new Cache<Rule | Style>()
-  const { currentHash, instances } = collectHashedStyles(bucket, styles, false)
+  const bucket = new Cache<Rule | Style>(container.hash)
+  const { hashString, instances } = collectHashedStyles(bucket, styles, false)
 
   for (const [rule, style] of instances) {
-    style.add(new Selector(rule))
+    style.add(new Selector(rule, style.hash, undefined, hashString))
   }
 
-  const currentIdentifier = `h${hashToString(currentHash)}`
-  const atRule = container.add(new Rule(`@${selector} ${currentIdentifier}`))
+  const currentIdentifier = `h${container.hash(hashString)}`
+  const atRule = container.add(new Rule(`@${selector} ${currentIdentifier}`, undefined, container.hash, undefined, hashString))
   atRule.merge(bucket)
   return currentIdentifier
 }
@@ -289,15 +280,10 @@ function getStyles (container: FreeStyle | Rule) {
 /**
  * Cacheable interface.
  */
-export interface ICacheable <T> {
+export interface IStyle <T> {
   id: string
   clone (): T
-}
-
-/**
- * Common interface all style classes conform to.
- */
-export interface IStyle <T> extends ICacheable <T> {
+  getIdentifier (): string
   getStyles (): string
 }
 
@@ -305,13 +291,13 @@ export interface IStyle <T> extends ICacheable <T> {
  * Change listeners are registered to react to CSS changes.
  */
 export interface ChangeListenerFunction {
-  (type?: string, style?: ICacheable<any>[], parent?: any): any
+  (type?: string, style?: IStyle<any>[], parent?: any): any
 }
 
 /**
  * Implement a cache/event emitter.
  */
-export class Cache <T extends ICacheable<any>> {
+export class Cache <T extends IStyle<any>> {
 
   private _children: { [id: string]: T } = {}
   private _keys: string[] = []
@@ -320,7 +306,7 @@ export class Cache <T extends ICacheable<any>> {
   private _mergeListener: ChangeListenerFunction
   private _childListener: ChangeListenerFunction
 
-  constructor () {
+  constructor (public hash = stringHash) {
     this._mergeListener = (type: string, path: T[]) => {
       const finalItem = path.pop()
       let item: any = this
@@ -354,19 +340,24 @@ export class Cache <T extends ICacheable<any>> {
 
   add <U extends T> (style: U): U {
     const count = this._counts[style.id] || 0
+    let item = <U> this._children[style.id]
 
     this._counts[style.id] = count + 1
 
     if (count === 0) {
-      this._keys.push(style.id)
-      this._children[style.id] = style.clone()
-      this.emitChange('add', [style])
+      item = style.clone()
+      this._keys.push(item.id)
+      this._children[item.id] = item
+      this.emitChange('add', [item])
     } else {
       this._keys.splice(this._keys.indexOf(style.id), 1)
       this._keys.push(style.id)
-    }
 
-    const item = <U> this._children[style.id]
+      // Check if contents are different.
+      if (item.getIdentifier() !== style.getIdentifier()) {
+        throw new TypeError(`Hash collision: ${style.getStyles()} === ${item.getStyles()}`)
+      }
+    }
 
     if (style instanceof Cache) {
       if (count === 0) {
@@ -429,7 +420,7 @@ export class Cache <T extends ICacheable<any>> {
     }
   }
 
-  emitChange (type: string, path: ICacheable<any>[]): void {
+  emitChange (type: string, path: IStyle<any>[]): void {
     for (const listener of this._listeners) {
       listener(type, path, this)
     }
@@ -456,12 +447,20 @@ export class Cache <T extends ICacheable<any>> {
 /**
  * Selector is a dumb class made to represent nested CSS selectors.
  */
-export class Selector implements ICacheable<Selector> {
+export class Selector implements IStyle<Selector> {
 
-  constructor (public selector: string, public id = `s${hashString(selector)}`) {}
+  constructor (public selector: string, public hash = stringHash, public id = `s${hash(selector)}`,  public identifier = '') {}
+
+  getStyles () {
+    return this.selector
+  }
+
+  getIdentifier () {
+    return `${this.identifier}_${this.selector}`
+  }
 
   clone () {
-    return new Selector(this.selector, this.id)
+    return new Selector(this.selector, this.hash, this.id, this.identifier)
   }
 
 }
@@ -471,18 +470,20 @@ export class Selector implements ICacheable<Selector> {
  */
 export class Style extends Cache<Selector> implements IStyle<Style> {
 
-  constructor (public style: string, public id = `c${hashString(style)}`) {
+  constructor (public style: string, public hash = stringHash, public id = `c${hash(style)}`) {
     super()
   }
 
   getStyles (): string {
-    const { style } = this
+    return this.style ? `${this.values().map(x => x.selector).join(',')}{${this.style}}` : ''
+  }
 
-    return style ? `${this.values().map(x => x.selector).join(',')}{${style}}` : ''
+  getIdentifier () {
+    return this.style
   }
 
   clone () {
-    return new Style(this.style, this.id)
+    return new Style(this.style, this.hash, this.id)
   }
 
 }
@@ -492,7 +493,13 @@ export class Style extends Cache<Selector> implements IStyle<Style> {
  */
 export class Rule extends Cache<Rule | Style> implements IStyle<Rule> {
 
-  constructor (public rule: string, public style = '', public id = `a${hashString(rule + style)}`) {
+  constructor (
+    public rule: string,
+    public style = '',
+    public hash = stringHash,
+    public id = `a${hash(rule + style)}`,
+    public identifier = ''
+  ) {
     super()
   }
 
@@ -500,8 +507,12 @@ export class Rule extends Cache<Rule | Style> implements IStyle<Rule> {
     return `${this.rule}{${this.style}${getStyles(this)}}`
   }
 
+  getIdentifier () {
+    return `${this.identifier}_${this.rule}_${this.style}`
+  }
+
   clone () {
-    return new Rule(this.rule, this.style, this.id)
+    return new Rule(this.rule, this.style, this.hash, this.id, this.identifier)
   }
 
 }
@@ -511,8 +522,8 @@ export class Rule extends Cache<Rule | Style> implements IStyle<Rule> {
  */
 export class FreeStyle extends Cache<Rule | Style> implements IStyle<FreeStyle> {
 
-  constructor (public id = `f${hashToString(++instanceId)}`) {
-    super()
+  constructor (public hash = stringHash, public id = `f${(++instanceId).toString(36)}`) {
+    super(hash)
   }
 
   url (url: string): string {
@@ -566,8 +577,12 @@ export class FreeStyle extends Cache<Rule | Style> implements IStyle<FreeStyle> 
     return getStyles(this)
   }
 
+  getIdentifier () {
+    return this.id
+  }
+
   clone () {
-    return new FreeStyle(this.id)
+    return new FreeStyle(this.hash, this.id)
   }
 
 }
@@ -575,6 +590,6 @@ export class FreeStyle extends Cache<Rule | Style> implements IStyle<FreeStyle> 
 /**
  * Exports a simple function to create a new instance.
  */
-export function create () {
-  return new FreeStyle()
+export function create (hash?: HashFunction) {
+  return new FreeStyle(hash)
 }

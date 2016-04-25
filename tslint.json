@@ -40,12 +40,6 @@
     "no-bitwise": false,
     "no-conditional-assignment": true,
     "no-consecutive-blank-lines": true,
-    "no-console": [
-      true,
-      "log",
-      "error",
-      "dir"
-    ],
     "no-construct": true,
     "no-constructor-vars": false,
     "no-debugger": true,

@@ -1,11 +1,11 @@
-# Free Style
+# Free-Style
 
 [![NPM version][npm-image]][npm-url]
 [![NPM downloads][downloads-image]][downloads-url]
 [![Build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
-> **Free Style** is designed to make CSS easier and more maintainable by using JavaScript.
+> **Free-Style** is designed to make CSS easier and more maintainable by using JavaScript.
 
 ## Installation
 
@@ -27,13 +27,13 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 * Isolation (Every style is automatically namespaced)
 * Extensible (Just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/MoOx/color) already exists!)
 
-### Also solved with Free Style
+### Also solved with Free-Style
 
 * Working with legacy DOM components (You can nest `.class-name` in your styles)
 * Expose third-party and semantic hooks/theming through ordinary class names (`.button`)
 * Consistently generates styles and class names (Generates the exact same on client and server, and will magically merges duplicate styles)
 * Develop components alongside the style (No more hunting CSS files for estranged `ul > li > a`)
-* Create isomorphic applications by serving styles for *only* the components rendered (With third-parties, see [React Free Style](http://github.com/blakeembrey/react-free-style))
+* Create isomorphic applications by serving styles for *only* the components rendered (With third-parties, see [React Free-Style](http://github.com/blakeembrey/react-free-style))
 * Continue using CSS you already know (`{ '&:hover': { ... } }`)
 * Automatically namespace `@`-rule styles (`{ '@media (min-width: 500px)': { ... } }`)
 * Define multiple rules with arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
@@ -42,7 +42,7 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 ### But How?
 
-**Free Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged by checking for duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters and features like dead code minification that will warn on unused variables. Using "register" returns the class name to the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free Style](http://github.com/blakeembrey/react-free-style)). Styles should generally be created outside of the application run loop (E.g. `render`) so the CSS string and hash are generated once only. Any time a style is added/removed/merge/unmerged an event is triggered that allows libraries and other `FreeStyle` instances to propagate style changes.
+**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged by checking for duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters and features like dead code minification that will warn on unused variables. Using "register" returns the class name to the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should generally be created outside of the application run loop (E.g. `render`) so the CSS string and hash are generated once only. Any time a style is added/removed/merge/unmerged an event is triggered that allows libraries and other `FreeStyle` instances to propagate style changes.
 
 ### Ways to Use
 
@@ -253,6 +253,14 @@ Style.join(STYLE, 'string', { yes: true, no: false }) //=> "f1e8b20b string yes"
 * [Add yours!](https://github.com/blakeembrey/free-style/issues/new)
 
 ### Lower Level Methods
+
+#### Custom Hash Algorithm
+
+Initialize **Free-Style** with a custom CSS class hash algorithm (by default it uses a simple, internal string hash).
+
+```js
+create([hash]) //=> `FreeStyle.FreeStyle`
+```
 
 #### Creating Instances Manually
 
