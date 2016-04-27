@@ -46,9 +46,10 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 ### Ways to Use
 
-* [easy-style](https://github.com/jkroso/easy-style) Light-weight singleton API design for browsers
-* [react-free-style](https://github.com/blakeembrey/react-free-style) React implementation that automatically renders the styles on the current page
-* **This module!** Create, compose and manipulate multiple instances
+* [`stylin`](https://github.com/ajoslin/stylin) - The simplest abstraction, create styles, rules and keyframes, and the `<style />` stays in sync.
+* [`easy-style`](https://github.com/jkroso/easy-style) - Light-weight singleton API for browsers and node
+* [`react-free-style`](https://github.com/blakeembrey/react-free-style) - React implementation that renders styles used on the current page (universal use-case)
+* **This module!** - Create, compose and manipulate style instances and change events
 
 ## Usage
 
