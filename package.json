@@ -21,9 +21,6 @@
     "type": "git",
     "url": "git://github.com/blakeembrey/free-style.git"
   },
-  "typescript": {
-    "definition": "free-style.d.ts"
-  },
   "keywords": [
     "inline",
     "css",
