@@ -1,6 +1,6 @@
 {
   "name": "free-style",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Make CSS easier and more maintainable by using JavaScript",
   "main": "dist/free-style.js",
   "typings": "dist/free-style.d.ts",
