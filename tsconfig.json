@@ -6,11 +6,12 @@
     "declaration": true,
     "noImplicitAny": true,
     "removeComments": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "inlineSources": true
   },
   "files": [
     "src/free-style.ts",
     "src/free-style.spec.ts",
-    "typings/main.d.ts"
+    "typings/index.d.ts"
   ]
 }

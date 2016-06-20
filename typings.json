@@ -1,5 +1,5 @@
 {
-  "ambientDependencies": {
+  "globalDependencies": {
     "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f"
   },
   "devDependencies": {
