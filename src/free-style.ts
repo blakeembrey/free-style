@@ -11,7 +11,7 @@ export type PropertyName = string
 /**
  * Valid CSS property values.
  */
-export type PropertyValue = void | number | string | string[] | number[]
+export type PropertyValue = null | undefined | number | string | (string | number)[]
 
 /**
  * User styles object.
@@ -46,7 +46,6 @@ const CSS_NUMBER: { [propertyName: string]: boolean } = {
   'widows': true,
   'z-index': true,
   'zoom': true,
-
   // SVG properties.
   'fill-opacity': true,
   'stroke-dashoffset': true,
@@ -54,14 +53,9 @@ const CSS_NUMBER: { [propertyName: string]: boolean } = {
   'stroke-width': true
 }
 
-/**
- * CSS vendor prefixes.
- */
-const VENDOR_PREFIXES = ['-webkit-', '-ms-', '-moz-', '-o-']
-
 // Add vendor prefixes to all unit-less properties.
-for (const property of Object.keys(CSS_NUMBER)) {
-  for (const prefix of VENDOR_PREFIXES) {
+for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-']) {
+  for (const property of Object.keys(CSS_NUMBER)) {
     CSS_NUMBER[prefix + property] = true
   }
 }
@@ -112,11 +106,7 @@ export function stringHash (str: string): string {
 /**
  * Transform a style string to a CSS string.
  */
-function styleStringToString (name: PropertyName, value: string | number | void) {
-  if (value == null) {
-    return ''
-  }
-
+function styleToString (name: PropertyName, value: string | number) {
   if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[name]) {
     value += 'px'
   }
@@ -125,22 +115,9 @@ function styleStringToString (name: PropertyName, value: string | number | void)
 }
 
 /**
- * Transform a style into a CSS string.
- */
-function styleToString (name: PropertyName, value: PropertyValue): string {
-  if (Array.isArray(value)) {
-    return (<Array<any>> value).map(value => {
-      return styleStringToString(name, value)
-    }).join(';')
-  }
-
-  return styleStringToString(name, <string | number | void> value)
-}
-
-/**
  * Sort an array of tuples by first value.
  */
-function sortTuples <T extends Array<any>> (value: T[]): T[] {
+function sortTuples <T extends any[]> (value: T[]): T[] {
   return value.sort((a, b) => a[0] > b[0] ? 1 : -1)
 }
 
@@ -172,7 +149,19 @@ function parseUserStyles (styles: UserStyles, hasNestedStyles: boolean) {
  * Stringify an array of property tuples.
  */
 function stringifyProperties (properties: Properties) {
-  return properties.map(p => styleToString(p[0], p[1])).join(';')
+  let result: string[] = []
+
+  for (const [name, value] of properties) {
+    if (value != null) {
+      if (Array.isArray(value)) {
+        result.push(value.filter(x => x != null).map(x => styleToString(name, x)).join(';'))
+      } else {
+        result.push(styleToString(name, value))
+      }
+    }
+  }
+
+  return result.join(';')
 }
 
 /**
@@ -189,53 +178,61 @@ function interpolate (selector: string, parent: string) {
 /**
  * Register all styles, but collect for post-selector correction using the hash.
  */
-function collectHashedStyles (container: Cache<any>, styles: UserStyles, hasNestedStyles: boolean) {
-  const instances: [string, Style][] = []
+function collectHashedStyles (container: Cache<any>, userStyles: UserStyles, isStyle: boolean, displayName?: string) {
+  const styles: [Cache<any>, string, Style][] = []
 
-  let hashString = ''
-
-  function stylize (container: Cache<any>, styles: UserStyles, selector: string) {
-    const { properties, nestedStyles } = parseUserStyles(styles, hasNestedStyles)
+  function stylize (cache: Cache<any>, userStyles: UserStyles, selector: string) {
+    const { properties, nestedStyles } = parseUserStyles(userStyles, isStyle)
     const styleString = stringifyProperties(properties)
-    const style = container.add(new Style(styleString, container.hash))
+    let pid = styleString
 
-    hashString += styleString
-    instances.push([selector, style])
+    // Only create style instances when styles exists.
+    if (styleString) {
+      const style = new Style(styleString, cache.hash)
+      cache.add(style)
+      styles.push([cache, selector, style])
+    }
 
     for (const [name, value] of nestedStyles) {
-      hashString += name
+      pid += name
 
       if (isAtRule(name)) {
-        stylize(container.add(new Rule(name, undefined, container.hash)), value, selector)
+        const rule = cache.add(new Rule(name, undefined, cache.hash))
+        pid += stylize(rule, value, selector)
       } else {
-        stylize(container, value, hasNestedStyles ? interpolate(name, selector) : name)
+        pid += stylize(cache, value, isStyle ? interpolate(name, selector) : name)
       }
     }
+
+    return pid
   }
 
-  stylize(container, styles, '&')
+  // Create a temporary cache to handle changes/mutations before re-assigning later.
+  const cache = new Cache<Style | Rule>(container.hash)
+  const pid = stylize(cache, userStyles, '&')
 
-  return { hashString, instances }
+  const hash = `f${cache.hash(pid)}`
+  const id = displayName ? `${displayName}_${hash}` : hash
+
+  for (const [cache, selector, style] of styles) {
+    const key = isStyle ? interpolate(selector, `.${id}`) : selector
+    cache.get(style).add(new Selector(key, style.hash, undefined, pid))
+  }
+
+  container.merge(cache)
+
+  return { pid, id }
 }
 
 /**
  * Recursively register styles on a container instance.
  */
-function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles): string {
-  const { hashString, instances } = collectHashedStyles(container, styles, true)
-
-  const currentClassName = `f${container.hash(hashString)}`
-  const currentSelector = `.${currentClassName}`
-
-  for (const [selector, style] of instances) {
-    style.add(new Selector(interpolate(selector, currentSelector), style.hash, undefined, hashString))
-  }
-
-  return currentClassName
+function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles, displayName?: string): string {
+  return collectHashedStyles(container, styles, true, displayName).id
 }
 
 /**
- * Create user rule. Simplified collect styles, since it doesn't need hashing.
+ * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
  */
 function registerUserRule (container: FreeStyle | Rule, selector: string, styles: UserStyles): void {
   const { properties, nestedStyles } = parseUserStyles(styles, false)
@@ -246,28 +243,26 @@ function registerUserRule (container: FreeStyle | Rule, selector: string, styles
   }
 
   const styleString = stringifyProperties(properties)
-  const rule = container.add(new Rule(selector, styleString, container.hash))
+  const rule = new Rule(selector, styleString, container.hash)
 
   for (const [name, value] of nestedStyles) {
     registerUserRule(rule, name, value)
   }
+
+  container.add(rule)
 }
 
 /**
  * Parse and register keyframes on the current instance.
  */
-function registerUserHashedRule (container: FreeStyle | Rule, selector: string, styles: UserStyles) {
+function registerUserHashedRule (container: FreeStyle, prefix: string, styles: UserStyles, displayName?: string) {
   const bucket = new Cache<Rule | Style>(container.hash)
-  const { hashString, instances } = collectHashedStyles(bucket, styles, false)
+  const { pid, id } = collectHashedStyles(bucket, styles, false, displayName)
 
-  for (const [rule, style] of instances) {
-    style.add(new Selector(rule, style.hash, undefined, hashString))
-  }
-
-  const currentIdentifier = `h${container.hash(hashString)}`
-  const atRule = container.add(new Rule(`@${selector} ${currentIdentifier}`, undefined, container.hash, undefined, hashString))
+  const atRule = new Rule(`${prefix} ${id}`, undefined, container.hash, undefined, pid)
   atRule.merge(bucket)
-  return currentIdentifier
+  container.add(atRule)
+  return id
 }
 
 /**
@@ -280,7 +275,7 @@ function getStyles (container: FreeStyle | Rule) {
 /**
  * Cacheable interface.
  */
-export interface IStyle <T> {
+export interface Container <T> {
   id: string
   clone (): T
   getIdentifier (): string
@@ -291,93 +286,57 @@ export interface IStyle <T> {
  * Change listeners are registered to react to CSS changes.
  */
 export interface ChangeListenerFunction {
-  (type?: string, style?: IStyle<any>[], parent?: any): any
+  (style: Container<any>): any
 }
 
 /**
  * Implement a cache/event emitter.
  */
-export class Cache <T extends IStyle<any>> {
+export class Cache <T extends Container<any>> {
+
+  changeId = 0
 
   private _children: { [id: string]: T } = {}
   private _keys: string[] = []
   private _counts: { [id: string]: number } = {}
-  private _listeners: Array<ChangeListenerFunction> = []
-  private _mergeListener: ChangeListenerFunction
-  private _childListener: ChangeListenerFunction
 
-  constructor (public hash = stringHash) {
-    this._mergeListener = (type: string, path: T[]) => {
-      const finalItem = path.pop()
-      let item: any = this
-
-      for (const cacheItem of path) {
-        item = this.get(cacheItem)
-      }
-
-      return type === 'add' ? item.add(finalItem) : this.remove(finalItem)
-    }
-
-    this._childListener = (type, path, parent) => {
-      this.emitChange(type, [parent].concat(path))
-    }
-  }
+  constructor (public hash: HashFunction) {}
 
   values (): T[] {
     return this._keys.map(x => this._children[x])
   }
 
-  empty () {
-    for (const key of this._keys) {
-      const item = this._children[key]
-      let len = this.count(item)
-
-      while (len--) {
-        this.remove(item)
-      }
-    }
-  }
-
   add <U extends T> (style: U): U {
     const count = this._counts[style.id] || 0
-    let item = <U> this._children[style.id]
+    const item = this._children[style.id] || style.clone()
 
     this._counts[style.id] = count + 1
 
     if (count === 0) {
-      item = style.clone()
       this._keys.push(item.id)
       this._children[item.id] = item
-      this.emitChange('add', [item])
+      this.changeId++
     } else {
-      this._keys.splice(this._keys.indexOf(style.id), 1)
-      this._keys.push(style.id)
-
       // Check if contents are different.
       if (item.getIdentifier() !== style.getIdentifier()) {
         throw new TypeError(`Hash collision: ${style.getStyles()} === ${item.getStyles()}`)
       }
+
+      this._keys.splice(this._keys.indexOf(style.id), 1)
+      this._keys.push(style.id)
+
+      if (item instanceof Cache && style instanceof Cache) {
+        const prevChangeId = item.changeId
+
+        item.merge(style)
+
+        if (item.changeId !== prevChangeId) {
+          this.changeId++
+        }
+      }
     }
 
-    if (style instanceof Cache) {
-      if (count === 0) {
-        (<any> item).addChangeListener(this._childListener)
-      }
-
-      for (const cacheItem of (<any> style).values()) {
-        (<any> item).add(cacheItem)
-      }
-    }
-
-    return item
-  }
-
-  get (style: T) {
-    return this._children[style.id]
-  }
-
-  count (style: T): number {
-    return this._counts[style.id] || 0
+    return item as U
   }
 
   remove (style: T): void {
@@ -392,54 +351,41 @@ export class Cache <T extends IStyle<any>> {
         delete this._counts[style.id]
         delete this._children[style.id]
         this._keys.splice(this._keys.indexOf(style.id), 1)
-        this.emitChange('remove', [style])
-      }
+        this.changeId++
+      } else if (item instanceof Cache && style instanceof Cache) {
+        const prevChangeId = item.changeId
 
-      if (style instanceof Cache) {
-        if (count === 1) {
-          (<any> item).removeChangeListener(this._childListener)
-        }
+        item.unmerge(style)
 
-        for (const cacheItem of (<any> style).values()) {
-          (<any> item).remove(cacheItem)
+        if (item.changeId !== prevChangeId) {
+          this.changeId++
         }
       }
     }
   }
 
-  addChangeListener (fn: ChangeListenerFunction): void {
-    this._listeners.push(fn)
+  get (container: Container<any>) {
+    return this._children[container.id]
   }
 
-  removeChangeListener (fn: ChangeListenerFunction): void {
-    const listeners = this._listeners
-    const index = listeners.indexOf(fn)
-
-    if (index > -1) {
-      listeners.splice(index, 1)
+  merge <U extends Cache<any>> (cache: U) {
+    for (const value of cache.values()) {
+      this.add(value)
     }
+
+    return this
   }
 
-  emitChange (type: string, path: IStyle<any>[]): void {
-    for (const listener of this._listeners) {
-      listener(type, path, this)
+  unmerge <U extends Cache<any>> (cache: U) {
+    for (const value of cache.values()) {
+      this.remove(value)
     }
+
+    return this
   }
 
-  merge <U extends Cache<T>> (style: U) {
-    for (const cacheItem of style.values()) {
-      this.add(cacheItem)
-    }
-
-    style.addChangeListener(this._mergeListener)
-  }
-
-  unmerge <U extends Cache<T>> (style: U) {
-    for (const cacheItem of style.values()) {
-      this.remove(cacheItem)
-    }
-
-    style.removeChangeListener(this._mergeListener)
+  clone () {
+    return new Cache(this.hash).merge(this)
   }
 
 }
@@ -447,20 +393,25 @@ export class Cache <T extends IStyle<any>> {
 /**
  * Selector is a dumb class made to represent nested CSS selectors.
  */
-export class Selector implements IStyle<Selector> {
+export class Selector implements Container<Selector> {
 
-  constructor (public selector: string, public hash = stringHash, public id = `s${hash(selector)}`,  public identifier = '') {}
+  constructor (
+    public selector: string,
+    public hash: HashFunction,
+    public id = `s${hash(selector)}`,
+    public pid = ''
+  ) {}
 
   getStyles () {
     return this.selector
   }
 
   getIdentifier () {
-    return `${this.identifier}_${this.selector}`
+    return `${this.pid}.${this.selector}`
   }
 
   clone () {
-    return new Selector(this.selector, this.hash, this.id, this.identifier)
+    return new Selector(this.selector, this.hash, this.id, this.pid)
   }
 
 }
@@ -468,22 +419,22 @@ export class Selector implements IStyle<Selector> {
 /**
  * The style container registers a style string with selectors.
  */
-export class Style extends Cache<Selector> implements IStyle<Style> {
+export class Style extends Cache<Selector> implements Container<Style> {
 
-  constructor (public style: string, public hash = stringHash, public id = `c${hash(style)}`) {
-    super()
+  constructor (public style: string, public hash: HashFunction, public id = `c${hash(style)}`) {
+    super(hash)
   }
 
   getStyles (): string {
-    return this.style ? `${this.values().map(x => x.selector).join(',')}{${this.style}}` : ''
+    return `${this.values().map(x => x.selector).join(',')}{${this.style}}`
   }
 
   getIdentifier () {
     return this.style
   }
 
-  clone () {
-    return new Style(this.style, this.hash, this.id)
+  clone (): Style {
+    return new Style(this.style, this.hash, this.id).merge(this)
   }
 
 }
@@ -491,16 +442,16 @@ export class Style extends Cache<Selector> implements IStyle<Style> {
 /**
  * Implement rule logic for style output.
  */
-export class Rule extends Cache<Rule | Style> implements IStyle<Rule> {
+export class Rule extends Cache<Rule | Style> implements Container<Rule> {
 
   constructor (
     public rule: string,
     public style = '',
-    public hash = stringHash,
-    public id = `a${hash(rule + style)}`,
-    public identifier = ''
+    public hash: HashFunction,
+    public id = `a${hash(`${rule}.${style}`)}`,
+    public pid = ''
   ) {
-    super()
+    super(hash)
   }
 
   getStyles (): string {
@@ -508,11 +459,11 @@ export class Rule extends Cache<Rule | Style> implements IStyle<Rule> {
   }
 
   getIdentifier () {
-    return `${this.identifier}_${this.rule}_${this.style}`
+    return `${this.pid}.${this.rule}.${this.style}`
   }
 
-  clone () {
-    return new Rule(this.rule, this.style, this.hash, this.id, this.identifier)
+  clone (): Rule {
+    return new Rule(this.rule, this.style, this.hash, this.id, this.pid).merge(this)
   }
 
 }
@@ -520,57 +471,22 @@ export class Rule extends Cache<Rule | Style> implements IStyle<Rule> {
 /**
  * The FreeStyle class implements the API for everything else.
  */
-export class FreeStyle extends Cache<Rule | Style> implements IStyle<FreeStyle> {
+export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyle> {
 
-  constructor (public hash = stringHash, public id = `f${(++instanceId).toString(36)}`) {
+  constructor (public hash: HashFunction, public debug: boolean, public id = `f${(++instanceId).toString(36)}`) {
     super(hash)
   }
 
-  url (url: string): string {
-    return 'url("' + encodeURI(url) + '")'
+  registerStyle (styles: UserStyles, displayName?: string) {
+    return registerUserStyles(this, styles, this.debug ? displayName : undefined)
   }
 
-  join (...classList: Array<string | Object | void | string[]>) {
-    const classNames: string[] = []
-
-    for (const value of classList) {
-      if (typeof value === 'string') {
-        classNames.push(value)
-      } else if (Array.isArray(value)) {
-        classNames.push(this.join.apply(this, value))
-      } else if (value != null) {
-        for (const key of Object.keys(value)) {
-          if ((<any> value)[key]) {
-            classNames.push(key)
-          }
-        }
-      }
-    }
-
-    return classNames.join(' ')
-  }
-
-  registerStyle (styles: UserStyles) {
-    return registerUserStyles(this, styles)
+  registerKeyframes (keyframes: UserStyles, displayName?: string) {
+    return registerUserHashedRule(this, '@keyframes', keyframes, this.debug ? displayName : undefined)
   }
 
   registerRule (rule: string, styles: UserStyles) {
     return registerUserRule(this, rule, styles)
-  }
-
-  registerKeyframes (keyframes: UserStyles) {
-    return registerUserHashedRule(this, 'keyframes', keyframes)
-  }
-
-  /* istanbul ignore next */
-  inject (target?: HTMLElement): HTMLElement {
-    target = target || document.head
-
-    const node = document.createElement('style')
-    node.innerHTML = this.getStyles()
-    target.appendChild(node)
-
-    return node
   }
 
   getStyles () {
@@ -581,8 +497,8 @@ export class FreeStyle extends Cache<Rule | Style> implements IStyle<FreeStyle> 
     return this.id
   }
 
-  clone () {
-    return new FreeStyle(this.hash, this.id)
+  clone (): FreeStyle {
+    return new FreeStyle(this.hash, this.debug, this.id).merge(this)
   }
 
 }
@@ -590,6 +506,6 @@ export class FreeStyle extends Cache<Rule | Style> implements IStyle<FreeStyle> 
 /**
  * Exports a simple function to create a new instance.
  */
-export function create (hash?: HashFunction) {
-  return new FreeStyle(hash)
+export function create (hash = stringHash, debug = process.env.NODE_ENV !== 'production') {
+  return new FreeStyle(hash, debug)
 }

@@ -42,14 +42,14 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 ### But How?
 
-**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged by checking for duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters and features like dead code minification that will warn on unused variables. Using "register" returns the class name to the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should generally be created outside of the application run loop (E.g. `render`) so the CSS string and hash are generated once only. Any time a style is added/removed/merge/unmerged an event is triggered that allows libraries and other `FreeStyle` instances to propagate style changes.
+**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged on duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters that will warn on unused variables and features like dead code minification. Using "register" returns the class name used for the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should usually be created outside of the application run loop (E.g. `render`) so the CSS string and hashes are only generated once.
 
 ### Ways to Use
 
 * [`stylin`](https://github.com/ajoslin/stylin) - The simplest abstraction, create styles, rules and keyframes, and the `<style />` stays in sync.
 * [`easy-style`](https://github.com/jkroso/easy-style) - Light-weight singleton API for browsers and node
 * [`react-free-style`](https://github.com/blakeembrey/react-free-style) - React implementation that renders styles used on the current page (universal use-case)
-* **This module!** - Create, compose and manipulate style instances and change events
+* **This module!** - Create, compose and manipulate style instances
 
 ## Usage
 
@@ -102,7 +102,7 @@ Style.registerStyle({
 }) //=> "f1n85iiq"
 ```
 
-#### Nest @-rules
+#### Nest Rules
 
 ```js
 Style.registerStyle({
@@ -135,6 +135,8 @@ Style.registerStyle({
 
 **Tip:** The ampersand (`&`) will be replaced by the parent selector at runtime. In this example, the result is `.f1h42yg6:hover`.
 
+**Tip:** The second argument to `registerStyle` and `registerKeyframes` is a "display name". The display name will be used as the class name prefix in development (`process.env.NODE_ENV !== 'production'`).
+
 #### Use JavaScript
 
 ```js
@@ -146,9 +148,12 @@ var ellipsisStyle = {
   textOverflow: 'ellipsis'
 }
 
-var RED_ELLIPSIS_STYLE = Style.registerStyle(extend({
-  color: 'red'
-}, ellipsisStyle)) //=> "fvxl8qs"
+var RED_ELLIPSIS_STYLE = Style.registerStyle(extend(
+  {
+    color: 'red'
+  },
+  ellipsisStyle
+)) //=> "fvxl8qs"
 ```
 
 **Tip:** This is a shallow extend example. There are modules on NPM for deep extending objects. You can also take advantage of new JavaScript features, such as `const` and computed properties:
@@ -178,7 +183,7 @@ var STYLE = Style.registerStyle({
 }) //=> "fibanyf"
 ```
 
-**Tip:** The string returned by `registerKeyframes` is a hash of the contents, and the name of the animation.
+**Tip:** The string returned by `registerKeyframes` the name of the animation, which is a hash of the rule (you can also add a "display name" in development!).
 
 ### Rules
 
@@ -202,95 +207,57 @@ Style.registerRule('body', {
 
 **Tip:** Interpolation is not supported with `registerRule`.
 
-### Multiple Instances
-
-```js
-var Style1 = FreeStyle.create()
-var Style2 = FreeStyle.create()
-
-// Changes in `Style2` get reflected in `Style1`.
-// Use this to compose entire stylesheets or components!
-Style1.merge(Style2)
-Style1.unmerge(Style2)
-```
-
-### Output
-
-#### CSS String
+### CSS String
 
 ```js
 Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 ```
 
-#### Inject Styles
-
-**Please note:** This is a thin wrapper around `Style.getStyles()` that creates and appends a `<style />` element to the head (or a target element). A more complex solution would listen and react to style changes.
-
-```js
-Style.inject(/* optional target */)
-```
-
-### Utilities
-
-#### URL
-
-```js
-Style.url('http://example.com') //=> 'url("http://example.com")'
-```
-
-#### Join
-
-```js
-Style.join(STYLE, 'string', { yes: true, no: false }) //=> "f1e8b20b string yes"
-```
-
 ### Useful Libraries
 
-* [color](https://github.com/MoOx/color)
-* [postcss-js](https://github.com/postcss/postcss-js)
-* [prefix-lite](https://github.com/namuol/prefix-lite)
-* [inline-style-prefixer](https://github.com/rofrischmann/inline-style-prefixer)
-* [Add yours!](https://github.com/blakeembrey/free-style/issues/new)
+* [`color`](https://github.com/MoOx/color)
+* [`postcss-js`](https://github.com/postcss/postcss-js)
+* [`prefix-lite`](https://github.com/namuol/prefix-lite)
+* [`inline-style-prefixer`](https://github.com/rofrischmann/inline-style-prefixer)
+* [`classnames`](https://github.com/JedWatson/classnames)
+* [`insert-css`](https://github.com/substack/insert-css)
+* [`image-url`](https://github.com/ajoslin/image-url)
+* [**Add yours!**](https://github.com/blakeembrey/free-style/issues/new)
 
-### Lower Level Methods
-
-#### Custom Hash Algorithm
+### Custom Hash Algorithm
 
 Initialize **Free-Style** with a custom CSS class hash algorithm (by default it uses a simple, internal string hash).
 
 ```js
-create([hash]) //=> `FreeStyle.FreeStyle`
+create(hashFunction) //=> `FreeStyle.FreeStyle`
 ```
 
-#### Creating Instances Manually
+### Classes
 
 ```js
-FreeStyle.FreeStyle // Main stylesheet instance - returned from `create()`.
-FreeStyle.Style // Style's hold CSS and a generate a consistent hash of the contents.
-FreeStyle.AtRule // AtRule's are lighter-weight containers that can be nested inside `FreeStyle`.
-FreeStyle.Selector // Selector's hold the CSS selector and can be nested inside `Style`.
-FreeStyle.Cache // `FreeStyle`, `Style` and `AtRule` all extend the cache which maintains reference counts.
+FreeStyle.FreeStyle // Similar to writing a CSS file, holds styles and rules - returned from `create()`.
+FreeStyle.Style // Styles hold the CSS string and a generate a consistent hash of their contents.
+FreeStyle.Rule // Rules are lighter-weight containers that can be nested inside `FreeStyle` instances.
+FreeStyle.Selector // Selectors hold the CSS selector and can be nested inside `Style` instances.
+FreeStyle.Cache // `FreeStyle`, `Style` and `Rule` all extend the cache which maintains reference counts.
 ```
 
-#### Change Events
+### Other Properties and Methods
 
 ```js
-Style.addChangeListener(fn)
-Style.removeChangeListener(fn)
-```
-
-#### Other Methods
-
-```js
-Style.add(Style | AtRule) // Add to internal cache and emit change.
-Style.has(Style | AtRule) // Check if the style already exists.
-Style.remove(Style | AtRule) // Remove from internal cache and emit change.
-Style.count(Style | AtRule) // Return the number of instances mounted.
-
 var ChildStyle = Style.create()
 
-Style.merge(ChildStyle) // Merge the child styles and manage changes from instance.
-Style.unmerge(ChildStyle) // Unmerge the child styles and stop listening for changes.
+// The `changeId` property increments every time a new style is added. The allows implementors to skip style
+// element updates when duplicate styles are inserted, as the `changeId` property would remain the same.
+ChildStyle.changeId
+
+// Clones the style instance. This is useful when add/removing or merging/unmerging styles. If you didn't clone
+// the instance beforehand, it's possible a user to modify the style state (E.g. new styles/selectors) and the
+// next time you unmerge/remove the instance will remove too many styles.
+ChildStyle.clone()
+
+Style.merge(ChildStyle) // Merge the child styles into the current instance.
+Style.unmerge(ChildStyle) // Unmerge the child styles from the current instance.
 ```
 
 ## Legacy Browsers
