@@ -36,7 +36,7 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 * Create isomorphic applications by serving styles for *only* the components rendered (With third-parties, see [React Free-Style](http://github.com/blakeembrey/react-free-style))
 * Continue using CSS you already know (`{ '&:hover': { ... } }`)
 * Automatically namespace `@`-rule styles (`{ '@media (min-width: 500px)': { ... } }`)
-* Define multiple rules with arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
+* Overload CSS properties using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
 * Integrates with any third-party system
 * Extremely small and powerful API that works with any ecosystem (~360 SLOC)
 
@@ -87,7 +87,7 @@ console.log(BUTTON_STYLE) //=> "f65pi0b"
 
 **Tip:** The string returned by `registerStyle` is a unique hash of the content and should be used as a class in HTML.
 
-#### Multiple CSS Values
+#### Overload CSS Properties
 
 ```js
 Style.registerStyle({
