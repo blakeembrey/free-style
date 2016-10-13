@@ -56,20 +56,22 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 ```js
 var FreeStyle = require('free-style')
 
-// Create a container instance.
+// Create a stylesheet instance.
 var Style = FreeStyle.create()
 
-// Register a new, uniquely hashed style.
-var STYLE = Style.registerStyle({
+// Register a new style, returning a class name to use.
+var backgroundStyle = Style.registerStyle({
   backgroundColor: 'red'
 }) //=> "f14svl5e"
 
-// Inject a `<style />` element into the `<head>`.
-Style.inject()
+// Inject `<style>` into the `<head>`.
+var styleElement = document.createElement('style')
+styleElement.textContent = Style.getStyles()
+document.head.appendChild(styleElement)
 
-// Figure out how to render the class name after registering.
+// Render the style by using the class name.
 React.render(
-  <div className={STYLE}>Hello world!</div>,
+  <div className={backgroundStyle}>Hello world!</div>,
   document.body
 )
 ```
@@ -77,12 +79,12 @@ React.render(
 ### Styles
 
 ```js
-var BUTTON_STYLE = Style.registerStyle({
+var buttonStyle = Style.registerStyle({
   backgroundColor: 'red',
   padding: 10
 })
 
-console.log(BUTTON_STYLE) //=> "f65pi0b"
+console.log(buttonStyle) //=> "f65pi0b"
 ```
 
 **Tip:** The string returned by `registerStyle` is a unique hash of the content and should be used as a class in HTML.
@@ -148,7 +150,7 @@ var ellipsisStyle = {
   textOverflow: 'ellipsis'
 }
 
-var RED_ELLIPSIS_STYLE = Style.registerStyle(extend(
+var redEllipsisStyle = Style.registerStyle(extend(
   {
     color: 'red'
   },
@@ -172,13 +174,13 @@ const style = Style.registerStyle({
 ### Keyframes
 
 ```js
-var COLOR_ANIM = Style.registerKeyframes({
+var colorAnimation = Style.registerKeyframes({
   from: { color: 'red' },
   to: { color: 'blue' }
 }) //=> "h1j3ughx"
 
-var STYLE = Style.registerStyle({
-  animationName: COLOR_ANIM,
+var style = Style.registerStyle({
+  animationName: colorAnimation,
   animationDuration: '1s'
 }) //=> "fibanyf"
 ```
@@ -247,13 +249,13 @@ FreeStyle.Cache // `FreeStyle`, `Style` and `Rule` all extend the cache which ma
 ```js
 var ChildStyle = Style.create()
 
-// The `changeId` property increments every time a new style is added. The allows implementors to skip style
-// element updates when duplicate styles are inserted, as the `changeId` property would remain the same.
+// The `changeId` property increments when a new style is inserted. The allows implementors to skip style
+// element updates when styles are inserted twice, as the `changeId` property would remain the same.
 ChildStyle.changeId
 
-// Clones the style instance. This is useful when add/removing or merging/unmerging styles. If you didn't clone
-// the instance beforehand, it's possible a user to modify the style state (E.g. new styles/selectors) and the
-// next time you unmerge/remove the instance will remove too many styles.
+// Clones the style instance. This is useful when adding/removing or merging/unmerging styles. If you don't clone
+// the instance beforehand, it's possible for a user to modify the style state with new styles/selectors, and the
+// next time you unmerge/remove the instance will be inconsistent with the original.
 ChildStyle.clone()
 
 Style.merge(ChildStyle) // Merge the child styles into the current instance.
