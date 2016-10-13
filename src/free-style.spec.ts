@@ -5,12 +5,14 @@ import { create } from './free-style'
 test('free style', (t) => {
   t.test('output hashed classes', t => {
     const Style = create()
+    let changeId = Style.changeId
 
     const className = Style.registerStyle({
       color: 'red'
     })
 
     t.equal(Style.getStyles(), `.${className}{color:red}`)
+    t.notEqual(Style.changeId, changeId)
 
     t.end()
   })
@@ -78,7 +80,8 @@ test('free style', (t) => {
 
     t.equal(
       Style.getStyles(),
-      `.${className}{color:red}.${className} > .${className}{color:blue}.${className} > .${className} .class-name{background:green}`
+      `.${className}{color:red}.${className} > .${className}{color:blue}` +
+      `.${className} > .${className} .class-name{background:green}`
     )
 
     t.end()
@@ -99,19 +102,84 @@ test('free style', (t) => {
 
   t.test('merge duplicate styles', t => {
     const Style = create()
+    let changeId = Style.changeId
 
     const className1 = Style.registerStyle({
       background: 'blue',
       color: 'red'
     })
 
+    t.notEqual(Style.changeId, changeId)
+
+    // Checking the duplicate style _does not_ trigger a "change".
+    changeId = Style.changeId
+
     const className2 = Style.registerStyle({
       color: 'red',
       background: 'blue'
     })
 
+    t.equal(Style.changeId, changeId)
     t.equal(className1, className2)
     t.equal(Style.getStyles(), `.${className1}{background:blue;color:red}`)
+
+    t.end()
+  })
+
+  t.test('allow debug css prefixes', t => {
+    const Style = create(undefined, true)
+    let changeId = Style.changeId
+
+    const className1 = Style.registerStyle(
+      {
+        color: 'red'
+      },
+      'className1'
+    )
+
+    t.notEqual(Style.changeId, changeId)
+
+    changeId = Style.changeId
+
+    const className2 = Style.registerStyle(
+      {
+        color: 'red'
+      },
+      'className2'
+    )
+
+    t.notEqual(Style.changeId, changeId)
+    t.notEqual(className1, className2)
+    t.equal(Style.getStyles(), `.${className1},.${className2}{color:red}`)
+
+    t.end()
+  })
+
+  t.test('ignore debug prefixes in "production"', t => {
+    const Style = create(undefined, false)
+    let changeId = Style.changeId
+
+    const className1 = Style.registerStyle(
+      {
+        color: 'red'
+      },
+      'className1'
+    )
+
+    t.notEqual(Style.changeId, changeId)
+
+    changeId = Style.changeId
+
+    const className2 = Style.registerStyle(
+      {
+        color: 'red'
+      },
+      'className2'
+    )
+
+    t.equal(Style.changeId, changeId)
+    t.equal(className1, className2)
+    t.equal(Style.getStyles(), `.${className1}{color:red}`)
 
     t.end()
   })
@@ -150,6 +218,7 @@ test('free style', (t) => {
   t.test('merge @-rules', t => {
     const Style = create()
     const mediaQuery = '@media (min-width: 600px)'
+    let changeId = Style.changeId
 
     const className1 = Style.registerStyle({
       [mediaQuery]: {
@@ -157,15 +226,23 @@ test('free style', (t) => {
       }
     })
 
+    t.notEqual(Style.changeId, changeId)
+
+    // Checking the next register _does_ trigger a change.
+    changeId = Style.changeId
+
     const className2 = Style.registerStyle({
       [mediaQuery]: {
         color: 'blue'
       }
     })
 
+    t.notEqual(Style.changeId, changeId)
+
     t.equal(
       Style.getStyles(),
-      `@media (min-width: 600px){.${className1}{color:red}.${className2}{color:blue}}`)
+      `@media (min-width: 600px){.${className1}{color:red}.${className2}{color:blue}}`
+    )
 
     t.end()
   })
@@ -232,15 +309,6 @@ test('free style', (t) => {
       `.${className1}{color:red}`
     )
 
-    Style1.empty()
-
-    t.equal(Style1.getStyles(), '')
-
-    // Check private properties for remaining state.
-    t.deepEqual((Style1 as any)._keys, [])
-    t.deepEqual((Style1 as any)._counts, {})
-    t.deepEqual((Style1 as any)._children, {})
-
     t.end()
   })
 
@@ -278,15 +346,19 @@ test('free style', (t) => {
 
   t.test('register arbitrary at rule', t => {
     const Style = create()
+    let changeId = Style.changeId
 
     Style.registerRule('@font-face', {
       fontFamily: '"Bitstream Vera Serif Bold"',
       src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
     })
 
+    t.notEqual(Style.changeId, changeId)
+
     t.equal(
       Style.getStyles(),
-      '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}'
+      '@font-face{font-family:"Bitstream Vera Serif Bold";' +
+      'src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}'
     )
 
     t.end()
@@ -307,8 +379,9 @@ test('free style', (t) => {
 
     t.equal(
       Style.getStyles(),
-      '@font-face{font-family:"Bitstream Vera Serif Bold";src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}' +
-        '@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}'
+      '@font-face{font-family:"Bitstream Vera Serif Bold";' +
+      'src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}' +
+      '@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}'
     )
 
     t.end()
@@ -360,52 +433,16 @@ test('free style', (t) => {
 
     t.equal(
       Style.getStyles(),
-      `.${x}{background:red}.${y}{background:palegreen}@media (min-width: 400px){.${x}{background:yellow}.${y}{background:pink}}`
+      `.${x}{background:red}.${y}{background:palegreen}` +
+      `@media (min-width: 400px){.${x}{background:yellow}.${y}{background:pink}}`
     )
 
     t.end()
   })
 
-  t.test('events', t => {
-    t.test('propagate changes', t => {
-      const Style1 = create()
-      const Style2 = create()
-
-      Style1.merge(Style2)
-
-      t.equal(Style1.getStyles(), '')
-
-      const className2 = Style2.registerStyle({
-        color: 'red'
-      })
-
-      t.equal(Style1.getStyles(), `.${className2}{color:red}`)
-
-      t.end()
-    })
-  })
-
-  t.test('utils', t => {
-    const Style = create()
-
-    t.test('url', t => {
-      t.equal(Style.url('http://example.com'), 'url("http://example.com")')
-
-      t.end()
-    })
-
-    t.test('join', t => {
-      t.equal(
-        Style.join('a', { b: true, noop: false }, null, ['c', 'd']),
-        'a b c d'
-      )
-
-      t.end()
-    })
-  })
-
   t.test('keep order of nested params', t => {
     const Style = create()
+    let changeId = Style.changeId
 
     const className = Style.registerStyle({
       width: '20rem',
@@ -416,6 +453,8 @@ test('free style', (t) => {
         width: 1000
       }
     })
+
+    t.notEqual(Style.changeId, changeId)
 
     t.equal(
       Style.getStyles(),
@@ -480,15 +519,11 @@ test('free style', (t) => {
 
   t.test('detect hash collisions', t => {
     const Style = create()
-    let className: string
+    const className = Style.registerStyle({ color: '#0008d0' })
 
     t.throws(
-      () => {
-        className = Style.registerStyle({ color: '#0008d0' })
-
-        Style.registerStyle({ color: '#000f82' })
-      },
-      /Hash collision/
+      () => Style.registerStyle({ color: '#000f82' }),
+      'Hash collision: {color:#000f82} === .f1pqsan1{color:#0008d0}'
     )
 
     t.equal(Style.getStyles(), `.${className}{color:#0008d0}`)
