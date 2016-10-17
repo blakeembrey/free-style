@@ -207,7 +207,7 @@ Style.registerRule('body', {
 })
 ```
 
-**Tip:** Interpolation is not supported with `registerRule`.
+**Tip:** Interpolation of parent selectors (`&` => `.generatedName`) is not supported with `registerRule`.
 
 ### CSS String
 
