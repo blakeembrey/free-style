@@ -8,10 +8,8 @@ notifications:
     on_failure: change
 
 node_js:
-  - "0.10"
-  - "0.12"
-  - "4"
-  - "stable"
+  - '4'
+  - stable
 
 after_script:
   - npm install coveralls@2
