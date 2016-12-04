@@ -4,6 +4,11 @@
 let instanceId = 0
 
 /**
+ * The unique id is used to get a unique hash on styles (no merging).
+ */
+let uniqueId = 0
+
+/**
  * Valid CSS property names.
  */
 export type PropertyName = string
@@ -23,6 +28,11 @@ export type UserStyles = any
  */
 type Properties = Array<[PropertyName, PropertyValue]>
 type NestedStyles = Array<[PropertyName, UserStyles]>
+
+/**
+ * Tag styles with this string to get unique hash outputs.
+ */
+export const IS_UNIQUE = '__DO_NOT_DEDUPE_STYLE__'
 
 /**
  * CSS properties that are valid unit-less numbers.
@@ -127,12 +137,15 @@ function sortTuples <T extends any[]> (value: T[]): T[] {
 function parseUserStyles (styles: UserStyles, hasNestedStyles: boolean) {
   const properties: Properties = []
   const nestedStyles: NestedStyles = []
+  let isUnique = false
 
   // Sort keys before adding to styles.
   for (const key of Object.keys(styles)) {
     const value = styles[key]
 
-    if (isNestedStyle(value)) {
+    if (key === IS_UNIQUE) {
+      isUnique = !!value
+    } else if (isNestedStyle(value)) {
       nestedStyles.push([key.trim(), value])
     } else {
       properties.push([hyphenate(key.trim()), value])
@@ -141,7 +154,8 @@ function parseUserStyles (styles: UserStyles, hasNestedStyles: boolean) {
 
   return {
     properties: sortTuples(properties),
-    nestedStyles: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles)
+    nestedStyles: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles),
+    isUnique
   }
 }
 
@@ -182,13 +196,13 @@ function collectHashedStyles (container: Cache<any>, userStyles: UserStyles, isS
   const styles: [Cache<any>, string, Style][] = []
 
   function stylize (cache: Cache<any>, userStyles: UserStyles, selector: string) {
-    const { properties, nestedStyles } = parseUserStyles(userStyles, isStyle)
+    const { properties, nestedStyles, isUnique } = parseUserStyles(userStyles, isStyle)
     const styleString = stringifyProperties(properties)
     let pid = styleString
 
     // Only create style instances when styles exists.
     if (styleString) {
-      const style = new Style(styleString, cache.hash)
+      const style = new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
       cache.add(style)
       styles.push([cache, selector, style])
     }
@@ -235,7 +249,7 @@ function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles, di
  * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
  */
 function registerUserRule (container: FreeStyle | Rule, selector: string, styles: UserStyles): void {
-  const { properties, nestedStyles } = parseUserStyles(styles, false)
+  const { properties, nestedStyles, isUnique } = parseUserStyles(styles, false)
 
   // Throw when using properties and nested styles together in rule.
   if (properties.length && nestedStyles.length) {
@@ -243,7 +257,7 @@ function registerUserRule (container: FreeStyle | Rule, selector: string, styles
   }
 
   const styleString = stringifyProperties(properties)
-  const rule = new Rule(selector, styleString, container.hash)
+  const rule = new Rule(selector, styleString, container.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
 
   for (const [name, value] of nestedStyles) {
     registerUserRule(rule, name, value)

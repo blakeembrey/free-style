@@ -171,6 +171,30 @@ const style = Style.registerStyle({
 })
 ```
 
+#### Unique Style Ouput
+
+Sometimes you need to skip the default de-duping behaviour of `free-style`. For this, you can use `IS_UNIQUE` and enforce every style to be output separately:
+
+```js
+Style.registerStyle({
+  color: 'blue',
+  '&::-webkit-input-placeholder': {
+    color: `rgba(0, 0, 0, 0)`,
+    [IS_UNIQUE]: true
+  },
+  '&::-moz-placeholder': {
+    color: `rgba(0, 0, 0, 0)`,
+    [IS_UNIQUE]: true
+  },
+  '&::-ms-input-placeholder': {
+    color: `rgba(0, 0, 0, 0)`,
+    [IS_UNIQUE]: true
+  }
+}) //=> "f13byakl"
+
+Style.getStyles() //=> ".f13byakl{color:blue}.f13byakl::-webkit-input-placeholder{color:rgba(0, 0, 0, 0)}.f13byakl::-moz-placeholder{color:rgba(0, 0, 0, 0)}.f13byakl::-ms-input-placeholder{color:rgba(0, 0, 0, 0)}"
+```
+
 ### Keyframes
 
 ```js

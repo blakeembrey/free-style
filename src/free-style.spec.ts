@@ -1,6 +1,6 @@
 import test = require('blue-tape')
 import crypto = require('crypto')
-import { create } from './free-style'
+import { create, IS_UNIQUE } from './free-style'
 
 test('free style', (t) => {
   t.test('output hashed classes', t => {
@@ -568,6 +568,36 @@ test('free style', (t) => {
         })
       },
       /Hash collision/
+    )
+
+    t.end()
+  })
+
+  t.test('disable style deduping', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      color: 'blue',
+      '&::-webkit-input-placeholder': {
+        color: `rgba(0, 0, 0, 0)`,
+        [IS_UNIQUE]: true
+      },
+      '&::-moz-placeholder': {
+        color: `rgba(0, 0, 0, 0)`,
+        [IS_UNIQUE]: true
+      },
+      '&::-ms-input-placeholder': {
+        color: `rgba(0, 0, 0, 0)`,
+        [IS_UNIQUE]: true
+      }
+    })
+
+    t.equal(
+      Style.getStyles(),
+      `.${className}{color:blue}` +
+      `.${className}::-webkit-input-placeholder{color:rgba(0, 0, 0, 0)}` +
+      `.${className}::-moz-placeholder{color:rgba(0, 0, 0, 0)}` +
+      `.${className}::-ms-input-placeholder{color:rgba(0, 0, 0, 0)}`
     )
 
     t.end()
