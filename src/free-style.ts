@@ -32,7 +32,7 @@ type NestedStyles = Array<[PropertyName, UserStyles]>
 /**
  * Tag styles with this string to get unique hash outputs.
  */
-export const IS_UNIQUE = '__DO_NOT_DEDUPE_STYLE__'
+export const IS_UNIQUE: '__DO_NOT_DEDUPE_STYLE__' = '__DO_NOT_DEDUPE_STYLE__'
 
 /**
  * CSS properties that are valid unit-less numbers.
