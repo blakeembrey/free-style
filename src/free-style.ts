@@ -32,7 +32,7 @@ type NestedStyles = Array<[PropertyName, UserStyles]>
 /**
  * Tag styles with this string to get unique hash outputs.
  */
-export const IS_UNIQUE: '__DO_NOT_DEDUPE_STYLE__' = '__DO_NOT_DEDUPE_STYLE__'
+export const IS_UNIQUE = '__DO_NOT_DEDUPE_STYLE__'
 
 /**
  * CSS properties that are valid unit-less numbers.
@@ -118,7 +118,7 @@ export function stringHash (str: string): string {
  */
 function styleToString (name: PropertyName, value: string | number) {
   if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[name]) {
-    value += 'px'
+    value = `${value}px`
   }
 
   return `${name}:${String(value).replace(/([\{\}\[\]])/g, '\\$1')}`
