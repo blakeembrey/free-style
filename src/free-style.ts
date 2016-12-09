@@ -38,7 +38,7 @@ export const IS_UNIQUE: '__DO_NOT_DEDUPE_STYLE__' = '__DO_NOT_DEDUPE_STYLE__'
  * CSS properties that are valid unit-less numbers.
  */
 const CSS_NUMBER: { [propertyName: string]: boolean } = {
-  'animation-fill-count': true,
+  'animation-iteration-count': true,
   'box-flex': true,
   'box-flex-group': true,
   'column-count': true,
