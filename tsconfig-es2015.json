@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "outDir": "dist/es2015",
+    "module": "es2015",
+    "declaration": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "inlineSources": true,
+    "strictNullChecks": true
+  },
+  "files": [
+    "src/free-style.ts",
+    "src/free-style.spec.ts",
+    "typings/index.d.ts"
+  ]
+}
