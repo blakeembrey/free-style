@@ -243,7 +243,6 @@ Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 
 * [`color`](https://github.com/MoOx/color)
 * [`postcss-js`](https://github.com/postcss/postcss-js)
-* [`prefix-lite`](https://github.com/namuol/prefix-lite)
 * [`inline-style-prefixer`](https://github.com/rofrischmann/inline-style-prefixer)
 * [`classnames`](https://github.com/JedWatson/classnames)
 * [`insert-css`](https://github.com/substack/insert-css)
