@@ -5,7 +5,7 @@
   "main": "dist/free-style.js",
   "typings": "dist/free-style.d.ts",
   "module": "dist/es2015/free-style.js",
-  "jsnext:main": "dist/es2015/free-style.d.ts",
+  "jsnext:main": "dist/es2015/free-style.js",
   "files": [
     "dist/",
     "LICENSE"
