@@ -1,14 +1,9 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "es5",
     "outDir": "dist/es2015",
     "module": "es2015",
-    "declaration": true,
-    "noImplicitAny": true,
-    "removeComments": false,
-    "sourceMap": true,
-    "inlineSources": true,
-    "strictNullChecks": true
+    "declaration": false
   },
   "files": [
     "src/free-style.ts",
