@@ -12,7 +12,6 @@
   },
   "files": [
     "src/free-style.ts",
-    "src/free-style.spec.ts",
     "typings/index.d.ts"
   ]
 }
