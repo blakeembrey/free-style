@@ -1,5 +1,5 @@
-import * as test from 'blue-tape'
-import * as crypto from 'crypto'
+import test = require('blue-tape')
+import crypto = require('crypto')
 import { create, IS_UNIQUE } from './free-style'
 
 test('free style', (t) => {
