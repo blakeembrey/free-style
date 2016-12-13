@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "lint": "tslint \"src/**/*.ts\"",
-    "build": "rimraf dist/ && tsc && tsc -P tsconfig-es2015.json",
+    "build": "rimraf dist/ dist.es2015/ && tsc && tsc -P tsconfig-es2015.json",
     "benchmarks": "ts-node benchmarks/index.ts",
     "test-spec": "blue-tape dist/**/*.spec.js | tap-spec",
     "test-cov": "istanbul cover --print none -x dist/**/*.spec.js node_modules/blue-tape/bin/blue-tape.js -- dist/**/*.spec.js | tap-spec",
