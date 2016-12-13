@@ -169,13 +169,22 @@ function stringifyProperties (properties: Properties) {
   let result: string[] = []
 
   for (const [name, value] of properties) {
-    if (value != null) {
-      const value2 = typeof value === 'function' ? value() : value
-      if (Array.isArray(value2)) {
-        result.push(value2.filter(x => x != null).map(x => styleToString(name, x)).join(';'))
-      } else {
-        result.push(styleToString(name, value2))
-      }
+    // skip null values
+    if (value == null) {
+      continue
+    }
+    // resolve if a function
+    const value2 = typeof value === 'function' ? value() : value
+
+    // check again for null because value could be null
+    if (value2 == null) {
+      continue
+    }
+
+    if (Array.isArray(value2)) {
+      result.push(value2.filter(x => x != null).map(x => styleToString(name, x)).join(';'))
+    } else {
+      result.push(styleToString(name, value2))
     }
   }
 
