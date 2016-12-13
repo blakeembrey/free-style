@@ -602,4 +602,44 @@ test('free style', (t) => {
 
     t.end()
   })
+
+  t.test('functions are expanded into string values', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      color() {
+        return 'blue'
+      },
+      '&:hover': {
+        backgroundColor() {
+          return 'red'
+        }
+      }
+    })
+
+    t.equal(
+      Style.getStyles(),
+      `.${className}{color:blue}` +
+      `.${className}:hover{background-color:red}`
+    )
+
+    t.end()
+  })
+
+  t.test('functions can expand fallback values correctly', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      background() {
+        return ['black', 'rgba(0,0,0,0.5)']
+      }
+    })
+
+    t.equal(
+      Style.getStyles(),
+      `.${className}{background:black;background:rgba(0,0,0,0.5)}`
+    )
+
+    t.end()
+  })
 })

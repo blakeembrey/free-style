@@ -170,10 +170,11 @@ function stringifyProperties (properties: Properties) {
 
   for (const [name, value] of properties) {
     if (value != null) {
-      if (Array.isArray(value)) {
-        result.push(value.filter(x => x != null).map(x => styleToString(name, x)).join(';'))
+      const value2 = typeof value === 'function' ? value() : value
+      if (Array.isArray(value2)) {
+        result.push(value2.filter(x => x != null).map(x => styleToString(name, x)).join(';'))
       } else {
-        result.push(styleToString(name, value))
+        result.push(styleToString(name, value2))
       }
     }
   }
