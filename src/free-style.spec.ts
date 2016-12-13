@@ -642,4 +642,22 @@ test('free style', (t) => {
 
     t.end()
   })
+
+  t.test('nulls from functions are ignored', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      background() {
+        return null
+      },
+      color: 'red'
+    })
+
+    t.equal(
+      Style.getStyles(),
+      `.${className}{color:red}`
+    )
+
+    t.end()
+  })
 })
