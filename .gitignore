@@ -3,4 +3,5 @@ coverage
 .DS_Store
 npm-debug.log
 dist
+dist.es2015
 typings

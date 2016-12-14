@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist.es2015",
+    "module": "es2015",
+    "declaration": false
+  },
+  "files": [
+    "src/free-style.ts",
+    "typings/index.d.ts"
+  ]
+}
