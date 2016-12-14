@@ -7,6 +7,7 @@
   "jsnext:main": "dist.es2015/free-style.js",
   "files": [
     "dist/",
+    "dist.es2015",
     "LICENSE"
   ],
   "scripts": {
