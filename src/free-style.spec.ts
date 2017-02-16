@@ -465,21 +465,36 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('throw when using properties and nested styles with rule', t => {
+  t.test('should work with properties and nested styles in a single rule', t => {
     const Style = create()
 
-    t.throws(
-      () => {
-        Style.registerRule('body', {
-          height: '100%',
-          a: {
-            color: 'red'
-          }
-        })
-      },
-      TypeError
-    )
+    Style.registerRule('body', {
+      height: '100%',
+      a: {
+        color: 'red'
+      }
+    })
 
+    t.equal(Style.getStyles(), 'body{height:100%}body a{color:red}')
+    t.end()
+  })
+
+  t.test('should interpolate recursively with a rule', t => {
+    const Style = create()
+
+    Style.registerRule('body', {
+      height: '100%',
+      a: {
+        color: 'red'
+      },
+      '@print': {
+        a: {
+          color: 'blue'
+        }
+      }
+    })
+
+    t.equal(Style.getStyles(), 'body{height:100%}body a{color:red}@print{body a{color:blue}}')
     t.end()
   })
 

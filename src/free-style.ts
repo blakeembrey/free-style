@@ -251,22 +251,29 @@ function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles, di
 /**
  * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
  */
-function registerUserRule (container: FreeStyle | Rule, selector: string, styles: UserStyles): void {
-  const { properties, nestedStyles, isUnique } = parseUserStyles(styles, false)
-
-  // Throw when using properties and nested styles together in rule.
-  if (properties.length && nestedStyles.length) {
-    throw new TypeError(`Registering a CSS rule can not use properties with nested styles`)
-  }
-
+function registerUserRule (cache: Cache<Rule | Style>, selector: string, styles: UserStyles, parent?: string): void {
+  const { properties, nestedStyles, isUnique } = parseUserStyles(styles, true)
   const styleString = stringifyProperties(properties)
-  const rule = new Rule(selector, styleString, container.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
 
-  for (const [name, value] of nestedStyles) {
-    registerUserRule(rule, name, value)
+  if (isAtRule(selector)) {
+    const rule = new Rule(selector, styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
+
+    for (const [name, value] of nestedStyles) {
+      registerUserRule(rule, name, value, parent)
+    }
+
+    cache.add(rule)
+  } else {
+    const style = new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
+    const key = parent ? interpolate(selector, parent) : selector
+
+    style.add(new Selector(key, style.hash, undefined))
+    cache.add(style)
+
+    for (const [name, value] of nestedStyles) {
+      registerUserRule(cache, name, value, key)
+    }
   }
-
-  container.add(rule)
 }
 
 /**
