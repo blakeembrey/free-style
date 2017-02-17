@@ -16,18 +16,20 @@ export type PropertyName = string
 /**
  * Valid CSS property values.
  */
-export type PropertyValue = null | undefined | number | string | (string | number)[]
+export type PropertyValue = null | undefined | number | boolean | string | Array<null | undefined | number | boolean | string>
 
 /**
  * User styles object.
  */
-export type UserStyles = any
+export interface Styles {
+  [selector: string]: PropertyValue | Styles
+}
 
 /**
  * Storing properties alphabetically ordered during parse.
  */
 type Properties = Array<[PropertyName, PropertyValue]>
-type NestedStyles = Array<[PropertyName, UserStyles]>
+type NestedStyles = Array<[PropertyName, Styles]>
 
 /**
  * Tag styles with this string to get unique hash outputs.
@@ -93,7 +95,7 @@ function isAtRule (propertyName: PropertyName): boolean {
 /**
  * Check if a value is a nested style definition.
  */
-function isNestedStyle (value: any): boolean {
+function isNestedStyle (value: any): value is Styles {
   return value != null && typeof value === 'object' && !Array.isArray(value)
 }
 
@@ -119,7 +121,7 @@ export function stringHash (str: string): string {
 /**
  * Transform a style string to a CSS string.
  */
-function styleToString (name: PropertyName, value: string | number) {
+function styleToString (name: PropertyName, value: string | number | boolean) {
   if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[name]) {
     value = `${value}px`
   }
@@ -137,7 +139,7 @@ function sortTuples <T extends any[]> (value: T[]): T[] {
 /**
  * Categorize user styles.
  */
-function parseUserStyles (styles: UserStyles, hasNestedStyles: boolean) {
+function parseUserStyles (styles: Styles, hasNestedStyles: boolean) {
   const properties: Properties = []
   const nestedStyles: NestedStyles = []
   let isUnique = false
@@ -171,7 +173,9 @@ function stringifyProperties (properties: Properties) {
   for (const [name, value] of properties) {
     if (value != null) {
       if (Array.isArray(value)) {
-        result.push(value.filter(x => x != null).map(x => styleToString(name, x)).join(';'))
+        value.forEach(function (value) {
+          value && result.push(styleToString(name, value))
+        })
       } else {
         result.push(styleToString(name, value))
       }
@@ -193,50 +197,48 @@ function interpolate (selector: string, parent: string) {
 }
 
 /**
- * Register all styles, but collect for post-selector correction using the hash.
+ * Recursive loop building styles with deferred selectors.
  */
-function collectHashedStyles (container: Cache<any>, userStyles: UserStyles, isStyle: boolean, displayName?: string) {
-  const styles: [Cache<any>, string, Style][] = []
+function stylize (cache: Cache<any>, userStyles: Styles, selector: string, list: [Cache<any>, string, Style][], isStyle: boolean) {
+  const { properties, nestedStyles, isUnique } = parseUserStyles(userStyles, isStyle)
+  const styleString = stringifyProperties(properties)
+  let pid = styleString
 
-  function stylize (cache: Cache<any>, userStyles: UserStyles, selector: string) {
-    const { properties, nestedStyles, isUnique } = parseUserStyles(userStyles, isStyle)
-    const styleString = stringifyProperties(properties)
-    let pid = styleString
-
-    // Only create style instances when styles exists.
-    if (styleString) {
-      const style = new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
-      cache.add(style)
-      styles.push([cache, selector, style])
-    }
-
-    for (const [name, value] of nestedStyles) {
-      pid += name
-
-      if (isAtRule(name)) {
-        const rule = cache.add(new Rule(name, undefined, cache.hash))
-        pid += stylize(rule, value, selector)
-      } else {
-        pid += stylize(cache, value, isStyle ? interpolate(name, selector) : name)
-      }
-    }
-
-    return pid
+  // Only create style instances when styles exists.
+  if (styleString) {
+    const style = new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
+    cache.add(style)
+    list.push([cache, selector, style])
   }
 
-  // Create a temporary cache to handle changes/mutations before re-assigning later.
-  const cache = new Cache<Style | Rule>(container.hash)
-  const pid = stylize(cache, userStyles, '&')
+  for (const [name, value] of nestedStyles) {
+    pid += name
+
+    if (isAtRule(name)) {
+      const rule = cache.add(new Rule(name, undefined, cache.hash))
+      pid += stylize(rule, value, selector, list, isStyle)
+    } else {
+      pid += stylize(cache, value, isStyle ? interpolate(name, selector) : name, list, isStyle)
+    }
+  }
+
+  return pid
+}
+
+/**
+ * Register all styles, but collect for selector interpolation using the hash.
+ */
+function collectHashedStyles (cache: Cache<Style | Rule>, userStyles: Styles, isStyle: boolean, displayName?: string) {
+  const list: [Cache<any>, string, Style][] = []
+  const pid = stylize(cache, userStyles, '&', list, isStyle)
 
   const hash = `f${cache.hash(pid)}`
   const id = displayName ? `${displayName}_${hash}` : hash
 
-  for (const [cache, selector, style] of styles) {
+  for (const [cache, selector, style] of list) {
     const key = isStyle ? interpolate(selector, `.${id}`) : selector
     cache.get(style).add(new Selector(key, style.hash, undefined, pid))
   }
-
-  container.merge(cache)
 
   return { pid, id }
 }
@@ -244,49 +246,52 @@ function collectHashedStyles (container: Cache<any>, userStyles: UserStyles, isS
 /**
  * Recursively register styles on a container instance.
  */
-function registerUserStyles (container: FreeStyle | Rule, styles: UserStyles, displayName?: string): string {
-  return collectHashedStyles(container, styles, true, displayName).id
-}
-
-/**
- * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
- */
-function registerUserRule (cache: Cache<Rule | Style>, selector: string, styles: UserStyles, parent?: string): void {
-  const { properties, nestedStyles, isUnique } = parseUserStyles(styles, true)
-  const styleString = stringifyProperties(properties)
-
-  if (isAtRule(selector)) {
-    const rule = new Rule(selector, styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
-
-    for (const [name, value] of nestedStyles) {
-      registerUserRule(rule, name, value, parent)
-    }
-
-    cache.add(rule)
-  } else {
-    const style = new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
-    const key = parent ? interpolate(selector, parent) : selector
-
-    style.add(new Selector(key, style.hash, undefined))
-    cache.add(style)
-
-    for (const [name, value] of nestedStyles) {
-      registerUserRule(cache, name, value, key)
-    }
-  }
+function registerStyle (container: FreeStyle, styles: Styles, displayName?: string): string {
+  const cache = new Cache<Rule | Style>(container.hash)
+  const { id } = collectHashedStyles(cache, styles, true, displayName)
+  container.merge(cache)
+  return id
 }
 
 /**
  * Parse and register keyframes on the current instance.
  */
-function registerUserHashedRule (container: FreeStyle, prefix: string, styles: UserStyles, displayName?: string) {
-  const bucket = new Cache<Rule | Style>(container.hash)
-  const { pid, id } = collectHashedStyles(bucket, styles, false, displayName)
+function registerHashRule (container: FreeStyle, prefix: string, styles: Styles, displayName?: string) {
+  const cache = new Cache<Rule | Style>(container.hash)
+  const { pid, id } = collectHashedStyles(cache, styles, false, displayName)
 
   const atRule = new Rule(`${prefix} ${id}`, undefined, container.hash, undefined, pid)
-  atRule.merge(bucket)
+  atRule.merge(cache)
   container.add(atRule)
   return id
+}
+
+/**
+ * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
+ */
+function registerRule (container: FreeStyle | Rule, selector: string, styles: Styles, parent?: string): void {
+  const { properties, nestedStyles, isUnique } = parseUserStyles(styles, true)
+  const styleString = stringifyProperties(properties)
+
+  if (isAtRule(selector)) {
+    const rule = new Rule(selector, styleString, container.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
+
+    for (const [name, value] of nestedStyles) {
+      registerRule(rule, name, value, parent)
+    }
+
+    container.add(rule)
+  } else {
+    const style = new Style(styleString, container.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
+    const key = parent ? interpolate(selector, parent) : selector
+
+    style.add(new Selector(key, style.hash, undefined))
+    container.add(style)
+
+    for (const [name, value] of nestedStyles) {
+      registerRule(container, name, value, key)
+    }
+  }
 }
 
 /**
@@ -501,16 +506,20 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
     super(hash)
   }
 
-  registerStyle (styles: UserStyles, displayName?: string) {
-    return registerUserStyles(this, styles, this.debug ? displayName : undefined)
+  registerStyle (styles: Styles, displayName?: string) {
+    return registerStyle(this, styles, this.debug ? displayName : undefined)
   }
 
-  registerKeyframes (keyframes: UserStyles, displayName?: string) {
-    return registerUserHashedRule(this, '@keyframes', keyframes, this.debug ? displayName : undefined)
+  registerKeyframes (keyframes: Styles, displayName?: string) {
+    return registerHashRule(this, '@keyframes', keyframes, this.debug ? displayName : undefined)
   }
 
-  registerRule (rule: string, styles: UserStyles) {
-    return registerUserRule(this, rule, styles)
+  registerHashRule (rule: string, styles: Styles, displayName?: string) {
+    return registerHashRule(this, rule, styles, this.debug ? displayName : undefined)
+  }
+
+  registerRule (rule: string, styles: Styles) {
+    return registerRule(this, rule, styles)
   }
 
   getStyles () {
@@ -530,6 +539,6 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
 /**
  * Exports a simple function to create a new instance.
  */
-export function create (hash = stringHash, debug = process.env.NODE_ENV !== 'production') {
+export function create (hash = stringHash, debug = process.env['NODE_ENV'] !== 'production') {
   return new FreeStyle(hash, debug)
 }

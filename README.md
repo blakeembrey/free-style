@@ -209,7 +209,9 @@ var style = Style.registerStyle({
 }) //=> "fibanyf"
 ```
 
-**Tip:** The string returned by `registerKeyframes` the name of the animation, which is a hash of the rule (you can also add a "display name" in development!).
+**Tip:** The string returned by `registerKeyframes` the name of the animation, which is a hash of the rule (you can also add a "display name" in development).
+
+**P.S.** `registerKeyframes` uses the `registerHashRule` method internally. If you'd like to use the hash behaviour for other rules, you can use the `registerHashRule` method instead (e.g. `registerHashRule('@-webkit-keyframes', {})`).
 
 ### Rules
 

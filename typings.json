@@ -1,8 +1,8 @@
 {
-  "globalDependencies": {
-    "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f"
-  },
   "devDependencies": {
-    "blue-tape": "github:typings/typed-blue-tape#a4e41a85d6f760e7c60088127968eae7d3a556fa"
+    "blue-tape": "registry:npm/blue-tape#0.2.0+20160723033700"
+  },
+  "globalDevDependencies": {
+    "node": "registry:env/node#6.0.0+20170213133316"
   }
 }
