@@ -414,6 +414,27 @@ test('free style', (t) => {
     t.end()
   })
 
+  t.test('de-dupe using custom rules', t => {
+    const Style = create()
+    let changeId = Style.changeId
+
+    const className1 = Style.registerStyle({
+      color: 'red'
+    })
+
+    t.notEqual(Style.changeId, changeId)
+    changeId = Style.changeId
+
+    Style.registerRule('.test', {
+      color: 'red'
+    })
+
+    t.notEqual(Style.changeId, changeId)
+    t.equal(Style.getStyles(), `.${className1},.test{color:red}`)
+
+    t.end()
+  })
+
   t.test('cache order by latest insertion', t => {
     const Style = create()
 

@@ -139,7 +139,7 @@ function sortTuples <T extends any[]> (value: T[]): T[] {
 /**
  * Categorize user styles.
  */
-function parseUserStyles (styles: Styles, hasNestedStyles: boolean) {
+function parseStyles (styles: Styles, hasNestedStyles: boolean) {
   const properties: Properties = []
   const nestedStyles: NestedStyles = []
   let isUnique = false
@@ -199,26 +199,33 @@ function interpolate (selector: string, parent: string) {
 /**
  * Recursive loop building styles with deferred selectors.
  */
-function stylize (cache: Cache<any>, userStyles: Styles, selector: string, list: [Cache<any>, string, Style][], isStyle: boolean) {
-  const { properties, nestedStyles, isUnique } = parseUserStyles(userStyles, isStyle)
+function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [Style, string][], parent?: string) {
+  const { properties, nestedStyles, isUnique } = parseStyles(styles, !!selector)
   const styleString = stringifyProperties(properties)
   let pid = styleString
 
-  // Only create style instances when styles exists.
-  if (styleString) {
-    const style = new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
-    cache.add(style)
-    list.push([cache, selector, style])
-  }
+  if (isAtRule(selector)) {
+    const rule = cache.add(new Rule(selector, parent ? undefined : styleString, cache.hash))
 
-  for (const [name, value] of nestedStyles) {
-    pid += name
+    // Nested styles support (e.g. `.foo > @media > .bar`).
+    if (styleString && parent) {
+      const style = rule.add(new Style(styleString, rule.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
+      list.push([style, parent])
+    }
 
-    if (isAtRule(name)) {
-      const rule = cache.add(new Rule(name, undefined, cache.hash))
-      pid += stylize(rule, value, selector, list, isStyle)
-    } else {
-      pid += stylize(cache, value, isStyle ? interpolate(name, selector) : name, list, isStyle)
+    for (const [name, value] of nestedStyles) {
+      pid += name + stylize(rule, name, value, list, parent)
+    }
+  } else {
+    const key = parent ? interpolate(selector, parent) : selector
+
+    if (styleString) {
+      const style = cache.add(new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
+      list.push([style, key])
+    }
+
+    for (const [name, value] of nestedStyles) {
+      pid += name + stylize(cache, name, value, list, key)
     }
   }
 
@@ -228,27 +235,27 @@ function stylize (cache: Cache<any>, userStyles: Styles, selector: string, list:
 /**
  * Register all styles, but collect for selector interpolation using the hash.
  */
-function collectHashedStyles (cache: Cache<Style | Rule>, userStyles: Styles, isStyle: boolean, displayName?: string) {
-  const list: [Cache<any>, string, Style][] = []
-  const pid = stylize(cache, userStyles, '&', list, isStyle)
+function collectHashedStyles (container: Cache<Style | Rule>, styles: Styles, isStyle: boolean, displayName?: string) {
+  const cache = new Cache<Rule | Style>(container.hash)
+  const list: [Style, string][] = []
+  const pid = stylize(cache, isStyle ? '&' : '', styles, list)
 
   const hash = `f${cache.hash(pid)}`
   const id = displayName ? `${displayName}_${hash}` : hash
 
-  for (const [cache, selector, style] of list) {
+  for (const [style, selector] of list) {
     const key = isStyle ? interpolate(selector, `.${id}`) : selector
-    cache.get(style).add(new Selector(key, style.hash, undefined, pid))
+    style.add(new Selector(key, style.hash, undefined, pid))
   }
 
-  return { pid, id }
+  return { cache, pid, id }
 }
 
 /**
  * Recursively register styles on a container instance.
  */
 function registerStyle (container: FreeStyle, styles: Styles, displayName?: string): string {
-  const cache = new Cache<Rule | Style>(container.hash)
-  const { id } = collectHashedStyles(cache, styles, true, displayName)
+  const { cache, id } = collectHashedStyles(container, styles, true, displayName)
   container.merge(cache)
   return id
 }
@@ -257,8 +264,7 @@ function registerStyle (container: FreeStyle, styles: Styles, displayName?: stri
  * Parse and register keyframes on the current instance.
  */
 function registerHashRule (container: FreeStyle, prefix: string, styles: Styles, displayName?: string) {
-  const cache = new Cache<Rule | Style>(container.hash)
-  const { pid, id } = collectHashedStyles(cache, styles, false, displayName)
+  const { cache, pid, id } = collectHashedStyles(container, styles, false, displayName)
 
   const atRule = new Rule(`${prefix} ${id}`, undefined, container.hash, undefined, pid)
   atRule.merge(cache)
@@ -269,29 +275,17 @@ function registerHashRule (container: FreeStyle, prefix: string, styles: Styles,
 /**
  * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
  */
-function registerRule (container: FreeStyle | Rule, selector: string, styles: Styles, parent?: string): void {
-  const { properties, nestedStyles, isUnique } = parseUserStyles(styles, true)
-  const styleString = stringifyProperties(properties)
+function registerRule (container: FreeStyle, selector: string, styles: Styles, parent?: string): void {
+  const list: [Style, string][] = []
+  const cache = new Cache<Rule | Style>(container.hash)
 
-  if (isAtRule(selector)) {
-    const rule = new Rule(selector, styleString, container.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
+  stylize(cache, selector, styles, list)
 
-    for (const [name, value] of nestedStyles) {
-      registerRule(rule, name, value, parent)
-    }
-
-    container.add(rule)
-  } else {
-    const style = new Style(styleString, container.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined)
-    const key = parent ? interpolate(selector, parent) : selector
-
-    style.add(new Selector(key, style.hash, undefined))
-    container.add(style)
-
-    for (const [name, value] of nestedStyles) {
-      registerRule(container, name, value, key)
-    }
+  for (const [style, selector] of list) {
+    style.add(new Selector(selector, style.hash, undefined))
   }
+
+  container.merge(cache)
 }
 
 /**
