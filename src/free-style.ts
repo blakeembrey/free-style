@@ -242,35 +242,6 @@ function collectHashedStyles (container: Cache<Style | Rule>, styles: Styles, se
 }
 
 /**
- * Recursively register styles on a container instance.
- */
-function registerStyle (container: FreeStyle, styles: Styles, displayName?: string): string {
-  const { cache, id } = collectHashedStyles(container, styles, '&', true, displayName)
-  container.merge(cache)
-  return id
-}
-
-/**
- * Parse and register keyframes on the current instance.
- */
-function registerHashRule (container: FreeStyle, prefix: string, styles: Styles, displayName?: string) {
-  const { cache, pid, id } = collectHashedStyles(container, styles, '', false, displayName)
-
-  const atRule = new Rule(`${prefix} ${id}`, undefined, container.hash, undefined, pid)
-  atRule.merge(cache)
-  container.add(atRule)
-  return id
-}
-
-/**
- * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
- */
-function registerRule (container: FreeStyle, selector: string, styles: Styles): void {
-  const { cache } = collectHashedStyles(container, styles, selector, false)
-  container.merge(cache)
-}
-
-/**
  * Get the styles string for a container class.
  */
 function getStyles (container: FreeStyle | Rule) {
@@ -476,19 +447,25 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerStyle (styles: Styles, displayName?: string) {
-    return registerStyle(this, styles, this.debug ? displayName : undefined)
+    const { cache, id } = collectHashedStyles(this, styles, '&', true, this.debug ? displayName : undefined)
+    this.merge(cache)
+    return id
   }
 
   registerKeyframes (keyframes: Styles, displayName?: string) {
-    return registerHashRule(this, '@keyframes', keyframes, this.debug ? displayName : undefined)
+    return this.registerHashRule('@keyframes', keyframes, displayName)
   }
 
-  registerHashRule (rule: string, styles: Styles, displayName?: string) {
-    return registerHashRule(this, rule, styles, this.debug ? displayName : undefined)
+  registerHashRule (prefix: string, styles: Styles, displayName?: string) {
+    const { cache, pid, id } = collectHashedStyles(this, styles, '', false, this.debug ? displayName : undefined)
+    const rule = new Rule(`${prefix} ${id}`, undefined, this.hash, undefined, pid)
+    rule.merge(cache)
+    this.add(rule)
+    return id
   }
 
   registerRule (rule: string, styles: Styles) {
-    return registerRule(this, rule, styles)
+    this.merge(collectHashedStyles(this, styles, rule, false).cache)
   }
 
   getStyles () {
