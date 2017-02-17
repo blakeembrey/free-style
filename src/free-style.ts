@@ -1,17 +1,7 @@
 /**
- * Increment through IDs for FreeStyle, which can't generate hashed IDs.
- */
-let instanceId = 0
-
-/**
  * The unique id is used to get a unique hash on styles (no merging).
  */
 let uniqueId = 0
-
-/**
- * Valid CSS property names.
- */
-export type PropertyName = string
 
 /**
  * Valid CSS property values.
@@ -28,8 +18,8 @@ export interface Styles {
 /**
  * Storing properties alphabetically ordered during parse.
  */
-type Properties = Array<[PropertyName, PropertyValue]>
-type NestedStyles = Array<[PropertyName, Styles]>
+type Properties = Array<[string, PropertyValue]>
+type NestedStyles = Array<[string, Styles]>
 
 /**
  * Tag styles with this string to get unique hash outputs.
@@ -78,7 +68,7 @@ for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-']) {
 /**
  * Transform a JavaScript property into a CSS property.
  */
-function hyphenate (propertyName: PropertyName): PropertyName {
+function hyphenate (propertyName: string): string {
   return propertyName
     .replace(/([A-Z])/g, '-$1')
     .replace(/^ms-/, '-ms-') // Internet Explorer vendor prefix.
@@ -88,7 +78,7 @@ function hyphenate (propertyName: PropertyName): PropertyName {
 /**
  * Check if a property name should pop to the top level of CSS.
  */
-function isAtRule (propertyName: PropertyName): boolean {
+function isAtRule (propertyName: string): boolean {
   return propertyName.charAt(0) === '@'
 }
 
@@ -121,12 +111,12 @@ export function stringHash (str: string): string {
 /**
  * Transform a style string to a CSS string.
  */
-function styleToString (name: PropertyName, value: string | number | boolean) {
-  if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[name]) {
+function styleToString (key: string, value: string | number | boolean) {
+  if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[key]) {
     value = `${value}px`
   }
 
-  return `${name}:${String(value).replace(/([\{\}\[\]])/g, '\\$1')}`
+  return `${key}:${String(value)}`
 }
 
 /**
@@ -306,13 +296,6 @@ export interface Container <T> {
 }
 
 /**
- * Change listeners are registered to react to CSS changes.
- */
-export interface ChangeListenerFunction {
-  (style: Container<any>): any
-}
-
-/**
  * Implement a cache/event emitter.
  */
 export class Cache <T extends Container<any>> {
@@ -449,7 +432,7 @@ export class Style extends Cache<Selector> implements Container<Style> {
   }
 
   getStyles (): string {
-    return `${this.values().map(x => x.selector).join(',')}{${this.style}}`
+    return `${this.values().map(x => x.getStyles()).join(',')}{${this.style}}`
   }
 
   getIdentifier () {
@@ -496,7 +479,7 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
  */
 export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyle> {
 
-  constructor (public hash: HashFunction, public debug: boolean, public id = `f${(++instanceId).toString(36)}`) {
+  constructor (public hash: HashFunction, public debug: boolean, public id = `f${(++uniqueId).toString(36)}`) {
     super(hash)
   }
 
