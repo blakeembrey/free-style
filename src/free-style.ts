@@ -225,10 +225,10 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [St
 /**
  * Register all styles, but collect for selector interpolation using the hash.
  */
-function collectHashedStyles (container: Cache<Style | Rule>, styles: Styles, isStyle: boolean, displayName?: string) {
+function collectHashedStyles (container: Cache<Style | Rule>, styles: Styles, selector: string, isStyle: boolean, displayName?: string) {
   const cache = new Cache<Rule | Style>(container.hash)
   const list: [Style, string][] = []
-  const pid = stylize(cache, isStyle ? '&' : '', styles, list)
+  const pid = stylize(cache, selector, styles, list)
 
   const hash = `f${cache.hash(pid)}`
   const id = displayName ? `${displayName}_${hash}` : hash
@@ -245,7 +245,7 @@ function collectHashedStyles (container: Cache<Style | Rule>, styles: Styles, is
  * Recursively register styles on a container instance.
  */
 function registerStyle (container: FreeStyle, styles: Styles, displayName?: string): string {
-  const { cache, id } = collectHashedStyles(container, styles, true, displayName)
+  const { cache, id } = collectHashedStyles(container, styles, '&', true, displayName)
   container.merge(cache)
   return id
 }
@@ -254,7 +254,7 @@ function registerStyle (container: FreeStyle, styles: Styles, displayName?: stri
  * Parse and register keyframes on the current instance.
  */
 function registerHashRule (container: FreeStyle, prefix: string, styles: Styles, displayName?: string) {
-  const { cache, pid, id } = collectHashedStyles(container, styles, false, displayName)
+  const { cache, pid, id } = collectHashedStyles(container, styles, '', false, displayName)
 
   const atRule = new Rule(`${prefix} ${id}`, undefined, container.hash, undefined, pid)
   atRule.merge(cache)
@@ -265,16 +265,8 @@ function registerHashRule (container: FreeStyle, prefix: string, styles: Styles,
 /**
  * Create user rule. Simplified collection of styles, since it doesn't need a unique id hash.
  */
-function registerRule (container: FreeStyle, selector: string, styles: Styles, parent?: string): void {
-  const list: [Style, string][] = []
-  const cache = new Cache<Rule | Style>(container.hash)
-
-  stylize(cache, selector, styles, list)
-
-  for (const [style, selector] of list) {
-    style.add(new Selector(selector, style.hash, undefined))
-  }
-
+function registerRule (container: FreeStyle, selector: string, styles: Styles): void {
+  const { cache } = collectHashedStyles(container, styles, selector, false)
   container.merge(cache)
 }
 
