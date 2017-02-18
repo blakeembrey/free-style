@@ -455,13 +455,16 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   registerHashRule (prefix: string, styles: Styles, displayName?: string) {
     const { cache, pid, id } = composeStyles(this, '', styles, false, this.debug ? displayName : undefined)
     const rule = new Rule(`${prefix} ${id}`, undefined, this.hash, undefined, pid)
-    rule.merge(cache)
-    this.add(rule)
+    this.add(rule.merge(cache))
     return id
   }
 
   registerRule (rule: string, styles: Styles) {
     this.merge(composeStyles(this, rule, styles, false).cache)
+  }
+
+  registerCss (styles: Styles) {
+    this.merge(composeStyles(this, '', styles, false).cache)
   }
 
   getStyles () {

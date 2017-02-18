@@ -639,6 +639,32 @@ test('free style', (t) => {
     t.end()
   })
 
+  t.test('register a css object', t => {
+    const Style = create()
+
+    Style.registerCss({
+      'body': {
+        color: 'red',
+        '@print': {
+          color: 'blue'
+        }
+      },
+      h1: {
+        color: 'red',
+        '@print': {
+          color: '#000',
+          a: {
+            color: 'blue'
+          }
+        }
+      }
+    })
+
+    t.equal(Style.getStyles(), 'body,h1{color:red}@print{h1{color:#000}body,h1 a{color:blue}}')
+
+    t.end()
+  })
+
   t.test('registering a hashed rule', t => {
     const Style = create()
 
