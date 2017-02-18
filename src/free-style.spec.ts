@@ -638,4 +638,32 @@ test('free style', (t) => {
 
     t.end()
   })
+
+  t.test('registering a hashed rule', t => {
+    const Style = create()
+
+    const animation1 = Style.registerHashRule('@keyframes', {
+      from: {
+        color: 'blue'
+      },
+      to: {
+        color: 'red'
+      }
+    })
+
+    const animation2 = Style.registerHashRule('@-webkit-keyframes', {
+      from: {
+        color: 'blue'
+      },
+      to: {
+        color: 'red'
+      }
+    })
+
+    t.equal(animation1, animation2)
+    t.equal(Style.getStyles(), `@keyframes ${animation1}{from{color:blue}to{color:red}}@-webkit-keyframes ${animation2}{from{color:blue}to{color:red}}`)
+
+    t.end()
+
+  })
 })
