@@ -158,7 +158,7 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
  * Stringify an array of property tuples.
  */
 function stringifyProperties (properties: Properties) {
-  let result: string[] = []
+  const result: string[] = []
 
   for (const [name, value] of properties) {
     if (value != null) {
@@ -189,7 +189,7 @@ function interpolate (selector: string, parent: string) {
 /**
  * Recursive loop building styles with deferred selectors.
  */
-function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [Style, string][], parent?: string) {
+function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [string, Style][], parent?: string) {
   const { properties, nestedStyles, isUnique } = parseStyles(styles, !!selector)
   const styleString = stringifyProperties(properties)
   let pid = styleString
@@ -200,7 +200,7 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [St
     // Nested styles support (e.g. `.foo > @media > .bar`).
     if (styleString && parent) {
       const style = rule.add(new Style(styleString, rule.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
-      list.push([style, parent])
+      list.push([parent, style])
     }
 
     for (const [name, value] of nestedStyles) {
@@ -211,7 +211,7 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [St
 
     if (styleString) {
       const style = cache.add(new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
-      list.push([style, key])
+      list.push([key, style])
     }
 
     for (const [name, value] of nestedStyles) {
@@ -225,15 +225,15 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [St
 /**
  * Register all styles, but collect for selector interpolation using the hash.
  */
-function collectHashedStyles (container: Cache<Style | Rule>, styles: Styles, selector: string, isStyle: boolean, displayName?: string) {
+function composeStyles (container: Cache<Style | Rule>, selector: string, styles: Styles, isStyle: boolean, displayName?: string) {
   const cache = new Cache<Rule | Style>(container.hash)
-  const list: [Style, string][] = []
+  const list: [string, Style][] = []
   const pid = stylize(cache, selector, styles, list)
 
   const hash = `f${cache.hash(pid)}`
   const id = displayName ? `${displayName}_${hash}` : hash
 
-  for (const [style, selector] of list) {
+  for (const [selector, style] of list) {
     const key = isStyle ? interpolate(selector, `.${id}`) : selector
     style.add(new Selector(key, style.hash, undefined, pid))
   }
@@ -267,7 +267,7 @@ export class Cache <T extends Container<any>> {
 
   private _children: { [id: string]: T } = {}
   private _keys: string[] = []
-  private _counts: { [id: string]: number } = {}
+  private _counters: { [id: string]: number } = {}
 
   constructor (public hash: HashFunction) {}
 
@@ -276,10 +276,10 @@ export class Cache <T extends Container<any>> {
   }
 
   add <U extends T> (style: U): U {
-    const count = this._counts[style.id] || 0
+    const count = this._counters[style.id] || 0
     const item = this._children[style.id] || style.clone()
 
-    this._counts[style.id] = count + 1
+    this._counters[style.id] = count + 1
 
     if (count === 0) {
       this._keys.push(item.id)
@@ -309,15 +309,15 @@ export class Cache <T extends Container<any>> {
   }
 
   remove (style: T): void {
-    const count = this._counts[style.id]
+    const count = this._counters[style.id]
 
     if (count > 0) {
-      this._counts[style.id] = count - 1
+      this._counters[style.id] = count - 1
 
       const item = this._children[style.id]
 
       if (count === 1) {
-        delete this._counts[style.id]
+        delete this._counters[style.id]
         delete this._children[style.id]
         this._keys.splice(this._keys.indexOf(style.id), 1)
         this.changeId++
@@ -331,10 +331,6 @@ export class Cache <T extends Container<any>> {
         }
       }
     }
-  }
-
-  get (container: Container<any>) {
-    return this._children[container.id]
   }
 
   merge <U extends Cache<any>> (cache: U) {
@@ -447,7 +443,7 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerStyle (styles: Styles, displayName?: string) {
-    const { cache, id } = collectHashedStyles(this, styles, '&', true, this.debug ? displayName : undefined)
+    const { cache, id } = composeStyles(this, '&', styles, true, this.debug ? displayName : undefined)
     this.merge(cache)
     return id
   }
@@ -457,7 +453,7 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerHashRule (prefix: string, styles: Styles, displayName?: string) {
-    const { cache, pid, id } = collectHashedStyles(this, styles, '', false, this.debug ? displayName : undefined)
+    const { cache, pid, id } = composeStyles(this, '', styles, false, this.debug ? displayName : undefined)
     const rule = new Rule(`${prefix} ${id}`, undefined, this.hash, undefined, pid)
     rule.merge(cache)
     this.add(rule)
@@ -465,7 +461,7 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerRule (rule: string, styles: Styles) {
-    this.merge(collectHashedStyles(this, styles, rule, false).cache)
+    this.merge(composeStyles(this, rule, styles, false).cache)
   }
 
   getStyles () {
