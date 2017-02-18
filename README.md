@@ -19,30 +19,28 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 ### Solved by using CSS in JS
 
-* No global variables (Where and what is `.button`? Why does it conflict?)
-* Built in dependency system (CommonJS, Require.js, `<script />`)
-* Dead code elimination (Automatically remove unused styles)
-* Minification (Minify JS with existing tools)
-* Shared constants and reusable styles (Using variables and objects)
-* Isolation (Every style is automatically namespaced)
-* Extensible (Just use JavaScript - everything from [math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/MoOx/color) already exists!)
+* No global variables (What and where is `.button`? Why is it conflicting?)
+* Defined dependency systems (CommonJS, Require.js, `<script />`)
+* Dead code elimination automatically removes unused styles
+* Minification through JavaScript tooling
+* Shared constants and reusable styles
+* Every style is isolated, tested and namespaced to the JS component
+* Extensible - everything from [Math](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math) to [color manipulation](https://github.com/MoOx/color) already exists!
 
 ### Also solved with Free-Style
 
-* Working with legacy DOM components (You can nest `.class-name` in your styles)
-* Expose third-party and semantic hooks/theming through ordinary class names (`.button`)
-* Consistently generates styles and class names (Generates the exact same on client and server, and will magically merges duplicate styles)
+* Works with third-party DOM components (You can nest regular `.class-name` in your styles)
+* Consistently generates styles and class names, and will automatically merge duplicate styles
 * Develop components alongside the style (No more hunting CSS files for estranged `ul > li > a`)
-* Create isomorphic applications by serving styles for *only* the components rendered (With third-parties, see [React Free-Style](http://github.com/blakeembrey/react-free-style))
-* Continue using CSS you already know (`{ '&:hover': { ... } }`)
+* Create universal applications and serve styles for **only** the components rendered (see [React Free-Style](http://github.com/blakeembrey/react-free-style))
+* Use the CSS you already know (`{ '&:hover': { ... } }`)
 * Automatically namespace `@`-rule styles (`{ '@media (min-width: 500px)': { ... } }`)
 * Overload CSS properties using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
-* Integrates with any third-party system
-* Extremely small and powerful API that works with any ecosystem (~360 SLOC)
+* Small and powerful API that works with any ecosystem (~360 SLOC)
 
 ### But How?
 
-**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged on duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters that will warn on unused variables and features like dead code minification. Using "register" returns the class name used for the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should usually be created outside of the application run loop (E.g. `render`) so the CSS string and hashes are only generated once.
+**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged on duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters that will warn on unused variables and features like dead code minification. Using "register" returns the class name used for the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should usually be created outside of the application run loop (e.g. `render()`) so the CSS string and hashes are only generated once.
 
 ### Ways to Use
 
@@ -76,7 +74,7 @@ React.render(
 )
 ```
 
-### Styles
+### Style
 
 ```js
 var buttonStyle = Style.registerStyle({
@@ -87,7 +85,7 @@ var buttonStyle = Style.registerStyle({
 console.log(buttonStyle) //=> "f65pi0b"
 ```
 
-**Tip:** The string returned by `registerStyle` is a unique hash of the content and should be used as a class in HTML.
+**Tip:** The string returned by `registerStyle` is a unique hash of the content and is used as the class in HTML.
 
 #### Overload CSS Properties
 
@@ -119,6 +117,7 @@ Style.registerStyle({
 
 ```js
 Style.registerStyle({
+  color: 'red',
   '.classname': {
     color: 'blue'
   }
@@ -129,6 +128,7 @@ Style.registerStyle({
 
 ```js
 Style.registerStyle({
+  color: 'red',
   '&:hover': {
     color: 'blue'
   }
@@ -137,7 +137,7 @@ Style.registerStyle({
 
 **Tip:** The ampersand (`&`) will be replaced by the parent selector at runtime. In this example, the result is `.f1h42yg6:hover`.
 
-**Tip:** The second argument to `registerStyle` and `registerKeyframes` is a "display name". The display name will be used as the class name prefix in development (`process.env.NODE_ENV !== 'production'`).
+**Tip:** The second argument to `registerStyle`, `registerKeyframes` and `registerHashRule` is a "display name". The display name will be used as the class name prefix in development (`process.env.NODE_ENV !== 'production'`).
 
 #### Use JavaScript
 
@@ -173,22 +173,22 @@ const style = Style.registerStyle({
 
 #### Unique Style Ouput
 
-Sometimes you need to skip the default de-duping behaviour of `free-style`. For this, you can use `IS_UNIQUE` and enforce every style to be output separately:
+Sometimes you need to skip the de-duping behaviour of `free-style`. Use the `IS_UNIQUE` export and enforce every style to be output separately:
 
 ```js
 Style.registerStyle({
   color: 'blue',
   '&::-webkit-input-placeholder': {
     color: `rgba(0, 0, 0, 0)`,
-    [IS_UNIQUE]: true
+    [FreeStyle.IS_UNIQUE]: true
   },
   '&::-moz-placeholder': {
     color: `rgba(0, 0, 0, 0)`,
-    [IS_UNIQUE]: true
+    [FreeStyle.IS_UNIQUE]: true
   },
   '&::-ms-input-placeholder': {
     color: `rgba(0, 0, 0, 0)`,
-    [IS_UNIQUE]: true
+    [FreeStyle.IS_UNIQUE]: true
   }
 }) //=> "f13byakl"
 
@@ -211,7 +211,23 @@ var style = Style.registerStyle({
 
 **Tip:** The string returned by `registerKeyframes` the name of the animation, which is a hash of the rule (you can also add a "display name" in development).
 
-**P.S.** `registerKeyframes` uses the `registerHashRule` method internally. If you'd like to use the hash behaviour for other rules, you can use the `registerHashRule` method instead (e.g. `registerHashRule('@-webkit-keyframes', {})`).
+### Hash Rule
+
+Hashed rules are what `registerKeyframes` uses internally. It accepts a prefix and the styles object, which will create a rule using `prefix + hash`. Conveniently, the same contents will generate the same hash so you can register vendor-specific rules using the same hash.
+
+```js
+var keyframes = {
+  from: {
+    color: 'blue'
+  },
+  to: {
+    color: 'red'
+  }
+}
+
+var animation1 = Style.registerHashRule('@keyframes', keyframes) //=> "f1dz2mpx"
+var animation2 = Style.registerHashRule('@-webkit-keyframes', keyframes) //=> "f1dz2mpx"
+```
 
 ### Rules
 
@@ -230,6 +246,23 @@ Style.registerRule('@media print', {
 Style.registerRule('body', {
   margin: 0,
   padding: 0
+})
+```
+
+### CSS Object
+
+```js
+Style.registerCss({
+  body: {
+    margin: 0,
+    padding: 0,
+    '@print': {
+      color: '#000'
+    }
+  },
+  h1: {
+    fontSize: '2em'
+  }
 })
 ```
 
