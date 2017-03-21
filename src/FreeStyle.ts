@@ -1,11 +1,29 @@
+import { Cache } from './Cache';
+import { Container } from './Container';
+import { Rule } from './Rule';
+import { Style } from './Style';
 
+import {
+  HashFunction,
+  Styles,
+} from './types';
+
+import {
+  composeStyles,
+  getStyles,
+  stringHash,
+} from './utils';
+
+import {
+  GLOBALS,
+} from './constants';
 
 /**
  * The FreeStyle class implements the API for everything else.
  */
 export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyle> {
 
-  constructor (public hash: HashFunction, public debug: boolean, public id = `f${(++uniqueId).toString(36)}`) {
+  constructor (public hash: HashFunction, public debug: boolean, public id = `f${(++GLOBALS.uniqueId).toString(36)}`) {
     super(hash)
   }
 

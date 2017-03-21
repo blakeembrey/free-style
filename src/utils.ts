@@ -1,6 +1,8 @@
 import { Cache } from './Cache';
 import { Rule } from './Rule';
+import { Selector } from './Selector';
 import { Style } from './Style';
+import { FreeStyle } from './free-style';
 
 import {
   NestedStyles,
@@ -11,6 +13,7 @@ import {
 import {
   IS_UNIQUE,
   CSS_NUMBER,
+  GLOBALS,
 } from './constants';
 /**
  * Transform a JavaScript property into a CSS property.
@@ -141,7 +144,7 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [st
 
     // Nested styles support (e.g. `.foo > @media > .bar`).
     if (styleString && parent) {
-      const style = rule.add(new Style(styleString, rule.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
+      const style = rule.add(new Style(styleString, rule.hash, isUnique ? `u${(++GLOBALS.uniqueId).toString(36)}` : undefined))
       list.push([parent, style])
     }
 
@@ -152,7 +155,7 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [st
     const key = parent ? interpolate(selector, parent) : selector
 
     if (styleString) {
-      const style = cache.add(new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
+      const style = cache.add(new Style(styleString, cache.hash, isUnique ? `u${(++GLOBALS.uniqueId).toString(36)}` : undefined))
       list.push([key, style])
     }
 
@@ -167,7 +170,7 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [st
 /**
  * Register all styles, but collect for selector interpolation using the hash.
  */
-function composeStyles (container: Cache<Style | Rule>, selector: string, styles: Styles, isStyle: boolean, displayName?: string) {
+export function composeStyles (container: Cache<Style | Rule>, selector: string, styles: Styles, isStyle: boolean, displayName?: string) {
   const cache = new Cache<Rule | Style>(container.hash)
   const list: [string, Style][] = []
   const pid = stylize(cache, selector, styles, list)
@@ -186,6 +189,6 @@ function composeStyles (container: Cache<Style | Rule>, selector: string, styles
 /**
  * Get the styles string for a container class.
  */
-function getStyles (container: FreeStyle | Rule) {
+export function getStyles (container: FreeStyle | Rule) {
   return container.values().map(style => style.getStyles()).join('')
 }

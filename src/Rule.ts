@@ -2,6 +2,9 @@ import { Cache } from './Cache';
 import { Container } from './Container';
 import { Style } from './Style';
 import { HashFunction } from './types';
+import {
+  getStyles,
+} from './utils';
 /**
  * Implement rule logic for style output.
  */

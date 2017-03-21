@@ -45,4 +45,6 @@ for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-']) {
 /**
  * The unique id is used to get a unique hash on styles (no merging).
  */
-export let uniqueId = 0
+export const GLOBALS = {
+  uniqueId: 0,
+}
