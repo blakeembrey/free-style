@@ -1,5 +1,7 @@
 # Free-Style
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/blakeembrey/free-style.svg)](https://greenkeeper.io/)
+
 [![NPM version][npm-image]][npm-url]
 [![NPM downloads][downloads-image]][downloads-url]
 [![Build status][travis-image]][travis-url]
