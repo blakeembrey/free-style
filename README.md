@@ -4,6 +4,7 @@
 [![NPM downloads][downloads-image]][downloads-url]
 [![Build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
+[![Greenkeeper badge](https://badges.greenkeeper.io/blakeembrey/free-style.svg)](https://greenkeeper.io/)
 
 > **Free-Style** is designed to make CSS easier and more maintainable by using JavaScript.
 
