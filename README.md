@@ -45,10 +45,11 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 ### Ways to Use
 
-* [`stylin`](https://github.com/ajoslin/stylin) - The simplest abstraction, create styles, rules and keyframes, and the `<style />` stays in sync.
+* [`react-free-style`](https://github.com/blakeembrey/react-free-style) - React implementation that renders styles on the current page (for universal apps)
+* [`typestyle`](https://github.com/typestyle/typestyle) - Popular type-safe interface for working with CSS
+* [`stylin`](https://github.com/ajoslin/stylin) - Simplest abstraction for creating styles, rules, and keyframes, and keeps `<style />` in sync
 * [`easy-style`](https://github.com/jkroso/easy-style) - Light-weight singleton API for browsers and node
-* [`react-free-style`](https://github.com/blakeembrey/react-free-style) - React implementation that renders styles used on the current page (universal use-case)
-* **This module!** - Create, compose and manipulate style instances
+* **This module!** - Manually create, compose and manipulate style instances
 
 ## Usage
 
