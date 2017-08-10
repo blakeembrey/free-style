@@ -276,10 +276,11 @@ Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 
 ### Useful Libraries
 
+* [`classnames`](https://github.com/JedWatson/classnames)
 * [`color`](https://github.com/MoOx/color)
+* [`style-helper`](https://github.com/blakeembrey/style-helper)
 * [`postcss-js`](https://github.com/postcss/postcss-js)
 * [`inline-style-prefixer`](https://github.com/rofrischmann/inline-style-prefixer)
-* [`classnames`](https://github.com/JedWatson/classnames)
 * [`insert-css`](https://github.com/substack/insert-css)
 * [`image-url`](https://github.com/ajoslin/image-url)
 * [**Add yours!**](https://github.com/blakeembrey/free-style/issues/new)
