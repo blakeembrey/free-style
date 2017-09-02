@@ -6,7 +6,7 @@ let uniqueId = 0
 /**
  * Valid CSS property values.
  */
-export type PropertyValue = null | undefined | number | boolean | string | Array<null | undefined | number | boolean | string>
+export type PropertyValue = null | undefined | number | boolean | string | Array<number | boolean | string>
 
 /**
  * User styles object.
@@ -76,20 +76,6 @@ function hyphenate (propertyName: string): string {
 }
 
 /**
- * Check if a property name should pop to the top level of CSS.
- */
-function isAtRule (propertyName: string): boolean {
-  return propertyName.charAt(0) === '@'
-}
-
-/**
- * Check if a value is a nested style definition.
- */
-function isNestedStyle (value: any): value is Styles {
-  return value != null && typeof value === 'object' && !Array.isArray(value)
-}
-
-/**
  * Hash algorithm interface.
  */
 export type HashFunction = (str: string) => string
@@ -116,7 +102,7 @@ function styleToString (key: string, value: string | number | boolean) {
     value = `${value}px`
   }
 
-  return `${key}:${String(value)}`
+  return `${key}:${value}`
 }
 
 /**
@@ -140,7 +126,7 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
 
     if (key === IS_UNIQUE) {
       isUnique = !!value
-    } else if (isNestedStyle(value)) {
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       nestedStyles.push([key.trim(), value])
     } else {
       properties.push([hyphenate(key.trim()), value])
@@ -163,9 +149,9 @@ function stringifyProperties (properties: Properties) {
   for (const [name, value] of properties) {
     if (value != null) {
       if (Array.isArray(value)) {
-        value.forEach(function (value) {
-          value && result.push(styleToString(name, value))
-        })
+        for (const val of value) {
+          result.push(styleToString(name, val))
+        }
       } else {
         result.push(styleToString(name, value))
       }
@@ -194,7 +180,7 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [st
   const styleString = stringifyProperties(properties)
   let pid = styleString
 
-  if (isAtRule(selector)) {
+  if (selector.charCodeAt(0) === 64 /* @ */) {
     const rule = cache.add(new Rule(selector, parent ? undefined : styleString, cache.hash))
 
     // Nested styles support (e.g. `.foo > @media > .bar`).
@@ -244,8 +230,8 @@ function composeStyles (container: FreeStyle, selector: string, styles: Styles, 
 /**
  * Get the styles string for a container class.
  */
-function getStyles (container: FreeStyle | Rule) {
-  return container.values().map(style => style.getStyles()).join('')
+function toStyles (container: Cache<Container<any>>, sep = '') {
+  return container.values().map(x => x.getStyles()).join(sep)
 }
 
 /**
@@ -283,9 +269,12 @@ export class Cache <T extends Container<any>> {
 
   changeId = 0
 
-  private _children: { [id: string]: T } = {}
+  private _children: { [id: string]: T } = Object.create(null)
   private _keys: string[] = []
-  private _counters: { [id: string]: number } = {}
+  private _counters: { [id: string]: number } = Object.create(null)
+
+  private _cacheStyles: string
+  private _cacheChangeId: number
 
   constructor (public hash = stringHash, public changes: Changes = noopChanges) {}
 
@@ -383,6 +372,19 @@ export class Cache <T extends Container<any>> {
     return this
   }
 
+  computeStyles () {
+    return ''
+  }
+
+  getStyles (): string {
+    if (this._cacheChangeId !== this.changeId) {
+      this._cacheChangeId = this.changeId
+      this._cacheStyles = this.computeStyles()
+    }
+
+    return this._cacheStyles
+  }
+
   clone () {
     return new Cache(this.hash).merge(this)
   }
@@ -424,8 +426,8 @@ export class Style extends Cache<Selector> implements Container<Style> {
     super(hash)
   }
 
-  getStyles (): string {
-    return `${this.values().map(x => x.getStyles()).join(',')}{${this.style}}`
+  computeStyles (): string {
+    return `${toStyles(this, ',')}{${this.style}}`
   }
 
   getIdentifier () {
@@ -453,8 +455,8 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
     super(hash)
   }
 
-  getStyles (): string {
-    return `${this.rule}{${this.style}${getStyles(this)}}`
+  computeStyles (): string {
+    return `${this.rule}{${this.style}${toStyles(this)}}`
   }
 
   getIdentifier () {
@@ -506,8 +508,8 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
     this.merge(composeStyles(this, '', styles, false).cache)
   }
 
-  getStyles () {
-    return getStyles(this)
+  computeStyles (): string {
+    return toStyles(this)
   }
 
   getIdentifier () {
