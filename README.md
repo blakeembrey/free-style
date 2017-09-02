@@ -285,15 +285,42 @@ Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 * [`image-url`](https://github.com/ajoslin/image-url)
 * [**Add yours!**](https://github.com/blakeembrey/free-style/issues/new)
 
-### Custom Hash Algorithm
+### Implementor Details
 
-Initialize **Free-Style** with a custom CSS class hash algorithm (by default it uses a simple, internal string hash).
+#### Custom Hash Algorithm
+
+Initialize **Free-Style** with a custom CSS class generator.
 
 ```js
 create(hashFunction) //=> `FreeStyle.FreeStyle`
 ```
 
-### Classes
+#### Debug
+
+Debug mode can changed programmatically using the second argument to `create([hash [, debug])`. It defaults to the value of `process.env.NODE_ENV !== 'production'`.
+
+#### Changes
+
+**Free-Style** provides two methods for detecting style changes. First is a `changeId` property, incremented every time a change occurs.
+
+```js
+const Style = create()
+const prevChangeId = Style.changeId
+
+Style.registerStyle({ color: 'red' })
+
+if (Style.changeId !== prevChangeId) {}
+```
+
+Second, the third argument to `create()` is a map of change function handlers. All functions are required:
+
+* `add (style: Container<any>, index: number): void`
+* `change (style: Container<any>, oldIndex: number, newIndex: number): void`
+* `remove (style: Container<any>, index: number): void`
+
+All classes implement `Container`, so you can `getStyles()`, `getIdentifier()` or use `id`.
+
+#### Classes
 
 ```js
 FreeStyle.FreeStyle // Similar to writing a CSS file, holds styles and rules - returned from `create()`.
@@ -303,19 +330,10 @@ FreeStyle.Selector // Selectors hold the CSS selector and can be nested inside `
 FreeStyle.Cache // `FreeStyle`, `Style` and `Rule` all extend the cache which maintains reference counts.
 ```
 
-### Other Properties and Methods
+#### Other Properties and Methods
 
 ```js
 var ChildStyle = Style.create()
-
-// The `changeId` property increments when a new style is inserted. The allows implementors to skip style
-// element updates when styles are inserted twice, as the `changeId` property would remain the same.
-ChildStyle.changeId
-
-// Clones the style instance. This is useful when adding/removing or merging/unmerging styles. If you don't clone
-// the instance beforehand, it's possible for a user to modify the style state with new styles/selectors, and the
-// next time you unmerge/remove the instance will be inconsistent with the original.
-ChildStyle.clone()
 
 Style.merge(ChildStyle) // Merge the child styles into the current instance.
 Style.unmerge(ChildStyle) // Unmerge the child styles from the current instance.

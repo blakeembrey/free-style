@@ -690,6 +690,39 @@ test('free style', (t) => {
     t.equal(Style.getStyles(), `@keyframes ${animation1}{from{color:blue}to{color:red}}@-webkit-keyframes ${animation2}{from{color:blue}to{color:red}}`)
 
     t.end()
+  })
 
+  t.test('change events', t => {
+    const styles: string[] = []
+
+    const Style = create(undefined, undefined, {
+      add (style, index) {
+        styles.splice(index, 0, style.getStyles())
+      },
+      change (style, oldIndex, newIndex) {
+        styles.splice(oldIndex, 1)
+        styles.splice(newIndex, 0, style.getStyles())
+      },
+      remove (_, index) {
+        styles.splice(index, 1)
+      }
+    })
+
+    Style.registerStyle({
+      background: 'red',
+      '@media (min-width: 400px)': {
+        background: 'yellow'
+      }
+    })
+
+    Style.registerStyle({
+      background: 'palegreen',
+      '@media (min-width: 400px)': {
+        background: 'pink'
+      }
+    })
+
+    t.equal(styles.join(''), Style.getStyles())
+    t.end()
   })
 })

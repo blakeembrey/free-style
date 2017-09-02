@@ -225,7 +225,7 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [st
 /**
  * Register all styles, but collect for selector interpolation using the hash.
  */
-function composeStyles (container: Cache<Style | Rule>, selector: string, styles: Styles, isStyle: boolean, displayName?: string) {
+function composeStyles (container: FreeStyle, selector: string, styles: Styles, isStyle: boolean, displayName?: string) {
   const cache = new Cache<Rule | Style>(container.hash)
   const list: [string, Style][] = []
   const pid = stylize(cache, selector, styles, list)
@@ -249,6 +249,24 @@ function getStyles (container: FreeStyle | Rule) {
 }
 
 /**
+ * Propagate change events.
+ */
+export interface Changes {
+  add (style: Container<any>, index: number): void
+  change (style: Container<any>, oldIndex: number, newIndex: number): void
+  remove (style: Container<any>, index: number): void
+}
+
+/**
+ * Noop changes.
+ */
+const noopChanges: Changes = {
+  add: () => undefined,
+  change: () => undefined,
+  remove: () => undefined
+}
+
+/**
  * Cacheable interface.
  */
 export interface Container <T> {
@@ -269,7 +287,7 @@ export class Cache <T extends Container<any>> {
   private _keys: string[] = []
   private _counters: { [id: string]: number } = {}
 
-  constructor (public hash: HashFunction) {}
+  constructor (public hash = stringHash, public changes: Changes = noopChanges) {}
 
   values (): T[] {
     return this._keys.map(x => this._children[x])
@@ -285,14 +303,22 @@ export class Cache <T extends Container<any>> {
       this._keys.push(item.id)
       this._children[item.id] = item
       this.changeId++
+      this.changes.add(item, this._keys.length - 1)
     } else {
       // Check if contents are different.
       if (item.getIdentifier() !== style.getIdentifier()) {
         throw new TypeError(`Hash collision: ${style.getStyles()} === ${item.getStyles()}`)
       }
 
-      this._keys.splice(this._keys.indexOf(style.id), 1)
-      this._keys.push(style.id)
+      const oldIndex = this._keys.indexOf(style.id)
+      const newIndex = this._keys.length - 1
+      const prevChangeId = this.changeId
+
+      if (oldIndex !== newIndex) {
+        this._keys.splice(oldIndex, 1)
+        this._keys.push(style.id)
+        this.changeId++
+      }
 
       if (item instanceof Cache && style instanceof Cache) {
         const prevChangeId = item.changeId
@@ -302,6 +328,10 @@ export class Cache <T extends Container<any>> {
         if (item.changeId !== prevChangeId) {
           this.changeId++
         }
+      }
+
+      if (this.changeId !== prevChangeId) {
+        this.changes.change(item, oldIndex, newIndex)
       }
     }
 
@@ -315,12 +345,15 @@ export class Cache <T extends Container<any>> {
       this._counters[style.id] = count - 1
 
       const item = this._children[style.id]
+      const index = this._keys.indexOf(item.id)
 
       if (count === 1) {
         delete this._counters[style.id]
         delete this._children[style.id]
-        this._keys.splice(this._keys.indexOf(style.id), 1)
+
+        this._keys.splice(index, 1)
         this.changeId++
+        this.changes.remove(item, index)
       } else if (item instanceof Cache && style instanceof Cache) {
         const prevChangeId = item.changeId
 
@@ -328,6 +361,7 @@ export class Cache <T extends Container<any>> {
 
         if (item.changeId !== prevChangeId) {
           this.changeId++
+          this.changes.change(item, index, index)
         }
       }
     }
@@ -438,8 +472,13 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
  */
 export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyle> {
 
-  constructor (public hash: HashFunction, public debug: boolean, public id = `f${(++uniqueId).toString(36)}`) {
-    super(hash)
+  constructor (
+    public hash = stringHash,
+    public debug = typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production',
+    public id = `f${(++uniqueId).toString(36)}`,
+    changes?: Changes
+  ) {
+    super(hash, changes)
   }
 
   registerStyle (styles: Styles, displayName?: string) {
@@ -476,7 +515,7 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   clone (): FreeStyle {
-    return new FreeStyle(this.hash, this.debug, this.id).merge(this)
+    return new FreeStyle(this.hash, this.debug, this.id, this.changes).merge(this)
   }
 
 }
@@ -484,6 +523,6 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
 /**
  * Exports a simple function to create a new instance.
  */
-export function create (hash = stringHash, debug = typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-  return new FreeStyle(hash, debug)
+export function create (hash?: HashFunction, debug?: boolean, changes?: Changes) {
+  return new FreeStyle(hash, debug, undefined, changes)
 }
