@@ -341,7 +341,7 @@ Style.unmerge(ChildStyle) // Unmerge the child styles from the current instance.
 
 ## Legacy Browsers
 
-To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Object.keys`, `Object.create(null)`, `Array.isArray` and `Array.prototype.map`.
+To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Object.keys`, `Object.create(null)` and `Array.isArray`.
 
 ## License
 

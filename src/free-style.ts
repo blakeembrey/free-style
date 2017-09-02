@@ -6,13 +6,13 @@ let uniqueId = 0
 /**
  * Valid CSS property values.
  */
-export type PropertyValue = null | undefined | number | boolean | string | Array<number | boolean | string>
+export type PropertyValue = number | boolean | string
 
 /**
  * User styles object.
  */
 export interface Styles {
-  [selector: string]: PropertyValue | Styles
+  [selector: string]: null | undefined | PropertyValue | PropertyValue[] | Styles
 }
 
 /**
@@ -124,17 +124,27 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
   for (const key of Object.keys(styles)) {
     const value = styles[key]
 
-    if (key === IS_UNIQUE) {
-      isUnique = !!value
-    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-      nestedStyles.push([key.trim(), value])
-    } else {
-      properties.push([hyphenate(key.trim()), value])
+    if (value !== null && value !== undefined) {
+      if (key === IS_UNIQUE) {
+        isUnique = true
+      } else if (typeof value === 'object') {
+        if (Array.isArray(value)) {
+          const prop = hyphenate(key.trim())
+
+          for (let i = 0; i < value.length; i++) {
+            properties.push([prop, value[i]])
+          }
+        } else {
+          nestedStyles.push([key.trim(), value])
+        }
+      } else {
+        properties.push([hyphenate(key.trim()), value])
+      }
     }
   }
 
   return {
-    properties: sortTuples(properties),
+    styleString: stringifyProperties(sortTuples(properties)),
     nestedStyles: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles),
     isUnique
   }
@@ -144,21 +154,16 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
  * Stringify an array of property tuples.
  */
 function stringifyProperties (properties: Properties) {
-  const result: string[] = []
+  let result = ''
+  const end = properties.length - 1
 
-  for (const [name, value] of properties) {
-    if (value != null) {
-      if (Array.isArray(value)) {
-        for (const val of value) {
-          result.push(styleToString(name, val))
-        }
-      } else {
-        result.push(styleToString(name, value))
-      }
-    }
+  for (let i = 0; i < properties.length; i++) {
+    const [name, value] = properties[i]
+
+    result += styleToString(name, value) + (i === end ? '' : ';')
   }
 
-  return result.join(';')
+  return result
 }
 
 /**
@@ -176,8 +181,7 @@ function interpolate (selector: string, parent: string) {
  * Recursive loop building styles with deferred selectors.
  */
 function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [string, Style][], parent?: string) {
-  const { properties, nestedStyles, isUnique } = parseStyles(styles, !!selector)
-  const styleString = stringifyProperties(properties)
+  const { styleString, nestedStyles, isUnique } = parseStyles(styles, !!selector)
   let pid = styleString
 
   if (selector.charCodeAt(0) === 64 /* @ */) {
@@ -228,13 +232,6 @@ function composeStyles (container: FreeStyle, selector: string, styles: Styles, 
 }
 
 /**
- * Get the styles string for a container class.
- */
-function toStyles (container: Cache<Container<any>>, sep = '') {
-  return container.values().map(x => x.getStyles()).join(sep)
-}
-
-/**
  * Propagate change events.
  */
 export interface Changes {
@@ -267,20 +264,14 @@ export interface Container <T> {
  */
 export class Cache <T extends Container<any>> {
 
+  sheet: string[] = []
   changeId = 0
 
-  private _children: { [id: string]: T } = Object.create(null)
   private _keys: string[] = []
+  private _children: { [id: string]: T } = Object.create(null)
   private _counters: { [id: string]: number } = Object.create(null)
 
-  private _cacheStyles: string
-  private _cacheChangeId: number
-
   constructor (public hash = stringHash, public changes: Changes = noopChanges) {}
-
-  values (): T[] {
-    return this._keys.map(x => this._children[x])
-  }
 
   add <U extends T> (style: U): U {
     const count = this._counters[style.id] || 0
@@ -289,8 +280,9 @@ export class Cache <T extends Container<any>> {
     this._counters[style.id] = count + 1
 
     if (count === 0) {
-      this._keys.push(item.id)
       this._children[item.id] = item
+      this._keys.push(item.id)
+      this.sheet.push(item.getStyles())
       this.changeId++
       this.changes.add(item, this._keys.length - 1)
     } else {
@@ -320,6 +312,13 @@ export class Cache <T extends Container<any>> {
       }
 
       if (this.changeId !== prevChangeId) {
+        if (oldIndex === newIndex) {
+          this.sheet.splice(oldIndex, 1, item.getStyles())
+        } else {
+          this.sheet.splice(oldIndex, 1)
+          this.sheet.splice(newIndex, 0, item.getStyles())
+        }
+
         this.changes.change(item, oldIndex, newIndex)
       }
     }
@@ -341,6 +340,7 @@ export class Cache <T extends Container<any>> {
         delete this._children[style.id]
 
         this._keys.splice(index, 1)
+        this.sheet.splice(index, 1)
         this.changeId++
         this.changes.remove(item, index)
       } else if (item instanceof Cache && style instanceof Cache) {
@@ -349,6 +349,7 @@ export class Cache <T extends Container<any>> {
         item.unmerge(style)
 
         if (item.changeId !== prevChangeId) {
+          this.sheet.splice(index, 1, item.getStyles())
           this.changeId++
           this.changes.change(item, index, index)
         }
@@ -357,32 +358,19 @@ export class Cache <T extends Container<any>> {
   }
 
   merge <U extends Cache<any>> (cache: U) {
-    for (const value of cache.values()) {
-      this.add(value)
+    for (const id of cache._keys) {
+      this.add(cache._children[id])
     }
 
     return this
   }
 
   unmerge <U extends Cache<any>> (cache: U) {
-    for (const value of cache.values()) {
-      this.remove(value)
+    for (const id of cache._keys) {
+      this.remove(cache._children[id])
     }
 
     return this
-  }
-
-  computeStyles () {
-    return ''
-  }
-
-  getStyles (): string {
-    if (this._cacheChangeId !== this.changeId) {
-      this._cacheChangeId = this.changeId
-      this._cacheStyles = this.computeStyles()
-    }
-
-    return this._cacheStyles
   }
 
   clone () {
@@ -426,8 +414,8 @@ export class Style extends Cache<Selector> implements Container<Style> {
     super(hash)
   }
 
-  computeStyles (): string {
-    return `${toStyles(this, ',')}{${this.style}}`
+  getStyles (): string {
+    return `${this.sheet.join(',')}{${this.style}}`
   }
 
   getIdentifier () {
@@ -455,8 +443,8 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
     super(hash)
   }
 
-  computeStyles (): string {
-    return `${this.rule}{${this.style}${toStyles(this)}}`
+  getStyles (): string {
+    return `${this.rule}{${this.style}${this.sheet.join('')}}`
   }
 
   getIdentifier () {
@@ -508,8 +496,8 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
     this.merge(composeStyles(this, '', styles, false).cache)
   }
 
-  computeStyles (): string {
-    return toStyles(this)
+  getStyles (): string {
+    return this.sheet.join('')
   }
 
   getIdentifier () {
