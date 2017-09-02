@@ -6,7 +6,6 @@
     "declaration": false
   },
   "files": [
-    "src/free-style.ts",
-    "typings/index.d.ts"
+    "src/free-style.ts"
   ]
 }
