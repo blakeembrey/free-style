@@ -52,7 +52,7 @@
     "tap-spec": "^4.1.1",
     "ts-node": "^3.0.4",
     "tslint": "^5.2.0",
-    "tslint-config-standard": "^6.0.0",
+    "tslint-config-standard": "^6.0.1",
     "typescript": "^2.1.4"
   }
 }

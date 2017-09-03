@@ -1,5 +1,5 @@
 /**
- * The unique id is used to get a unique hash on styles (no merging).
+ * The unique id is used for unique hashes.
  */
 let uniqueId = 0
 
@@ -9,58 +9,70 @@ let uniqueId = 0
 export type PropertyValue = number | boolean | string
 
 /**
- * User styles object.
+ * Input styles object.
  */
 export interface Styles {
   [selector: string]: null | undefined | PropertyValue | PropertyValue[] | Styles
 }
 
 /**
- * Storing properties alphabetically ordered during parse.
+ * Hash algorithm interface.
  */
+export type HashFunction = (str: string) => string
+
+/**
+ * Tag styles with this string to get unique hashes.
+ */
+export const IS_UNIQUE = '__DO_NOT_DEDUPE_STYLE__'
+
 type Properties = Array<[string, PropertyValue]>
 type NestedStyles = Array<[string, Styles]>
 
-/**
- * Tag styles with this string to get unique hash outputs.
- */
-export const IS_UNIQUE = '__DO_NOT_DEDUPE_STYLE__'
+const upperCasePattern = /[A-Z]/g
+const msPattern = /^ms-/
+const interpolatePattern = /&/g
+const propLower = (m: string) => `-${m.toLowerCase()}`
 
 /**
  * CSS properties that are valid unit-less numbers.
  */
-const CSS_NUMBER: { [propertyName: string]: boolean } = {
-  'animation-iteration-count': true,
-  'box-flex': true,
-  'box-flex-group': true,
-  'column-count': true,
-  'counter-increment': true,
-  'counter-reset': true,
-  'flex': true,
-  'flex-grow': true,
-  'flex-positive': true,
-  'flex-shrink': true,
-  'flex-negative': true,
-  'font-weight': true,
-  'line-clamp': true,
-  'line-height': true,
-  'opacity': true,
-  'order': true,
-  'orphans': true,
-  'tab-size': true,
-  'widows': true,
-  'z-index': true,
-  'zoom': true,
+const cssNumberProperties = [
+  'animation-iteration-count',
+  'box-flex',
+  'box-flex-group',
+  'column-count',
+  'counter-increment',
+  'counter-reset',
+  'flex',
+  'flex-grow',
+  'flex-positive',
+  'flex-shrink',
+  'flex-negative',
+  'font-weight',
+  'line-clamp',
+  'line-height',
+  'opacity',
+  'order',
+  'orphans',
+  'tab-size',
+  'widows',
+  'z-index',
+  'zoom',
   // SVG properties.
-  'fill-opacity': true,
-  'stroke-dashoffset': true,
-  'stroke-opacity': true,
-  'stroke-width': true
-}
+  'fill-opacity',
+  'stroke-dashoffset',
+  'stroke-opacity',
+  'stroke-width'
+]
+
+/**
+ * Map of css number properties.
+ */
+const CSS_NUMBER = Object.create(null)
 
 // Add vendor prefixes to all unit-less properties.
-for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-']) {
-  for (const property of Object.keys(CSS_NUMBER)) {
+for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-', '']) {
+  for (const property of cssNumberProperties) {
     CSS_NUMBER[prefix + property] = true
   }
 }
@@ -70,26 +82,18 @@ for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-']) {
  */
 function hyphenate (propertyName: string): string {
   return propertyName
-    .replace(/([A-Z])/g, '-$1')
-    .replace(/^ms-/, '-ms-') // Internet Explorer vendor prefix.
-    .toLowerCase()
+    .replace(upperCasePattern, propLower)
+    .replace(msPattern, '-ms-') // Internet Explorer vendor prefix.
 }
-
-/**
- * Hash algorithm interface.
- */
-export type HashFunction = (str: string) => string
 
 /**
  * Generate a hash value from a string.
  */
 export function stringHash (str: string): string {
   let value = 5381
-  let i = str.length
+  let len = str.length
 
-  while (i) {
-    value = (value * 33) ^ str.charCodeAt(--i)
-  }
+  while (len--) value = (value * 33) ^ str.charCodeAt(len)
 
   return (value >>> 0).toString(36)
 }
@@ -99,7 +103,7 @@ export function stringHash (str: string): string {
  */
 function styleToString (key: string, value: string | number | boolean) {
   if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[key]) {
-    value = `${value}px`
+    return `${key}:${value}px`
   }
 
   return `${key}:${value}`
@@ -154,8 +158,8 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
  * Stringify an array of property tuples.
  */
 function stringifyProperties (properties: Properties) {
-  let result = ''
   const end = properties.length - 1
+  let result = ''
 
   for (let i = 0; i < properties.length; i++) {
     const [name, value] = properties[i]
@@ -171,7 +175,7 @@ function stringifyProperties (properties: Properties) {
  */
 function interpolate (selector: string, parent: string) {
   if (selector.indexOf('&') > -1) {
-    return selector.replace(/&/g, parent)
+    return selector.replace(interpolatePattern, parent)
   }
 
   return `${parent} ${selector}`
@@ -229,6 +233,15 @@ function composeStyles (container: FreeStyle, selector: string, styles: Styles, 
   }
 
   return { cache, pid, id }
+}
+
+/**
+ * Cache to list to styles.
+ */
+function join (strings: string[]): string {
+  let res = ''
+  for (const str of strings) res += str
+  return res
 }
 
 /**
@@ -357,18 +370,14 @@ export class Cache <T extends Container<any>> {
     }
   }
 
-  merge <U extends Cache<any>> (cache: U) {
-    for (const id of cache._keys) {
-      this.add(cache._children[id])
-    }
+  merge (cache: Cache<any>) {
+    for (const id of cache._keys) this.add(cache._children[id])
 
     return this
   }
 
-  unmerge <U extends Cache<any>> (cache: U) {
-    for (const id of cache._keys) {
-      this.remove(cache._children[id])
-    }
+  unmerge (cache: Cache<any>) {
+    for (const id of cache._keys) this.remove(cache._children[id])
 
     return this
   }
@@ -444,7 +453,7 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   }
 
   getStyles (): string {
-    return `${this.rule}{${this.style}${this.sheet.join('')}}`
+    return `${this.rule}{${this.style}${join(this.sheet)}}`
   }
 
   getIdentifier () {
@@ -497,7 +506,7 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   getStyles (): string {
-    return this.sheet.join('')
+    return join(this.sheet)
   }
 
   getIdentifier () {
