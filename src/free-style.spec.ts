@@ -1,6 +1,6 @@
 import test = require('blue-tape')
 import crypto = require('crypto')
-import { create, IS_UNIQUE } from './free-style'
+import { create, IS_UNIQUE, escape } from './free-style'
 
 test('free style', (t) => {
   t.test('output hashed classes', t => {
@@ -723,6 +723,33 @@ test('free style', (t) => {
     })
 
     t.equal(styles.join(''), Style.getStyles())
+    t.end()
+  })
+
+  t.test('escape css selectors', t => {
+    const Style = create()
+    const displayName = 'Connect(App)'
+
+    const animationName = Style.registerKeyframes(
+      { from: { color: 'red' } },
+      displayName
+    )
+
+    const className = Style.registerStyle(
+      { animation: animationName, '.t': { color: 'red' } },
+      displayName
+    )
+
+    t.ok(animationName.startsWith(displayName))
+    t.ok(className.startsWith(displayName))
+
+    t.equal(
+      Style.getStyles(),
+      `@keyframes ${escape(animationName)}{from{color:red}}` +
+      `.${escape(className)}{animation:Connect(App)_ftl4afb}` +
+      `.${escape(className)} .t{color:red}`
+    )
+
     t.end()
   })
 })

@@ -31,6 +31,7 @@ type NestedStyles = Array<[string, Styles]>
 const upperCasePattern = /[A-Z]/g
 const msPattern = /^ms-/
 const interpolatePattern = /&/g
+const escapePattern = /[ !#$%&()*+,./;<=>?@[\]^`{|}~"'\\]/g
 const propLower = (m: string) => `-${m.toLowerCase()}`
 
 /**
@@ -78,9 +79,14 @@ for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-', '']) {
 }
 
 /**
+ * Escape a CSS class name.
+ */
+export const escape = (str: string) => str.replace(escapePattern, '\\$&')
+
+/**
  * Transform a JavaScript property into a CSS property.
  */
-function hyphenate (propertyName: string): string {
+export function hyphenate (propertyName: string): string {
   return propertyName
     .replace(upperCasePattern, propLower)
     .replace(msPattern, '-ms-') // Internet Explorer vendor prefix.
@@ -228,7 +234,7 @@ function composeStyles (container: FreeStyle, selector: string, styles: Styles, 
   const id = displayName ? `${displayName}_${hash}` : hash
 
   for (const [selector, style] of list) {
-    const key = isStyle ? interpolate(selector, `.${id}`) : selector
+    const key = isStyle ? interpolate(selector, `.${escape(id)}`) : selector
     style.add(new Selector(key, style.hash, undefined, pid))
   }
 
@@ -238,9 +244,9 @@ function composeStyles (container: FreeStyle, selector: string, styles: Styles, 
 /**
  * Cache to list to styles.
  */
-function join (strings: string[]): string {
+function join (arr: string[]): string {
   let res = ''
-  for (const str of strings) res += str
+  for (let i = 0; i < arr.length; i++) res += arr[i]
   return res
 }
 
@@ -481,7 +487,8 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerStyle (styles: Styles, displayName?: string) {
-    const { cache, id } = composeStyles(this, '&', styles, true, this.debug ? displayName : undefined)
+    const debugName = this.debug ? displayName : undefined
+    const { cache, id } = composeStyles(this, '&', styles, true, debugName)
     this.merge(cache)
     return id
   }
@@ -491,8 +498,9 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerHashRule (prefix: string, styles: Styles, displayName?: string) {
-    const { cache, pid, id } = composeStyles(this, '', styles, false, this.debug ? displayName : undefined)
-    const rule = new Rule(`${prefix} ${id}`, undefined, this.hash, undefined, pid)
+    const debugName = this.debug ? displayName : undefined
+    const { cache, pid, id } = composeStyles(this, '', styles, false, debugName)
+    const rule = new Rule(`${prefix} ${escape(id)}`, undefined, this.hash, undefined, pid)
     this.add(rule.merge(cache))
     return id
   }
