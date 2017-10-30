@@ -49,7 +49,7 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 * [`typestyle`](https://github.com/typestyle/typestyle) - Popular type-safe interface for working with CSS
 * [`stylin`](https://github.com/ajoslin/stylin) - Simplest abstraction for creating styles, rules, and keyframes, and keeps `<style />` in sync
 * [`easy-style`](https://github.com/jkroso/easy-style) - Light-weight singleton API for browsers and node
-* [`i-css`](https://github.com/irom-io/i-css) - Library for writing css with literals objects
+* [`i-css`](https://github.com/irom-io/i-css) - Library for writing CSS with literal objects
 * **This module!** - Manually create, compose and manipulate style instances
 
 ## Usage
