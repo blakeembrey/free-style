@@ -119,7 +119,13 @@ function styleToString (key: string, value: string | number | boolean) {
  * Sort an array of tuples by first value.
  */
 function sortTuples <T extends any[]> (value: T[]): T[] {
-  return value.sort((a, b) => a[0] > b[0] ? 1 : -1)
+  return value.sort((a, b) => {
+    if (a[0] === b[0]) {
+      return a[2] > b[2] ? 1 : -1
+    } else {
+      return a[0] > b[0] ? 1 : -1
+    }
+  })
 }
 
 /**
@@ -142,7 +148,7 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
           const prop = hyphenate(key.trim())
 
           for (let i = 0; i < value.length; i++) {
-            properties.push([prop, value[i]])
+            properties.push([prop, value[i], i])
           }
         } else {
           nestedStyles.push([key.trim(), value])
