@@ -184,6 +184,20 @@ test('free style', (t) => {
     t.end()
   })
 
+  t.test('sort keys by property name', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      border: '5px solid red',
+      borderWidth: 10,
+      borderColor: 'blue'
+    })
+
+    t.equal(Style.getStyles(), `.${className}{border:5px solid red;border-color:blue;border-width:10px}`)
+
+    t.end()
+  })
+
   t.test('sort keys alphabetically after hyphenating', t => {
     const Style = create()
 
@@ -193,6 +207,18 @@ test('free style', (t) => {
     })
 
     t.equal(Style.getStyles(), `.${className}{-ms-border-radius:5px;border-radius:5px}`)
+
+    t.end()
+  })
+
+  t.test('overloaded keys should sort in insertion order', t => {
+    const Style = create()
+
+    const className = Style.registerStyle({
+      foo: [15, 13, 11, 9, 7, 5, 3, 1, 14, 12, 10, 8, 6, 4, 2]
+    })
+
+    t.equal(Style.getStyles(), `.${className}{foo:15px;foo:13px;foo:11px;foo:9px;foo:7px;foo:5px;foo:3px;foo:1px;foo:14px;foo:12px;foo:10px;foo:8px;foo:6px;foo:4px;foo:2px}`)
 
     t.end()
   })

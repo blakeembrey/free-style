@@ -25,9 +25,6 @@ export type HashFunction = (str: string) => string
  */
 export const IS_UNIQUE = '__DO_NOT_DEDUPE_STYLE__'
 
-type Properties = Array<[string, PropertyValue]>
-type NestedStyles = Array<[string, Styles]>
-
 const upperCasePattern = /[A-Z]/g
 const msPattern = /^ms-/
 const interpolatePattern = /&/g
@@ -107,7 +104,7 @@ export function stringHash (str: string): string {
 /**
  * Transform a style string to a CSS string.
  */
-function styleToString (key: string, value: string | number | boolean) {
+function styleToString (key: string, value: PropertyValue) {
   if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[key]) {
     return `${key}:${value}px`
   }
@@ -126,8 +123,8 @@ function sortTuples <T extends any[]> (value: T[]): T[] {
  * Categorize user styles.
  */
 function parseStyles (styles: Styles, hasNestedStyles: boolean) {
-  const properties: Properties = []
-  const nestedStyles: NestedStyles = []
+  const properties: Array<[string, PropertyValue | PropertyValue[]]> = []
+  const nestedStyles: Array<[string, Styles]> = []
   let isUnique = false
 
   // Sort keys before adding to styles.
@@ -137,16 +134,8 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
     if (value !== null && value !== undefined) {
       if (key === IS_UNIQUE) {
         isUnique = true
-      } else if (typeof value === 'object') {
-        if (Array.isArray(value)) {
-          const prop = hyphenate(key.trim())
-
-          for (let i = 0; i < value.length; i++) {
-            properties.push([prop, value[i]])
-          }
-        } else {
-          nestedStyles.push([key.trim(), value])
-        }
+      } else if (typeof value === 'object' && !Array.isArray(value)) {
+        nestedStyles.push([key.trim(), value])
       } else {
         properties.push([hyphenate(key.trim()), value])
       }
@@ -163,17 +152,12 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
 /**
  * Stringify an array of property tuples.
  */
-function stringifyProperties (properties: Properties) {
-  const end = properties.length - 1
-  let result = ''
+function stringifyProperties (properties: Array<[string, PropertyValue | PropertyValue[]]>) {
+  return properties.map(([name, value]) => {
+    if (!Array.isArray(value)) return styleToString(name, value)
 
-  for (let i = 0; i < properties.length; i++) {
-    const [name, value] = properties[i]
-
-    result += styleToString(name, value) + (i === end ? '' : ';')
-  }
-
-  return result
+    return value.map(x => styleToString(name, x)).join(';')
+  }).join(';')
 }
 
 /**
