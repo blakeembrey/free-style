@@ -44,7 +44,7 @@
   "homepage": "https://github.com/blakeembrey/free-style",
   "devDependencies": {
     "@types/blue-tape": "^0.1.31",
-    "@types/node": "^8.0.26",
+    "@types/node": "^9.4.0",
     "blue-tape": "^1.0.0",
     "istanbul": "^0.4.2",
     "just-css-properties": "^1.0.0",
