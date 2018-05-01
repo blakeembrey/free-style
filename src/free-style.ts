@@ -33,12 +33,19 @@ const propLower = (m: string) => `-${m.toLowerCase()}`
 
 /**
  * CSS properties that are valid unit-less numbers.
+ *
+ * Ref: https://github.com/facebook/react/blob/master/packages/react-dom/src/shared/CSSProperty.js
  */
-const cssNumberProperties = [
+const CSS_NUMBER_PROPERTIES = [
   'animation-iteration-count',
+  'border-image-outset',
+  'border-image-slice',
+  'border-image-width',
   'box-flex',
   'box-flex-group',
+  'box-ordinal-group',
   'column-count',
+  'columns',
   'counter-increment',
   'counter-reset',
   'flex',
@@ -46,13 +53,16 @@ const cssNumberProperties = [
   'flex-positive',
   'flex-shrink',
   'flex-negative',
+  'flex-order',
   'font-weight',
   'grid-area',
   'grid-column',
   'grid-column-end',
+  'grid-column-span',
   'grid-column-start',
   'grid-row',
   'grid-row-end',
+  'grid-row-span',
   'grid-row-start',
   'line-clamp',
   'line-height',
@@ -65,7 +75,11 @@ const cssNumberProperties = [
   'zoom',
   // SVG properties.
   'fill-opacity',
+  'flood-opacity',
+  'stop-opacity',
+  'stroke-dasharray',
   'stroke-dashoffset',
+  'stroke-miterlimit',
   'stroke-opacity',
   'stroke-width'
 ]
@@ -73,11 +87,11 @@ const cssNumberProperties = [
 /**
  * Map of css number properties.
  */
-const CSS_NUMBER = Object.create(null)
+const CSS_NUMBER: { [key: string]: true } = Object.create(null)
 
 // Add vendor prefixes to all unit-less properties.
 for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-', '']) {
-  for (const property of cssNumberProperties) {
+  for (const property of CSS_NUMBER_PROPERTIES) {
     CSS_NUMBER[prefix + property] = true
   }
 }
