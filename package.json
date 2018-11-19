@@ -18,7 +18,7 @@
     "test:spec": "blue-tape dist/**/*.spec.js | tap-spec",
     "test:cov": "istanbul cover --print none -x \"dist/**/*.spec.js\" node_modules/blue-tape/bin/blue-tape.js -- \"dist/**/*.spec.js\" | tap-spec",
     "test": "npm run build && npm run lint && npm run test:cov",
-    "prepublish": "npm run build"
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
