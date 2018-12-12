@@ -275,6 +275,7 @@ Style.getStyles() //=> ".f65pi0b{background-color:red;padding:10px}"
 
 ### Useful Libraries
 
+* [`polished`](https://polished.js.org)
 * [`classnames`](https://github.com/JedWatson/classnames)
 * [`color`](https://github.com/MoOx/color)
 * [`style-helper`](https://github.com/blakeembrey/style-helper)
