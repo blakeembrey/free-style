@@ -1,3 +1,4 @@
+var insertCss = require('insert-css')
 var FreeStyle = require('../..')
 
 var Style = FreeStyle.create()
@@ -31,6 +32,6 @@ function app (targetEl) {
   targetEl.appendChild(appEl)
 }
 
-Style.inject()
+insertCss(Style.getStyles())
 
 app(document.body)

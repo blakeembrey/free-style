@@ -4,7 +4,10 @@
     "serve": "http-server"
   },
   "devDependencies": {
-    "browserify": "^12.0.1",
-    "http-server": "^0.8.5"
+    "browserify": "^16.2.3",
+    "http-server": "^0.11.1"
+  },
+  "dependencies": {
+    "insert-css": "^2.0.0"
   }
 }
