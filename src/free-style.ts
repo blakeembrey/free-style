@@ -394,8 +394,8 @@ export class Cache <T extends Container<any>> {
     return this
   }
 
-  clone () {
-    return new Cache(this.hash).merge(this)
+  clone (): Cache<T> {
+    return new Cache<T>(this.hash).merge(this)
   }
 }
 
@@ -418,7 +418,7 @@ export class Selector implements Container<Selector> {
     return `${this.pid}.${this.selector}`
   }
 
-  clone () {
+  clone (): Selector {
     return new Selector(this.selector, this.hash, this.id, this.pid)
   }
 }
