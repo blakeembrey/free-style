@@ -287,19 +287,18 @@ export interface Container <T> {
  * Implement a cache/event emitter.
  */
 export class Cache <T extends Container<any>> {
-
   sheet: string[] = []
   changeId = 0
 
   private _keys: string[] = []
-  private _children: { [id: string]: T } = Object.create(null)
-  private _counters: { [id: string]: number } = Object.create(null)
+  private _children: Record<string, T | undefined> = Object.create(null)
+  private _counters: Record<string, number | undefined> = Object.create(null)
 
   constructor (public hash = stringHash, public changes: Changes = noopChanges) {}
 
   add <U extends T> (style: U): U {
     const count = this._counters[style.id] || 0
-    const item = this._children[style.id] || style.clone()
+    const item: U = this._children[style.id] || style.clone()
 
     this._counters[style.id] = count + 1
 
@@ -347,16 +346,16 @@ export class Cache <T extends Container<any>> {
       }
     }
 
-    return item as U
+    return item
   }
 
   remove (style: T): void {
     const count = this._counters[style.id]
 
-    if (count > 0) {
+    if (count !== undefined && count > 0) {
       this._counters[style.id] = count - 1
 
-      const item = this._children[style.id]
+      const item = this._children[style.id]!
       const index = this._keys.indexOf(item.id)
 
       if (count === 1) {
@@ -381,29 +380,29 @@ export class Cache <T extends Container<any>> {
     }
   }
 
-  merge (cache: Cache<any>) {
-    for (const id of cache._keys) this.add(cache._children[id])
+  values (): T[] {
+    return this._keys.map(key => this._children[key]!)
+  }
 
+  merge (cache: Cache<any>) {
+    for (const item of cache.values()) this.add(item)
     return this
   }
 
   unmerge (cache: Cache<any>) {
-    for (const id of cache._keys) this.remove(cache._children[id])
-
+    for (const item of cache.values()) this.remove(item)
     return this
   }
 
   clone () {
     return new Cache(this.hash).merge(this)
   }
-
 }
 
 /**
  * Selector is a dumb class made to represent nested CSS selectors.
  */
 export class Selector implements Container<Selector> {
-
   constructor (
     public selector: string,
     public hash: HashFunction,
@@ -422,14 +421,12 @@ export class Selector implements Container<Selector> {
   clone () {
     return new Selector(this.selector, this.hash, this.id, this.pid)
   }
-
 }
 
 /**
  * The style container registers a style string with selectors.
  */
 export class Style extends Cache<Selector> implements Container<Style> {
-
   constructor (public style: string, public hash: HashFunction, public id = `c${hash(style)}`) {
     super(hash)
   }
@@ -445,14 +442,12 @@ export class Style extends Cache<Selector> implements Container<Style> {
   clone (): Style {
     return new Style(this.style, this.hash, this.id).merge(this)
   }
-
 }
 
 /**
  * Implement rule logic for style output.
  */
 export class Rule extends Cache<Rule | Style> implements Container<Rule> {
-
   constructor (
     public rule: string,
     public style = '',
@@ -474,17 +469,15 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   clone (): Rule {
     return new Rule(this.rule, this.style, this.hash, this.id, this.pid).merge(this)
   }
-
 }
 
 /**
  * The FreeStyle class implements the API for everything else.
  */
 export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyle> {
-
   constructor (
     public hash = stringHash,
-    public debug = typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production',
+    public debug = typeof process !== 'undefined' && process.env.NODE_ENV !== 'production',
     public id = `f${(++uniqueId).toString(36)}`,
     changes?: Changes
   ) {
@@ -529,7 +522,6 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   clone (): FreeStyle {
     return new FreeStyle(this.hash, this.debug, this.id, this.changes).merge(this)
   }
-
 }
 
 /**
