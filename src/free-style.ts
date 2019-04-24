@@ -192,35 +192,40 @@ function interpolate (selector: string, parent: string) {
   return `${parent} ${selector}`
 }
 
+interface Stylize {
+  rules: [string, Stylize, string][] // rule, nested, style
+  styles: [string, string, boolean][] // selector, style, isUnique
+}
+
 /**
  * Recursive loop building styles with deferred selectors.
  */
-function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [string, Style][], parent?: string) {
-  const { styleString, nestedStyles, isUnique } = parseStyles(styles, !!selector)
+function stylize (
+  selector: string,
+  styles: Styles,
+  self: Stylize,
+  parent?: string
+) {
+  const { styleString, nestedStyles, isUnique } = parseStyles(styles, selector !== '')
   let pid = styleString
 
   if (selector.charCodeAt(0) === 64 /* @ */) {
-    const rule = cache.add(new Rule(selector, parent ? undefined : styleString, cache.hash))
+    const child: Stylize = { rules: [], styles: [] }
+    self.rules.push([selector, child, parent ? '' : styleString])
 
     // Nested styles support (e.g. `.foo > @media > .bar`).
-    if (styleString && parent) {
-      const style = rule.add(new Style(styleString, rule.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
-      list.push([parent, style])
-    }
+    if (styleString && parent) child.styles.push([parent, styleString, isUnique])
 
     for (const [name, value] of nestedStyles) {
-      pid += name + stylize(rule, name, value, list, parent)
+      pid += name + stylize(name, value, child, parent)
     }
   } else {
     const key = parent ? interpolate(selector, parent) : selector
 
-    if (styleString) {
-      const style = cache.add(new Style(styleString, cache.hash, isUnique ? `u${(++uniqueId).toString(36)}` : undefined))
-      list.push([key, style])
-    }
+    if (styleString) self.styles.push([key, styleString, isUnique])
 
     for (const [name, value] of nestedStyles) {
-      pid += name + stylize(cache, name, value, list, key)
+      pid += name + stylize(name, value, self, key)
     }
   }
 
@@ -228,22 +233,22 @@ function stylize (cache: Cache<any>, selector: string, styles: Styles, list: [st
 }
 
 /**
- * Register all styles, but collect for selector interpolation using the hash.
+ * Transform `Stylize` tree into actual styles.
  */
-function composeStyles (container: FreeStyle, selector: string, styles: Styles, isStyle: boolean, displayName?: string) {
-  const cache = new Cache<Rule | Style>(container.hash)
-  const list: [string, Style][] = []
-  const pid = stylize(cache, selector, styles, list)
-
-  const hash = `f${cache.hash(pid)}`
-  const id = displayName ? `${displayName}_${hash}` : hash
-
-  for (const [selector, style] of list) {
-    const key = isStyle ? interpolate(selector, `.${escape(id)}`) : selector
-    style.add(new Selector(key, style.hash, undefined, pid))
+function composeStylize (cache: Cache<Rule | Style>, pid: string, stylize: Stylize, className: string, isStyle: boolean) {
+  for (const [selector, styleString, isUnique] of stylize.styles) {
+    const key = isStyle ? interpolate(selector, className) : selector
+    const id = isUnique ? `u\0${(++uniqueId).toString(36)}` : `s\0${pid}\0${styleString}`
+    const style = new Style(styleString, id)
+    style.add(new Selector(key, `k\0${pid}\0${key}`))
+    cache.add(style)
   }
 
-  return { cache, pid, id }
+  for (const [selector, nested, styleString] of stylize.rules) {
+    const rule = new Rule(selector, styleString, `r\0${pid}\0${selector}\0${styleString}`)
+    composeStylize(rule, pid, nested, className, isStyle)
+    cache.add(rule)
+  }
 }
 
 /**
@@ -279,7 +284,6 @@ const noopChanges: Changes = {
 export interface Container <T> {
   id: string
   clone (): T
-  getIdentifier (): string
   getStyles (): string
 }
 
@@ -294,7 +298,7 @@ export class Cache <T extends Container<any>> {
   private _children: Record<string, T | undefined> = Object.create(null)
   private _counters: Record<string, number | undefined> = Object.create(null)
 
-  constructor (public hash = stringHash, public changes: Changes = noopChanges) {}
+  constructor (public changes: Changes = noopChanges) {}
 
   add <U extends T> (style: U): U {
     const count = this._counters[style.id] || 0
@@ -308,41 +312,21 @@ export class Cache <T extends Container<any>> {
       this.sheet.push(item.getStyles())
       this.changeId++
       this.changes.add(item, this._keys.length - 1)
+    } else if (item instanceof Cache && style instanceof Cache) {
+      const curIndex = this._keys.indexOf(style.id)
+      const prevItemChangeId = item.changeId
+
+      item.merge(style)
+
+      if (item.changeId !== prevItemChangeId) {
+        this.sheet.splice(curIndex, 1, item.getStyles())
+        this.changeId++
+        this.changes.change(item, curIndex, curIndex)
+      }
     } else {
       // Check if contents are different.
-      if (item.getIdentifier() !== style.getIdentifier()) {
+      if (item.getStyles() !== style.getStyles()) {
         throw new TypeError(`Hash collision: ${style.getStyles()} === ${item.getStyles()}`)
-      }
-
-      const oldIndex = this._keys.indexOf(style.id)
-      const newIndex = this._keys.length - 1
-      const prevChangeId = this.changeId
-
-      if (oldIndex !== newIndex) {
-        this._keys.splice(oldIndex, 1)
-        this._keys.push(style.id)
-        this.changeId++
-      }
-
-      if (item instanceof Cache && style instanceof Cache) {
-        const prevChangeId = item.changeId
-
-        item.merge(style)
-
-        if (item.changeId !== prevChangeId) {
-          this.changeId++
-        }
-      }
-
-      if (this.changeId !== prevChangeId) {
-        if (oldIndex === newIndex) {
-          this.sheet.splice(oldIndex, 1, item.getStyles())
-        } else {
-          this.sheet.splice(oldIndex, 1)
-          this.sheet.splice(newIndex, 0, item.getStyles())
-        }
-
-        this.changes.change(item, oldIndex, newIndex)
       }
     }
 
@@ -395,7 +379,7 @@ export class Cache <T extends Container<any>> {
   }
 
   clone (): Cache<T> {
-    return new Cache<T>(this.hash).merge(this)
+    return new Cache<T>().merge(this)
   }
 }
 
@@ -403,23 +387,14 @@ export class Cache <T extends Container<any>> {
  * Selector is a dumb class made to represent nested CSS selectors.
  */
 export class Selector implements Container<Selector> {
-  constructor (
-    public selector: string,
-    public hash: HashFunction,
-    public id = `s${hash(selector)}`,
-    public pid = ''
-  ) {}
+  constructor (public selector: string, public id: string) {}
 
   getStyles () {
     return this.selector
   }
 
-  getIdentifier () {
-    return `${this.pid}.${this.selector}`
-  }
-
   clone (): Selector {
-    return new Selector(this.selector, this.hash, this.id, this.pid)
+    return new Selector(this.selector, this.id)
   }
 }
 
@@ -427,20 +402,16 @@ export class Selector implements Container<Selector> {
  * The style container registers a style string with selectors.
  */
 export class Style extends Cache<Selector> implements Container<Style> {
-  constructor (public style: string, public hash: HashFunction, public id = `c${hash(style)}`) {
-    super(hash)
+  constructor (public style: string, public id: string) {
+    super()
   }
 
   getStyles (): string {
     return `${this.sheet.join(',')}{${this.style}}`
   }
 
-  getIdentifier () {
-    return this.style
-  }
-
   clone (): Style {
-    return new Style(this.style, this.hash, this.id).merge(this)
+    return new Style(this.style, this.id).merge(this)
   }
 }
 
@@ -450,24 +421,18 @@ export class Style extends Cache<Selector> implements Container<Style> {
 export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   constructor (
     public rule: string,
-    public style = '',
-    public hash: HashFunction,
-    public id = `a${hash(`${rule}.${style}`)}`,
-    public pid = ''
+    public style: string,
+    public id: string
   ) {
-    super(hash)
+    super()
   }
 
   getStyles (): string {
     return `${this.rule}{${this.style}${join(this.sheet)}}`
   }
 
-  getIdentifier () {
-    return `${this.pid}.${this.rule}.${this.style}`
-  }
-
   clone (): Rule {
-    return new Rule(this.rule, this.style, this.hash, this.id, this.pid).merge(this)
+    return new Rule(this.rule, this.style, this.id).merge(this)
   }
 }
 
@@ -476,18 +441,20 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
  */
 export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyle> {
   constructor (
-    public hash = stringHash,
-    public debug = typeof process !== 'undefined' && process.env.NODE_ENV !== 'production',
-    public id = `f${(++uniqueId).toString(36)}`,
+    public hash: HashFunction,
+    public debug: boolean,
+    public id: string,
     changes?: Changes
   ) {
-    super(hash, changes)
+    super(changes)
   }
 
   registerStyle (styles: Styles, displayName?: string) {
-    const debugName = this.debug ? displayName : undefined
-    const { cache, id } = composeStyles(this, '&', styles, true, debugName)
-    this.merge(cache)
+    const self: Stylize = { rules: [], styles: [] }
+    const pid = stylize('&', styles, self)
+    const hash = `f${this.hash(pid)}`
+    const id = this.debug && displayName ? `${displayName}_${hash}` : hash
+    composeStylize(this, pid, self, `.${escape(id)}`, true)
     return id
   }
 
@@ -496,27 +463,28 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerHashRule (prefix: string, styles: Styles, displayName?: string) {
-    const debugName = this.debug ? displayName : undefined
-    const { cache, pid, id } = composeStyles(this, '', styles, false, debugName)
-    const rule = new Rule(`${prefix} ${escape(id)}`, undefined, this.hash, undefined, pid)
-    this.add(rule.merge(cache))
+    const self: Stylize = { rules: [], styles: [] }
+    const pid = stylize('', styles, self)
+    const hash = `f${this.hash(pid)}`
+    const id = displayName ? `${displayName}_${hash}` : hash
+    const rule = new Rule(`${prefix} ${escape(id)}`, '', `h\0${pid}\0${prefix}`)
+    composeStylize(rule, pid, self, '', false)
+    this.add(rule)
     return id
   }
 
   registerRule (rule: string, styles: Styles) {
-    this.merge(composeStyles(this, rule, styles, false).cache)
+    const self: Stylize = { rules: [], styles: [] }
+    const pid = stylize(rule, styles, self)
+    return composeStylize(this, pid, self, '', false)
   }
 
   registerCss (styles: Styles) {
-    this.merge(composeStyles(this, '', styles, false).cache)
+    return this.registerRule('', styles)
   }
 
   getStyles (): string {
     return join(this.sheet)
-  }
-
-  getIdentifier () {
-    return this.id
   }
 
   clone (): FreeStyle {
@@ -527,6 +495,10 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
 /**
  * Exports a simple function to create a new instance.
  */
-export function create (hash?: HashFunction, debug?: boolean, changes?: Changes) {
-  return new FreeStyle(hash, debug, undefined, changes)
+export function create (
+  hash: HashFunction = stringHash,
+  debug: boolean = typeof (process as any) !== 'undefined' && (process.env as any).NODE_ENV !== 'production',
+  changes: Changes = noopChanges
+) {
+  return new FreeStyle(hash, debug, `f${(++uniqueId).toString(36)}`, changes)
 }

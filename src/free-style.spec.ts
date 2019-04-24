@@ -3,7 +3,7 @@ import crypto = require('crypto')
 import { create, IS_UNIQUE, escape } from './free-style'
 
 test('free style', (t) => {
-  t.test('output hashed classes', t => {
+  t.test('output hashed class names', t => {
     const Style = create()
     let changeId = Style.changeId
 
@@ -87,7 +87,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('do not append "px" to whitelisted properties', t => {
+  t.test('do not append "px" to whitelist properties', t => {
     const Style = create()
 
     const className = Style.registerStyle({
@@ -100,7 +100,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('merge duplicate styles', t => {
+  t.test('merge exactly duplicate styles', t => {
     const Style = create()
     let changeId = Style.changeId
 
@@ -211,7 +211,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('overloaded keys should sort in insertion order', t => {
+  t.test('overloaded keys should stay sorted in insertion order', t => {
     const Style = create()
 
     const className = Style.registerStyle({
@@ -223,7 +223,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('merge duplicate nested styles', t => {
+  t.test('merge duplicate nested style', t => {
     const Style = create()
 
     const className = Style.registerStyle({
@@ -241,7 +241,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('merge @-rules', t => {
+  t.test('@-rules across multiple styles produce multiple rules', t => {
     const Style = create()
     const mediaQuery = '@media (min-width: 600px)'
     let changeId = Style.changeId
@@ -267,7 +267,7 @@ test('free style', (t) => {
 
     t.equal(
       Style.getStyles(),
-      `@media (min-width: 600px){.${className1}{color:red}.${className2}{color:blue}}`
+      `@media (min-width: 600px){.${className1}{color:red}}@media (min-width: 600px){.${className2}{color:blue}}`
     )
 
     t.end()
@@ -304,12 +304,16 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('merge duplicate styles across instances', t => {
+  t.test('merge styles across instances', t => {
     const Style1 = create()
     const Style2 = create()
     const Style3 = create()
 
     const className1 = Style1.registerStyle({
+      color: 'red'
+    })
+
+    Style2.registerStyle({ // Should duplicate `className1`.
       color: 'red'
     })
 
@@ -325,7 +329,7 @@ test('free style', (t) => {
 
     t.equal(
       Style1.getStyles(),
-      `.${className1},.${className3}{color:red}@media (max-width: 600px){.${className3}{color:blue}}`
+      `.${className1}{color:red}.${className3}{color:red}@media (max-width: 600px){.${className3}{color:blue}}`
     )
 
     Style1.unmerge(Style2)
@@ -440,7 +444,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('de-dupe using custom rules', t => {
+  t.test('de-dupe across styles and rules', t => {
     const Style = create()
     let changeId = Style.changeId
 
@@ -461,7 +465,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('cache order by latest insertion', t => {
+  t.test('retain insertion order', t => {
     const Style = create()
 
     const x = Style.registerStyle({
@@ -480,14 +484,14 @@ test('free style', (t) => {
 
     t.equal(
       Style.getStyles(),
-      `.${x}{background:red}.${y}{background:palegreen}` +
-      `@media (min-width: 400px){.${x}{background:yellow}.${y}{background:pink}}`
+      `.${x}{background:red}@media (min-width: 400px){.${x}{background:yellow}}` +
+      `.${y}{background:palegreen}@media (min-width: 400px){.${y}{background:pink}}`
     )
 
     t.end()
   })
 
-  t.test('keep order of nested params', t => {
+  t.test('retain nested param order', t => {
     const Style = create()
     let changeId = Style.changeId
 
@@ -579,63 +583,7 @@ test('free style', (t) => {
     t.end()
   })
 
-  t.test('detect hash collisions', t => {
-    const Style = create()
-    const className = Style.registerStyle({ color: '#0008d0' })
-
-    t.throws(
-      () => Style.registerStyle({ color: '#000f82' }),
-      'Hash collision: {color:#000f82} === .f1pqsan1{color:#0008d0}'
-    )
-
-    t.equal(Style.getStyles(), `.${className}{color:#0008d0}`)
-
-    t.end()
-  })
-
-  t.test('detect hash collision for nested styles', t => {
-    const Style = create()
-
-    t.throws(
-      () => {
-        Style.registerStyle({
-          div: { color: '#0009e8' },
-          span: { color: 'red' }
-        })
-
-        Style.registerStyle({
-          div: { color: '#000f75' },
-          span: { color: 'red' }
-        })
-      },
-      /Hash collision/
-    )
-
-    t.end()
-  })
-
-  t.test('detect hash collision for keyframes', t => {
-    const Style = create()
-
-    t.throws(
-      () => {
-        Style.registerKeyframes({
-          from: { color: '#0008da' },
-          to: { color: 'red' }
-        })
-
-        Style.registerKeyframes({
-          from: { color: '#000f8c' },
-          to: { color: 'red' }
-        })
-      },
-      /Hash collision/
-    )
-
-    t.end()
-  })
-
-  t.test('disable style deduping', t => {
+  t.test('disable style de-dupe', t => {
     const Style = create()
 
     const className = Style.registerStyle({
@@ -686,7 +634,7 @@ test('free style', (t) => {
       }
     })
 
-    t.equal(Style.getStyles(), 'body,h1{color:red}@print{h1{color:#000}body,h1 a{color:blue}}')
+    t.equal(Style.getStyles(), 'body,h1{color:red}@print{body,h1 a{color:blue}h1{color:#000}}')
 
     t.end()
   })

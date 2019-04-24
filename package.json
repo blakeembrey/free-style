@@ -11,7 +11,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "lint": "tslint \"src/**/*.ts\"",
+    "lint": "tslint \"src/**/*.ts\" --project tsconfig.json",
     "build": "rimraf dist/ dist.es2015/ && tsc && tsc -P tsconfig.es2015.json",
     "bench:hash": "ts-node benchmarks/hash.ts",
     "bench:perf": "ts-node benchmarks/perf.ts",
