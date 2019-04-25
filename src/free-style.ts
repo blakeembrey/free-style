@@ -323,11 +323,6 @@ export class Cache <T extends Container<any>> {
         this.changeId++
         this.changes.change(item, curIndex, curIndex)
       }
-    } else {
-      // Check if contents are different.
-      if (item.getStyles() !== style.getStyles()) {
-        throw new TypeError(`Hash collision: ${style.getStyles()} === ${item.getStyles()}`)
-      }
     }
 
     return item
