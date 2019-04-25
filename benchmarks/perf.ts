@@ -4,7 +4,7 @@ const cssProperties = require('just-css-properties')
 
 const Style = create()
 const start = process.hrtime()
-const count = Math.pow(10, 4.5)
+const count = Math.pow(10, 5)
 
 for (let i = 0; i < count; i += 3) {
   const p1 = cssProperties[(i + 1) % cssProperties.length]
