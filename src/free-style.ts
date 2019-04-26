@@ -461,7 +461,7 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
     const self: Stylize = { rules: [], styles: [] }
     const pid = stylize('', styles, self)
     const hash = `f${this.hash(pid)}`
-    const id = displayName ? `${displayName}_${hash}` : hash
+    const id = this.debug && displayName ? `${displayName}_${hash}` : hash
     const rule = new Rule(`${prefix} ${escape(id)}`, '', `h\0${pid}\0${prefix}`)
     composeStylize(rule, pid, self, '', false)
     this.add(rule)
