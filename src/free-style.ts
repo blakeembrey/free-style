@@ -36,62 +36,57 @@ const propLower = (m: string) => `-${m.toLowerCase()}`
  *
  * Ref: https://github.com/facebook/react/blob/master/packages/react-dom/src/shared/CSSProperty.js
  */
-const CSS_NUMBER_PROPERTIES = [
-  'animation-iteration-count',
-  'border-image-outset',
-  'border-image-slice',
-  'border-image-width',
-  'box-flex',
-  'box-flex-group',
-  'box-ordinal-group',
-  'column-count',
-  'columns',
-  'counter-increment',
-  'counter-reset',
-  'flex',
-  'flex-grow',
-  'flex-positive',
-  'flex-shrink',
-  'flex-negative',
-  'flex-order',
-  'font-weight',
-  'grid-area',
-  'grid-column',
-  'grid-column-end',
-  'grid-column-span',
-  'grid-column-start',
-  'grid-row',
-  'grid-row-end',
-  'grid-row-span',
-  'grid-row-start',
-  'line-clamp',
-  'line-height',
-  'opacity',
-  'order',
-  'orphans',
-  'tab-size',
-  'widows',
-  'z-index',
-  'zoom',
+const CSS_NUMBER: Record<string, true> = {
+  'animation-iteration-count': true,
+  'border-image-outset': true,
+  'border-image-slice': true,
+  'border-image-width': true,
+  'box-flex': true,
+  'box-flex-group': true,
+  'box-ordinal-group': true,
+  'column-count': true,
+  'columns': true,
+  'counter-increment': true,
+  'counter-reset': true,
+  'flex': true,
+  'flex-grow': true,
+  'flex-positive': true,
+  'flex-shrink': true,
+  'flex-negative': true,
+  'flex-order': true,
+  'font-weight': true,
+  'grid-area': true,
+  'grid-column': true,
+  'grid-column-end': true,
+  'grid-column-span': true,
+  'grid-column-start': true,
+  'grid-row': true,
+  'grid-row-end': true,
+  'grid-row-span': true,
+  'grid-row-start': true,
+  'line-clamp': true,
+  'line-height': true,
+  'opacity': true,
+  'order': true,
+  'orphans': true,
+  'tab-size': true,
+  'widows': true,
+  'z-index': true,
+  'zoom': true,
   // SVG properties.
-  'fill-opacity',
-  'flood-opacity',
-  'stop-opacity',
-  'stroke-dasharray',
-  'stroke-dashoffset',
-  'stroke-miterlimit',
-  'stroke-opacity',
-  'stroke-width'
-]
-
-/**
- * Map of css number properties.
- */
-const CSS_NUMBER: { [key: string]: true } = Object.create(null)
+  'fill-opacity': true,
+  'flood-opacity': true,
+  'stop-opacity': true,
+  'stroke-dasharray': true,
+  'stroke-dashoffset': true,
+  'stroke-miterlimit': true,
+  'stroke-opacity': true,
+  'stroke-width': true
+}
 
 // Add vendor prefixes to all unit-less properties.
-for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-', '']) {
-  for (const property of CSS_NUMBER_PROPERTIES) {
+for (const property of Object.keys(CSS_NUMBER)) {
+  for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-', '']) {
     CSS_NUMBER[prefix + property] = true
   }
 }
@@ -116,9 +111,7 @@ export function hyphenate (propertyName: string): string {
 export function stringHash (str: string): string {
   let value = 5381
   let len = str.length
-
   while (len--) value = (value * 33) ^ str.charCodeAt(len)
-
   return (value >>> 0).toString(36)
 }
 
@@ -126,7 +119,7 @@ export function stringHash (str: string): string {
  * Transform a style string to a CSS string.
  */
 function styleToString (key: string, value: PropertyValue) {
-  if (typeof value === 'number' && value !== 0 && !CSS_NUMBER[key]) {
+  if (typeof value === 'number' && value !== 0 && !CSS_NUMBER.hasOwnProperty(key)) {
     return `${key}:${value}px`
   }
 
@@ -164,8 +157,8 @@ function parseStyles (styles: Styles, hasNestedStyles: boolean) {
   }
 
   return {
-    styleString: stringifyProperties(sortTuples(properties)),
-    nestedStyles: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles),
+    style: stringifyProperties(sortTuples(properties)),
+    nested: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles),
     isUnique
   }
 }
@@ -185,17 +178,12 @@ function stringifyProperties (properties: Array<[string, PropertyValue | Propert
  * Interpolate CSS selectors.
  */
 function interpolate (selector: string, parent: string) {
-  if (selector.indexOf('&') > -1) {
-    return selector.replace(interpolatePattern, parent)
-  }
-
-  return `${parent} ${selector}`
+  if (selector.indexOf('&') === -1) return `${parent} ${selector}`
+  return selector.replace(interpolatePattern, parent)
 }
 
-interface Stylize {
-  rules: [string, Stylize, string][] // rule, nested, style
-  styles: [string, string, boolean][] // selector, style, isUnique
-}
+type StylizeStyle = { selector: string, style: string, isUnique: boolean }
+type StylizeRule = { selector: string, style: string, rules: StylizeRule[], styles: StylizeStyle[] }
 
 /**
  * Recursive loop building styles with deferred selectors.
@@ -203,29 +191,30 @@ interface Stylize {
 function stylize (
   selector: string,
   styles: Styles,
-  self: Stylize,
+  rulesList: StylizeRule[],
+  stylesList: StylizeStyle[],
   parent?: string
 ) {
-  const { styleString, nestedStyles, isUnique } = parseStyles(styles, selector !== '')
-  let pid = styleString
+  const { style, nested, isUnique } = parseStyles(styles, selector !== '')
+  let pid = style
 
   if (selector.charCodeAt(0) === 64 /* @ */) {
-    const child: Stylize = { rules: [], styles: [] }
-    self.rules.push([selector, child, parent ? '' : styleString])
+    const child: StylizeRule = { selector, styles: [], rules: [], style: parent ? '' : style }
+    rulesList.push(child)
 
     // Nested styles support (e.g. `.foo > @media > .bar`).
-    if (styleString && parent) child.styles.push([parent, styleString, isUnique])
+    if (style && parent) child.styles.push({ selector: parent, style, isUnique })
 
-    for (const [name, value] of nestedStyles) {
-      pid += name + stylize(name, value, child, parent)
+    for (const [name, value] of nested) {
+      pid += name + stylize(name, value, child.rules, child.styles, parent)
     }
   } else {
     const key = parent ? interpolate(selector, parent) : selector
 
-    if (styleString) self.styles.push([key, styleString, isUnique])
+    if (style) stylesList.push({ selector: key, style, isUnique })
 
-    for (const [name, value] of nestedStyles) {
-      pid += name + stylize(name, value, self, key)
+    for (const [name, value] of nested) {
+      pid += name + stylize(name, value, rulesList, stylesList, key)
     }
   }
 
@@ -233,21 +222,28 @@ function stylize (
 }
 
 /**
- * Transform `Stylize` tree into actual styles.
+ * Transform `stylize` tree into style objects.
  */
-function composeStylize (cache: Cache<Rule | Style>, pid: string, stylize: Stylize, className: string, isStyle: boolean) {
-  for (const [selector, styleString, isUnique] of stylize.styles) {
+function composeStylize (
+  cache: Cache<Rule | Style>,
+  pid: string,
+  rulesList: StylizeRule[],
+  stylesList: StylizeStyle[],
+  className: string,
+  isStyle: boolean
+) {
+  for (const { selector, style, isUnique } of stylesList) {
     const key = isStyle ? interpolate(selector, className) : selector
-    const id = isUnique ? `u\0${(++uniqueId).toString(36)}` : `s\0${pid}\0${styleString}`
-    const style = new Style(styleString, id)
-    style.add(new Selector(key, `k\0${pid}\0${key}`))
-    cache.add(style)
+    const id = isUnique ? `u\0${(++uniqueId).toString(36)}` : `s\0${pid}\0${style}`
+    const item = new Style(style, id)
+    item.add(new Selector(key, `k\0${pid}\0${key}`))
+    cache.add(item)
   }
 
-  for (const [selector, nested, styleString] of stylize.rules) {
-    const rule = new Rule(selector, styleString, `r\0${pid}\0${selector}\0${styleString}`)
-    composeStylize(rule, pid, nested, className, isStyle)
-    cache.add(rule)
+  for (const { selector, style, rules, styles } of rulesList) {
+    const item = new Rule(selector, style, `r\0${pid}\0${selector}\0${style}`)
+    composeStylize(item, pid, rules, styles, className, isStyle)
+    cache.add(item)
   }
 }
 
@@ -445,11 +441,12 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerStyle (styles: Styles, displayName?: string) {
-    const self: Stylize = { rules: [], styles: [] }
-    const pid = stylize('&', styles, self)
+    const rulesList: StylizeRule[] = []
+    const stylesList: StylizeStyle[] = []
+    const pid = stylize('&', styles, rulesList, stylesList)
     const hash = `f${this.hash(pid)}`
     const id = this.debug && displayName ? `${displayName}_${hash}` : hash
-    composeStylize(this, pid, self, `.${escape(id)}`, true)
+    composeStylize(this, pid, rulesList, stylesList, `.${escape(id)}`, true)
     return id
   }
 
@@ -458,20 +455,22 @@ export class FreeStyle extends Cache<Rule | Style> implements Container<FreeStyl
   }
 
   registerHashRule (prefix: string, styles: Styles, displayName?: string) {
-    const self: Stylize = { rules: [], styles: [] }
-    const pid = stylize('', styles, self)
+    const rulesList: StylizeRule[] = []
+    const stylesList: StylizeStyle[] = []
+    const pid = stylize('', styles, rulesList, stylesList)
     const hash = `f${this.hash(pid)}`
     const id = this.debug && displayName ? `${displayName}_${hash}` : hash
     const rule = new Rule(`${prefix} ${escape(id)}`, '', `h\0${pid}\0${prefix}`)
-    composeStylize(rule, pid, self, '', false)
+    composeStylize(rule, pid, rulesList, stylesList, '', false)
     this.add(rule)
     return id
   }
 
   registerRule (rule: string, styles: Styles) {
-    const self: Stylize = { rules: [], styles: [] }
-    const pid = stylize(rule, styles, self)
-    return composeStylize(this, pid, self, '', false)
+    const rulesList: StylizeRule[] = []
+    const stylesList: StylizeStyle[] = []
+    const pid = stylize(rule, styles, rulesList, stylesList)
+    composeStylize(this, pid, rulesList, stylesList, '', false)
   }
 
   registerCss (styles: Styles) {
