@@ -4,6 +4,7 @@
   "description": "Make CSS easier and more maintainable by using JavaScript",
   "main": "dist/free-style.js",
   "typings": "dist/free-style.d.ts",
+  "module": "dist.es2015/free-style.js",
   "jsnext:main": "dist.es2015/free-style.js",
   "files": [
     "dist/",
