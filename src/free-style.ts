@@ -532,6 +532,7 @@ export class FreeStyle extends Cache<Rule | Style>
  */
 export function create(
   hash: HashFunction = stringHash,
+  // tslint:disable-next-line
   debug: boolean = typeof process !== "undefined" &&
     process.env.NODE_ENV !== "production",
   changes?: Changes
