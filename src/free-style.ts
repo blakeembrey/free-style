@@ -28,7 +28,7 @@ export type HashFunction = (str: string) => string;
 /**
  * Tag styles with this string to get unique hashes.
  */
-export const IS_UNIQUE = "__UNIQUE__";
+export const IS_UNIQUE = "__IS_UNIQUE__";
 
 /**
  * CSS properties that are valid unit-less numbers.
@@ -143,19 +143,18 @@ function sortTuples<T extends any[]>(value: T[]): T[] {
 function parseStyles(styles: Styles, hasNestedStyles: boolean) {
   const properties: Array<[string, PropertyValue | PropertyValue[]]> = [];
   const nestedStyles: Array<[string, Styles]> = [];
-  let isUnique = false;
+  const isUnique = styles[IS_UNIQUE] != null;
 
   // Sort keys before adding to styles.
   for (const key of Object.keys(styles)) {
+    const name = key.trim();
     const value = styles[key];
 
-    if (value !== null && value !== undefined) {
-      if (key === IS_UNIQUE) {
-        isUnique = true;
-      } else if (typeof value === "object" && !Array.isArray(value)) {
-        nestedStyles.push([key.trim(), value]);
+    if (name[0] !== "_" && value != null) {
+      if (typeof value === "object" && !Array.isArray(value)) {
+        nestedStyles.push([name, value]);
       } else {
-        properties.push([hyphenate(key.trim()), value]);
+        properties.push([hyphenate(name), value]);
       }
     }
   }
@@ -516,9 +515,9 @@ export class FreeStyle extends Cache<Rule | Style>
  */
 export function create(
   hash: HashFunction = stringHash,
-  debug: boolean = typeof (process as any) !== "undefined" &&
-    (process.env as any).NODE_ENV !== "production",
-  changes: Changes = noopChanges
+  debug: boolean = typeof process !== "undefined" &&
+    process.env.NODE_ENV !== "production",
+  changes?: Changes
 ) {
   return new FreeStyle(hash, debug, `f${(++uniqueId).toString(36)}`, changes);
 }
