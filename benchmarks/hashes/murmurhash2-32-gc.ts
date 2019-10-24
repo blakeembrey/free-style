@@ -42,5 +42,5 @@ export default function murmurhash2_32_gc(str: string, seed: number) {
   h = (h & 0xffff) * 0x5bd1e995 + ((((h >>> 16) * 0x5bd1e995) & 0xffff) << 16);
   h ^= h >>> 15;
 
-  return h >>> 0;
+  return (h >>> 0).toString(36);
 }

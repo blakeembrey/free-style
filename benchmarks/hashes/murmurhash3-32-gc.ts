@@ -63,5 +63,5 @@ export default function murmurhash3_32_gc(key: string, seed: number) {
     0xffffffff;
   h1 ^= h1 >>> 16;
 
-  return h1 >>> 0;
+  return (h1 >>> 0).toString(36);
 }

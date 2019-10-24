@@ -8,9 +8,9 @@ export default function fnv32h(str: string) {
   }
 
   return (
-    h[0].toString(16) +
-    h[1].toString(16) +
-    h[2].toString(16) +
-    h[3].toString(16)
+    h[0].toString(36) +
+    h[1].toString(36) +
+    h[2].toString(36) +
+    h[3].toString(36)
   );
 }
