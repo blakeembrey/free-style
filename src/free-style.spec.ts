@@ -1,5 +1,5 @@
 import crypto = require("crypto");
-import { create, IS_UNIQUE, escape } from "./free-style";
+import { create, IS_UNIQUE } from "./free-style";
 
 describe("free style", () => {
   it("output hashed class names", () => {
@@ -663,9 +663,9 @@ describe("free style", () => {
     expect(className.startsWith(displayName)).toBe(true);
 
     expect(Style.getStyles()).toEqual(
-      `@keyframes ${escape(animationName)}{from{color:red}}` +
-        `.${escape(className)}{animation:Connect(App)_ftl4afb}` +
-        `.${escape(className)} .t{color:red}`
+      `@keyframes ${animationName.replace(/[()]/g, "\\$&")}{from{color:red}}` +
+        `.${className.replace(/[()]/g, "\\$&")}{animation:Connect(App)_ftl4afb}` +
+        `.${className.replace(/[()]/g, "\\$&")} .t{color:red}`
     );
   });
 

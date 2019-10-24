@@ -98,13 +98,14 @@ for (const property of Object.keys(CSS_NUMBER)) {
 /**
  * Escape a CSS class name.
  */
-export const escape = (str: string) =>
-  str.replace(/[ !#$%&()*+,./;<=>?@[\]^`{|}~"'\\]/g, "\\$&");
+function escape (str: string) {
+  return str.replace(/[ !#$%&()*+,./;<=>?@[\]^`{|}~"'\\]/g, "\\$&");
+}
 
 /**
  * Transform a JavaScript property into a CSS property.
  */
-export function hyphenate(propertyName: string): string {
+function hyphenate(propertyName: string): string {
   return propertyName
     .replace(/[A-Z]/g, (m: string) => `-${m.toLowerCase()}`)
     .replace(/^ms-/, "-ms-"); // Internet Explorer vendor prefix.
@@ -113,7 +114,7 @@ export function hyphenate(propertyName: string): string {
 /**
  * Generate a hash value from a string.
  */
-export function stringHash(str: string): string {
+function stringHash(str: string): string {
   let value = 5381;
   let len = str.length;
   while (len--) value = (value * 33) ^ str.charCodeAt(len);
