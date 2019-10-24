@@ -668,4 +668,18 @@ describe("free style", () => {
         `.${escape(className)} .t{color:red}`
     );
   });
+
+  it("should clone a new style instance", () => {
+    const Style = create();
+
+    Style.registerStyle({ color: "red" });
+
+    const Style2 = Style.clone();
+
+    expect(Style.getStyles()).toEqual(Style2.getStyles());
+
+    Style2.registerStyle({ color: "blue" });
+
+    expect(Style.getStyles()).not.toEqual(Style2.getStyles());
+  });
 });
