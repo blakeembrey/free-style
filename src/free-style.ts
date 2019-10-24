@@ -23,7 +23,7 @@ export type HashFunction = (str: string) => string
 /**
  * Tag styles with this string to get unique hashes.
  */
-export const IS_UNIQUE = '__DO_NOT_DEDUPE_STYLE__'
+export const IS_UNIQUE = '__UNIQUE__'
 
 const upperCasePattern = /[A-Z]/g
 const msPattern = /^ms-/
@@ -86,7 +86,7 @@ const CSS_NUMBER: Record<string, true> = {
 
 // Add vendor prefixes to all unit-less properties.
 for (const property of Object.keys(CSS_NUMBER)) {
-  for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-', '']) {
+  for (const prefix of ['-webkit-', '-ms-', '-moz-', '-o-']) {
     CSS_NUMBER[prefix + property] = true
   }
 }
