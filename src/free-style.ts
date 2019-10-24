@@ -25,12 +25,6 @@ export type HashFunction = (str: string) => string
  */
 export const IS_UNIQUE = '__UNIQUE__'
 
-const upperCasePattern = /[A-Z]/g
-const msPattern = /^ms-/
-const interpolatePattern = /&/g
-const escapePattern = /[ !#$%&()*+,./;<=>?@[\]^`{|}~"'\\]/g
-const propLower = (m: string) => `-${m.toLowerCase()}`
-
 /**
  * CSS properties that are valid unit-less numbers.
  *
@@ -94,15 +88,15 @@ for (const property of Object.keys(CSS_NUMBER)) {
 /**
  * Escape a CSS class name.
  */
-export const escape = (str: string) => str.replace(escapePattern, '\\$&')
+export const escape = (str: string) => str.replace(/[ !#$%&()*+,./;<=>?@[\]^`{|}~"'\\]/g, '\\$&')
 
 /**
  * Transform a JavaScript property into a CSS property.
  */
 export function hyphenate (propertyName: string): string {
   return propertyName
-    .replace(upperCasePattern, propLower)
-    .replace(msPattern, '-ms-') // Internet Explorer vendor prefix.
+    .replace(/[A-Z]/g, (m: string) => `-${m.toLowerCase()}`)
+    .replace(/^ms-/, '-ms-') // Internet Explorer vendor prefix.
 }
 
 /**
@@ -179,7 +173,7 @@ function stringifyProperties (properties: Array<[string, PropertyValue | Propert
  */
 function interpolate (selector: string, parent: string) {
   if (selector.indexOf('&') === -1) return `${parent} ${selector}`
-  return selector.replace(interpolatePattern, parent)
+  return selector.replace(/&/g, parent)
 }
 
 type StylizeStyle = { selector: string, style: string, isUnique: boolean }
