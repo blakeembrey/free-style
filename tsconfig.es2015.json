@@ -5,7 +5,5 @@
     "module": "es2015",
     "declaration": false
   },
-  "files": [
-    "src/free-style.ts"
-  ]
+  "files": ["src/free-style.ts"]
 }
