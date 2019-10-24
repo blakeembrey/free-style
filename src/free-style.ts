@@ -26,9 +26,14 @@ export interface Styles {
 export type HashFunction = (str: string) => string;
 
 /**
- * Tag styles with this string to get unique hashes.
+ * Tag styles to get unique hashes (avoids de-duplication).
  */
 export const IS_UNIQUE = "__IS_UNIQUE__";
+
+/**
+ * Tag styles to set the debug display name.
+ */
+export const DISPLAY_NAME = "__DISPLAY_NAME__";
 
 /**
  * CSS properties that are valid unit-less numbers.
@@ -444,6 +449,20 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   }
 }
 
+function key(
+  pid: string,
+  f: FreeStyle,
+  styles: Styles,
+  displayName?: string
+): string {
+  let key = `f${f.hash(pid)}`;
+  if (f.debug) {
+    if (styles[DISPLAY_NAME]) key = `${styles[DISPLAY_NAME]}_${key}`;
+    if (displayName) key = `${displayName}_${key}`;
+  }
+  return key;
+}
+
 /**
  * The FreeStyle class implements the API for everything else.
  */
@@ -462,8 +481,7 @@ export class FreeStyle extends Cache<Rule | Style>
     const rulesList: StylizeRule[] = [];
     const stylesList: StylizeStyle[] = [];
     const pid = stylize("&", styles, rulesList, stylesList);
-    const hash = `f${this.hash(pid)}`;
-    const id = this.debug && displayName ? `${displayName}_${hash}` : hash;
+    const id = key(pid, this, styles, displayName);
     composeStylize(this, pid, rulesList, stylesList, `.${escape(id)}`, true);
     return id;
   }
@@ -476,8 +494,7 @@ export class FreeStyle extends Cache<Rule | Style>
     const rulesList: StylizeRule[] = [];
     const stylesList: StylizeStyle[] = [];
     const pid = stylize("", styles, rulesList, stylesList);
-    const hash = `f${this.hash(pid)}`;
-    const id = this.debug && displayName ? `${displayName}_${hash}` : hash;
+    const id = key(pid, this, styles, displayName);
     const rule = new Rule(
       `${prefix} ${escape(id)}`,
       "",
