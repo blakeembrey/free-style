@@ -4,6 +4,7 @@
 [![NPM downloads][downloads-image]][downloads-url]
 [![Build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
+[![Bundle size][bundlephobia-image]][bundlephobia-url]
 
 > **Free-Style** is designed to make CSS easier and more maintainable by using JavaScript.
 
@@ -355,3 +356,5 @@ MIT
 [travis-url]: https://travis-ci.org/blakeembrey/free-style
 [coveralls-image]: https://img.shields.io/coveralls/blakeembrey/free-style.svg?style=flat
 [coveralls-url]: https://coveralls.io/r/blakeembrey/free-style?branch=master
+[bundlephobia-image]: https://img.shields.io/bundlephobia/minzip/free-style.svg
+[bundlephobia-url]: https://bundlephobia.com/result?p=free-style
