@@ -18,7 +18,8 @@
     "bench:perf": "ts-node benchmarks/perf.ts",
     "test:spec": "blue-tape dist/**/*.spec.js | tap-spec",
     "test:cov": "istanbul cover --print none -x \"dist/**/*.spec.js\" node_modules/blue-tape/bin/blue-tape.js -- \"dist/**/*.spec.js\" | tap-spec",
-    "test": "npm run build && npm run lint && npm run test:cov",
+    "test": "npm run build && npm run lint && npm run test:cov && npm run size",
+    "size": "size-limit",
     "prepare": "npm run build"
   },
   "repository": {
@@ -43,7 +44,14 @@
     "url": "https://github.com/blakeembrey/free-style/issues"
   },
   "homepage": "https://github.com/blakeembrey/free-style",
+  "size-limit": [
+    {
+      "path": "dist/free-style.js",
+      "limit": "3 kB"
+    }
+  ],
   "devDependencies": {
+    "@size-limit/preset-small-lib": "^2.1.6",
     "@types/blue-tape": "^0.1.31",
     "@types/node": "^10.12.10",
     "blue-tape": "^1.0.0",
