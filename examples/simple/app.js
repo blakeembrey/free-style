@@ -4,6 +4,7 @@ var FreeStyle = require("../..");
 var Style = FreeStyle.create();
 
 var buttonStyle = Style.registerStyle({
+  $displayName: "button",
   borderRadius: 3,
   background: "red",
   color: "#fff",
@@ -13,6 +14,7 @@ var buttonStyle = Style.registerStyle({
 });
 
 var sectionStyle = Style.registerStyle({
+  $displayName: "section",
   width: 200,
   height: 200,
   background: "blue",

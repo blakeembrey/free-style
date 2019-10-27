@@ -2,10 +2,11 @@
   "name": "free-style",
   "version": "2.7.0",
   "description": "Make CSS easier and more maintainable by using JavaScript",
-  "main": "dist/free-style.js",
-  "typings": "dist/free-style.d.ts",
-  "module": "dist.es2015/free-style.js",
-  "jsnext:main": "dist.es2015/free-style.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist.es2015/index.js",
+  "sideEffects": false,
+  "jsnext:main": "dist.es2015/index.js",
   "files": [
     "dist/",
     "dist.es2015/",
@@ -47,8 +48,8 @@
   "homepage": "https://github.com/blakeembrey/free-style",
   "size-limit": [
     {
-      "path": "dist/free-style.js",
-      "limit": "3 kB"
+      "path": "dist/index.js",
+      "limit": "2.1 kB"
     }
   ],
   "jest": {

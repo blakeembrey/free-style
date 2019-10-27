@@ -1,5 +1,4 @@
-import crypto = require("crypto");
-import { create, IS_UNIQUE } from "./free-style";
+import { create } from "./index";
 
 describe("free style", () => {
   it("output hashed class names", () => {
@@ -110,59 +109,28 @@ describe("free style", () => {
   });
 
   it("allow debug css prefixes", () => {
-    const Style = create(undefined, true);
+    const Style = create();
     let changeId = Style.changeId;
 
-    const className1 = Style.registerStyle(
-      {
-        color: "red"
-      },
-      "className1"
-    );
+    const className1 = Style.registerStyle({
+      color: "red",
+      $displayName: "className1"
+    });
 
     expect(Style.changeId).not.toEqual(changeId);
 
     changeId = Style.changeId;
 
-    const className2 = Style.registerStyle(
-      {
-        color: "red"
-      },
-      "className2"
-    );
+    const className2 = Style.registerStyle({
+      color: "red",
+      $displayName: "className2"
+    });
 
     expect(Style.changeId).not.toEqual(changeId);
     expect(className1).not.toEqual(className2);
     expect(Style.getStyles()).toEqual(
       `.${className1},.${className2}{color:red}`
     );
-  });
-
-  it('ignore debug prefixes in "production"', () => {
-    const Style = create(undefined, false);
-    let changeId = Style.changeId;
-
-    const className1 = Style.registerStyle(
-      {
-        color: "red"
-      },
-      "className1"
-    );
-
-    expect(Style.changeId).not.toEqual(changeId);
-
-    changeId = Style.changeId;
-
-    const className2 = Style.registerStyle(
-      {
-        color: "red"
-      },
-      "className2"
-    );
-
-    expect(Style.changeId).toEqual(changeId);
-    expect(className1).toEqual(className2);
-    expect(Style.getStyles()).toEqual(`.${className1}{color:red}`);
   });
 
   it("sort keys by property name", () => {
@@ -497,40 +465,6 @@ describe("free style", () => {
     );
   });
 
-  it("customise hash algorithm", () => {
-    const Style = create((str: string) => {
-      return crypto
-        .createHash("sha256")
-        .update(str)
-        .digest("hex");
-    });
-
-    const className1 = Style.registerStyle({
-      color: "red"
-    });
-
-    const className2 = Style.registerStyle({
-      color: "blue"
-    });
-
-    const keyframes = Style.registerKeyframes({
-      from: {
-        color: "red"
-      },
-      to: {
-        color: "blue"
-      }
-    });
-
-    expect(className2.length).toEqual(65);
-    expect(className1.length).toEqual(65);
-    expect(keyframes.length).toEqual(65);
-
-    expect(Style.getStyles()).toEqual(
-      `.${className1}{color:red}.${className2}{color:blue}@keyframes ${keyframes}{from{color:red}to{color:blue}}`
-    );
-  });
-
   it("disable style de-dupe", () => {
     const Style = create();
 
@@ -538,15 +472,15 @@ describe("free style", () => {
       color: "blue",
       "&::-webkit-input-placeholder": {
         color: `rgba(0, 0, 0, 0)`,
-        [IS_UNIQUE]: true
+        $unique: true
       },
       "&::-moz-placeholder": {
         color: `rgba(0, 0, 0, 0)`,
-        [IS_UNIQUE]: true
+        $unique: true
       },
       "&::-ms-input-placeholder": {
         color: `rgba(0, 0, 0, 0)`,
-        [IS_UNIQUE]: true
+        $unique: true
       }
     });
 
@@ -615,7 +549,7 @@ describe("free style", () => {
   it("change events", () => {
     const styles: string[] = [];
 
-    const Style = create(undefined, undefined, {
+    const Style = create({
       add(style, index) {
         styles.splice(index, 0, style.getStyles());
       },
@@ -647,24 +581,28 @@ describe("free style", () => {
 
   it("escape css selectors", () => {
     const Style = create();
-    const displayName = "Connect(App)";
+    const $displayName = "Connect(App)";
 
-    const animationName = Style.registerKeyframes(
-      { from: { color: "red" } },
-      displayName
-    );
+    const animationName = Style.registerKeyframes({
+      from: { color: "red" },
+      $displayName
+    });
 
-    const className = Style.registerStyle(
-      { animation: animationName, ".t": { color: "red" } },
-      displayName
-    );
+    const className = Style.registerStyle({
+      animation: animationName,
+      ".t": { color: "red" },
+      $displayName
+    });
 
-    expect(animationName.startsWith(displayName)).toBe(true);
-    expect(className.startsWith(displayName)).toBe(true);
+    expect(animationName.startsWith($displayName)).toBe(true);
+    expect(className.startsWith($displayName)).toBe(true);
 
     expect(Style.getStyles()).toEqual(
       `@keyframes ${animationName.replace(/[()]/g, "\\$&")}{from{color:red}}` +
-        `.${className.replace(/[()]/g, "\\$&")}{animation:Connect(App)_ftl4afb}` +
+        `.${className.replace(
+          /[()]/g,
+          "\\$&"
+        )}{animation:Connect(App)_ftl4afb}` +
         `.${className.replace(/[()]/g, "\\$&")} .t{color:red}`
     );
   });
@@ -681,5 +619,40 @@ describe("free style", () => {
     Style2.registerStyle({ color: "blue" });
 
     expect(Style.getStyles()).not.toEqual(Style2.getStyles());
+  });
+
+  describe("production", () => {
+    const PREV_NODE_ENV = process.env.NODE_ENV;
+
+    beforeAll(() => {
+      process.env.NODE_ENV = "production";
+    });
+
+    afterAll(() => {
+      process.env.NODE_ENV = PREV_NODE_ENV;
+    });
+
+    it('ignore debug prefixes in "production"', () => {
+      const Style = create(undefined);
+      let changeId = Style.changeId;
+
+      const className1 = Style.registerStyle({
+        color: "red",
+        $displayName: "className1"
+      });
+
+      expect(Style.changeId).not.toEqual(changeId);
+
+      changeId = Style.changeId;
+
+      const className2 = Style.registerStyle({
+        color: "red",
+        $displayName: "className2"
+      });
+
+      expect(Style.changeId).toEqual(changeId);
+      expect(className1).toEqual(className2);
+      expect(Style.getStyles()).toEqual(`.${className1}{color:red}`);
+    });
   });
 });

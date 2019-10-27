@@ -1,7 +1,7 @@
 {
   "scripts": {
     "bundle": "browserify app.js -o bundle.js",
-    "serve": "http-server"
+    "start": "http-server"
   },
   "devDependencies": {
     "browserify": "^16.2.3",

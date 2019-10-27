@@ -16,5 +16,5 @@
     "strictNullChecks": true,
     "types": ["node", "jest"]
   },
-  "files": ["src/free-style.ts", "src/free-style.spec.ts"]
+  "include": ["src/**/*"]
 }

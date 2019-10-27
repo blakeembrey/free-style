@@ -12,6 +12,8 @@ export type PropertyValue = number | boolean | string;
  * Input styles object.
  */
 export interface Styles {
+  $unique?: boolean;
+  $displayName?: string;
   [selector: string]:
     | null
     | undefined
@@ -26,71 +28,66 @@ export interface Styles {
 export type HashFunction = (str: string) => string;
 
 /**
- * Tag styles to get unique hashes (avoids de-duplication).
+ * Quick dictionary lookup for unit-less numbers.
  */
-export const IS_UNIQUE = "__IS_UNIQUE__";
-
-/**
- * Tag styles to set the debug display name.
- */
-export const DISPLAY_NAME = "__DISPLAY_NAME__";
+const CSS_NUMBER: Record<string, true> = Object.create(null);
 
 /**
  * CSS properties that are valid unit-less numbers.
  *
  * Ref: https://github.com/facebook/react/blob/master/packages/react-dom/src/shared/CSSProperty.js
  */
-const CSS_NUMBER: Record<string, true> = {
-  "animation-iteration-count": true,
-  "border-image-outset": true,
-  "border-image-slice": true,
-  "border-image-width": true,
-  "box-flex": true,
-  "box-flex-group": true,
-  "box-ordinal-group": true,
-  "column-count": true,
-  columns: true,
-  "counter-increment": true,
-  "counter-reset": true,
-  flex: true,
-  "flex-grow": true,
-  "flex-positive": true,
-  "flex-shrink": true,
-  "flex-negative": true,
-  "flex-order": true,
-  "font-weight": true,
-  "grid-area": true,
-  "grid-column": true,
-  "grid-column-end": true,
-  "grid-column-span": true,
-  "grid-column-start": true,
-  "grid-row": true,
-  "grid-row-end": true,
-  "grid-row-span": true,
-  "grid-row-start": true,
-  "line-clamp": true,
-  "line-height": true,
-  opacity: true,
-  order: true,
-  orphans: true,
-  "tab-size": true,
-  widows: true,
-  "z-index": true,
-  zoom: true,
+const CSS_NUMBER_KEYS = [
+  "animation-iteration-count",
+  "border-image-outset",
+  "border-image-slice",
+  "border-image-width",
+  "box-flex",
+  "box-flex-group",
+  "box-ordinal-group",
+  "column-count",
+  "columns",
+  "counter-increment",
+  "counter-reset",
+  "flex",
+  "flex-grow",
+  "flex-positive",
+  "flex-shrink",
+  "flex-negative",
+  "flex-order",
+  "font-weight",
+  "grid-area",
+  "grid-column",
+  "grid-column-end",
+  "grid-column-span",
+  "grid-column-start",
+  "grid-row",
+  "grid-row-end",
+  "grid-row-span",
+  "grid-row-start",
+  "line-clamp",
+  "line-height",
+  "opacity",
+  "order",
+  "orphans",
+  "tab-size",
+  "widows",
+  "z-index",
+  "zoom",
   // SVG properties.
-  "fill-opacity": true,
-  "flood-opacity": true,
-  "stop-opacity": true,
-  "stroke-dasharray": true,
-  "stroke-dashoffset": true,
-  "stroke-miterlimit": true,
-  "stroke-opacity": true,
-  "stroke-width": true
-};
+  "fill-opacity",
+  "flood-opacity",
+  "stop-opacity",
+  "stroke-dasharray",
+  "stroke-dashoffset",
+  "stroke-miterlimit",
+  "stroke-opacity",
+  "stroke-width"
+];
 
 // Add vendor prefixes to all unit-less properties.
-for (const property of Object.keys(CSS_NUMBER)) {
-  for (const prefix of ["-webkit-", "-ms-", "-moz-", "-o-"]) {
+for (const property of CSS_NUMBER_KEYS) {
+  for (const prefix of ["-webkit-", "-ms-", "-moz-", "-o-", ""]) {
     CSS_NUMBER[prefix + property] = true;
   }
 }
@@ -98,7 +95,7 @@ for (const property of Object.keys(CSS_NUMBER)) {
 /**
  * Escape a CSS class name.
  */
-function escape (str: string) {
+function escape(str: string) {
   return str.replace(/[ !#$%&()*+,./;<=>?@[\]^`{|}~"'\\]/g, "\\$&");
 }
 
@@ -125,11 +122,7 @@ function stringHash(str: string): string {
  * Transform a style string to a CSS string.
  */
 function styleToString(key: string, value: PropertyValue) {
-  if (
-    typeof value === "number" &&
-    value !== 0 &&
-    !CSS_NUMBER.hasOwnProperty(key)
-  ) {
+  if (value && typeof value === "number" && !CSS_NUMBER[key]) {
     return `${key}:${value}px`;
   }
 
@@ -149,14 +142,13 @@ function sortTuples<T extends any[]>(value: T[]): T[] {
 function parseStyles(styles: Styles, hasNestedStyles: boolean) {
   const properties: Array<[string, PropertyValue | PropertyValue[]]> = [];
   const nestedStyles: Array<[string, Styles]> = [];
-  const isUnique = styles[IS_UNIQUE] != null;
 
   // Sort keys before adding to styles.
   for (const key of Object.keys(styles)) {
     const name = key.trim();
     const value = styles[key];
 
-    if (name[0] !== "_" && value != null) {
+    if (name[0] !== "$" && value != null) {
       if (typeof value === "object" && !Array.isArray(value)) {
         nestedStyles.push([name, value]);
       } else {
@@ -168,7 +160,7 @@ function parseStyles(styles: Styles, hasNestedStyles: boolean) {
   return {
     style: stringifyProperties(sortTuples(properties)),
     nested: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles),
-    isUnique
+    isUnique: !!styles.$unique
   };
 }
 
@@ -196,6 +188,7 @@ function interpolate(selector: string, parent: string) {
 }
 
 type StylizeStyle = { selector: string; style: string; isUnique: boolean };
+
 type StylizeRule = {
   selector: string;
   style: string;
@@ -302,7 +295,7 @@ const noopChanges: Changes = {
 };
 
 /**
- * Cacheable interface.
+ * Cache-able interface.
  */
 export interface Container<T> {
   id: string;
@@ -450,18 +443,10 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   }
 }
 
-function key(
-  pid: string,
-  f: FreeStyle,
-  styles: Styles,
-  displayName?: string
-): string {
-  let key = `f${f.hash(pid)}`;
-  if (f.debug) {
-    if (styles[DISPLAY_NAME]) key = `${styles[DISPLAY_NAME]}_${key}`;
-    if (displayName) key = `${displayName}_${key}`;
-  }
-  return key;
+function key(pid: string, styles: Styles): string {
+  const key = `f${stringHash(pid)}`;
+  if (process.env.NODE_ENV === "production" || !styles.$displayName) return key;
+  return `${styles.$displayName}_${key}`;
 }
 
 /**
@@ -469,38 +454,35 @@ function key(
  */
 export class FreeStyle extends Cache<Rule | Style>
   implements Container<FreeStyle> {
-  constructor(
-    public hash: HashFunction,
-    public debug: boolean,
-    public id: string,
-    changes?: Changes
-  ) {
+  constructor(public id: string, changes?: Changes) {
     super(changes);
   }
 
-  registerStyle(styles: Styles, displayName?: string) {
+  registerStyle(styles: Styles) {
     const rulesList: StylizeRule[] = [];
     const stylesList: StylizeStyle[] = [];
     const pid = stylize("&", styles, rulesList, stylesList);
-    const id = key(pid, this, styles, displayName);
-    composeStylize(this, pid, rulesList, stylesList, `.${escape(id)}`, true);
+    const id = key(pid, styles);
+    const selector = `.${
+      process.env.NODE_ENV === "production" ? id : escape(id)
+    }`;
+    composeStylize(this, pid, rulesList, stylesList, selector, true);
     return id;
   }
 
-  registerKeyframes(keyframes: Styles, displayName?: string) {
-    return this.registerHashRule("@keyframes", keyframes, displayName);
+  registerKeyframes(keyframes: Styles) {
+    return this.registerHashRule("@keyframes", keyframes);
   }
 
-  registerHashRule(prefix: string, styles: Styles, displayName?: string) {
+  registerHashRule(prefix: string, styles: Styles) {
     const rulesList: StylizeRule[] = [];
     const stylesList: StylizeStyle[] = [];
     const pid = stylize("", styles, rulesList, stylesList);
-    const id = key(pid, this, styles, displayName);
-    const rule = new Rule(
-      `${prefix} ${escape(id)}`,
-      "",
-      `h\0${pid}\0${prefix}`
-    );
+    const id = key(pid, styles);
+    const selector = `${prefix} ${
+      process.env.NODE_ENV === "production" ? id : escape(id)
+    }`;
+    const rule = new Rule(selector, "", `h\0${pid}\0${prefix}`);
     composeStylize(rule, pid, rulesList, stylesList, "", false);
     this.add(rule);
     return id;
@@ -522,21 +504,13 @@ export class FreeStyle extends Cache<Rule | Style>
   }
 
   clone(): FreeStyle {
-    return new FreeStyle(this.hash, this.debug, this.id, this.changes).merge(
-      this
-    );
+    return new FreeStyle(this.id, this.changes).merge(this);
   }
 }
 
 /**
  * Exports a simple function to create a new instance.
  */
-export function create(
-  hash: HashFunction = stringHash,
-  // tslint:disable-next-line
-  debug: boolean = typeof process !== "undefined" &&
-    process.env.NODE_ENV !== "production",
-  changes?: Changes
-) {
-  return new FreeStyle(hash, debug, `f${(++uniqueId).toString(36)}`, changes);
+export function create(changes?: Changes) {
+  return new FreeStyle(`f${(++uniqueId).toString(36)}`, changes);
 }

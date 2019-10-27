@@ -80,14 +80,15 @@ React.render(
 
 ```js
 var buttonStyle = Style.registerStyle({
+  $displayName: "button",
   backgroundColor: "red",
   padding: 10
 });
 
-console.log(buttonStyle); //=> "f65pi0b"
+console.log(buttonStyle); //=> "button_f65pi0b"
 ```
 
-**Tip:** The string returned by `registerStyle` is a unique hash of the content and is used as the class in HTML.
+**Tip:** The string returned by `registerStyle` is a unique hash of the content and used as the HTML class name. The `$displayName` is only used during development, and stripped in production (`process.env.NODE_ENV === 'production'`).
 
 #### Overload CSS Properties
 
@@ -139,8 +140,6 @@ Style.registerStyle({
 
 **Tip:** The ampersand (`&`) will be replaced by the parent selector at runtime. In this example, the result is `.f1h42yg6:hover`.
 
-**Tip:** The second argument to `registerStyle`, `registerKeyframes` and `registerHashRule` is a "display name". The display name will be used as the class name prefix in development (`process.env.NODE_ENV !== 'production'`).
-
 #### Use JavaScript
 
 ```js
@@ -175,24 +174,24 @@ const style = Style.registerStyle({
 });
 ```
 
-#### Unique Style Ouput
+#### Unique Style Output
 
-Sometimes you need to skip the de-duping behaviour of `free-style`. Use the `IS_UNIQUE` export and enforce every style to be output separately:
+Sometimes you need to skip the de-duping behavior of `free-style`. Use `$unique` to force separate styles:
 
 ```js
 Style.registerStyle({
   color: "blue",
   "&::-webkit-input-placeholder": {
     color: `rgba(0, 0, 0, 0)`,
-    [FreeStyle.IS_UNIQUE]: true
+    $unique: true
   },
   "&::-moz-placeholder": {
     color: `rgba(0, 0, 0, 0)`,
-    [FreeStyle.IS_UNIQUE]: true
+    $unique: true
   },
   "&::-ms-input-placeholder": {
     color: `rgba(0, 0, 0, 0)`,
-    [FreeStyle.IS_UNIQUE]: true
+    $unique: true
   }
 }); //=> "f13byakl"
 
@@ -213,7 +212,7 @@ var style = Style.registerStyle({
 }); //=> "fibanyf"
 ```
 
-**Tip:** The string returned by `registerKeyframes` the name of the animation, which is a hash of the rule (you can also add a "display name" in development).
+**Tip:** The string returned by `registerKeyframes` the name of the animation, which is a hash of the rule.
 
 ### Hash Rule
 
@@ -290,17 +289,9 @@ Style.getStyles(); //=> ".f65pi0b{background-color:red;padding:10px}"
 
 ### Implementor Details
 
-#### Custom Hash Algorithm
-
-Initialize **Free-Style** with a custom CSS class generator.
-
-```js
-create(hashFunction); //=> `FreeStyle.FreeStyle`
-```
-
 #### Debug
 
-Debug mode can changed programmatically using the second argument to `create([hash [, debug])`. It defaults to the value of `process.env.NODE_ENV !== 'production'`.
+Display names will automatically be removed when `process.env.NODE_ENV === "production"`.
 
 #### Changes
 
@@ -316,7 +307,7 @@ if (Style.changeId !== prevChangeId) {
 }
 ```
 
-Second, the third argument to `create()` is a map of change function handlers. All functions are required:
+The only argument to `create()` is a map of change function handlers. All functions are required:
 
 - `add (style: Container<any>, index: number): void`
 - `change (style: Container<any>, oldIndex: number, newIndex: number): void`
