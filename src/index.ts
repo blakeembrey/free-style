@@ -148,7 +148,7 @@ function parseStyles(styles: Styles, hasNestedStyles: boolean) {
     const name = key.trim();
     const value = styles[key];
 
-    if (name[0] !== "$" && value != null) {
+    if (name.charCodeAt(0) !== 36 /* $ */ && value != null) {
       if (typeof value === "object" && !Array.isArray(value)) {
         nestedStyles.push([name, value]);
       } else {
@@ -316,9 +316,9 @@ export class Cache<T extends Container<any>> {
 
   constructor(public changes: Changes = noopChanges) {}
 
-  add<U extends T>(style: U): U {
+  add(style: T): void {
     const count = this._counters[style.id] || 0;
-    const item: U = this._children[style.id] || style.clone();
+    const item: T = this._children[style.id] || style.clone();
 
     this._counters[style.id] = count + 1;
 
@@ -340,14 +340,12 @@ export class Cache<T extends Container<any>> {
         this.changes.change(item, curIndex, curIndex);
       }
     }
-
-    return item;
   }
 
   remove(style: T): void {
     const count = this._counters[style.id];
 
-    if (count !== undefined && count > 0) {
+    if (count) {
       this._counters[style.id] = count - 1;
 
       const item = this._children[style.id]!;
@@ -405,7 +403,7 @@ export class Selector implements Container<Selector> {
   }
 
   clone(): Selector {
-    return new Selector(this.selector, this.id);
+    return this;
   }
 }
 
