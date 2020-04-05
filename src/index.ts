@@ -159,7 +159,7 @@ function stringifyProperties(
  */
 function child(selector: string, parent: string) {
   if (!selector) return parent;
-  if (selector.indexOf("&") === -1) return `${parent} ${selector}`;
+  if (!selector.includes("&")) return `${parent} ${selector}`;
   return interpolate(selector, parent);
 }
 

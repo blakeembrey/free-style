@@ -3,7 +3,7 @@ import { create } from "./index";
 describe("free style", () => {
   it("should output class name hash", () => {
     const Style = create();
-    let changeId = Style.changeId;
+    const changeId = Style.changeId;
 
     const className = Style.registerStyle({
       color: "red",
@@ -310,7 +310,7 @@ describe("free style", () => {
 
   it("should register @-rule", () => {
     const Style = create();
-    let changeId = Style.changeId;
+    const changeId = Style.changeId;
 
     Style.registerRule("@font-face", {
       fontFamily: '"Bitstream Vera Serif Bold"',
@@ -412,7 +412,7 @@ describe("free style", () => {
 
   it("should retain nested param order", () => {
     const Style = create();
-    let changeId = Style.changeId;
+    const changeId = Style.changeId;
 
     const className = Style.registerStyle({
       width: "20rem",
