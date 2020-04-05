@@ -49,7 +49,7 @@
   "size-limit": [
     {
       "path": "dist/index.js",
-      "limit": "2.1 kB"
+      "limit": "1.7 kB"
     }
   ],
   "jest": {
@@ -75,10 +75,7 @@
     }
   },
   "lint-staged": {
-    "*.{js,json,css,md}": [
-      "npm run prettier",
-      "git add"
-    ]
+    "*.{js,json,css,md}": "npm run prettier"
   },
   "publishConfig": {
     "access": "public"

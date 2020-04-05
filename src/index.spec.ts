@@ -1,7 +1,7 @@
 import { create } from "./index";
 
 describe("free style", () => {
-  it("output hashed class names", () => {
+  it("should output class name hash", () => {
     const Style = create();
     let changeId = Style.changeId;
 
@@ -13,7 +13,7 @@ describe("free style", () => {
     expect(Style.changeId).not.toEqual(changeId);
   });
 
-  it("multiple values", () => {
+  it("should render multiple values", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -25,7 +25,7 @@ describe("free style", () => {
     );
   });
 
-  it("dash-case property names", () => {
+  it("should dash-case property names", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -35,7 +35,7 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual(`.${className}{background-color:red}`);
   });
 
-  it("nest @-rules", () => {
+  it("should nest @-rules", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -50,7 +50,7 @@ describe("free style", () => {
     );
   });
 
-  it("interpolate selectors", () => {
+  it("should interpolate selectors", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -69,7 +69,7 @@ describe("free style", () => {
     );
   });
 
-  it('do not append "px" to whitelist properties', () => {
+  it('should not append "px" to whitelisted properties', () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -82,7 +82,7 @@ describe("free style", () => {
     );
   });
 
-  it("merge exactly duplicate styles", () => {
+  it("should merge duplicate styles", () => {
     const Style = create();
     let changeId = Style.changeId;
 
@@ -108,7 +108,7 @@ describe("free style", () => {
     );
   });
 
-  it("allow debug css prefixes", () => {
+  it("should allow display names", () => {
     const Style = create();
     let changeId = Style.changeId;
 
@@ -133,7 +133,7 @@ describe("free style", () => {
     );
   });
 
-  it("sort keys by property name", () => {
+  it("should sort keys by property name", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -147,7 +147,7 @@ describe("free style", () => {
     );
   });
 
-  it("sort keys alphabetically after hyphenating", () => {
+  it("should sort keys alphabetically after hyphenating", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -160,7 +160,7 @@ describe("free style", () => {
     );
   });
 
-  it("overloaded keys should stay sorted in insertion order", () => {
+  it("should keep overloaded values in order", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -172,7 +172,7 @@ describe("free style", () => {
     );
   });
 
-  it("merge duplicate nested style", () => {
+  it("should merge duplicate nested styles", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -187,7 +187,7 @@ describe("free style", () => {
     );
   });
 
-  it("@-rules across multiple styles produce multiple rules", () => {
+  it("should produce multiple @-rules across styles", () => {
     const Style = create();
     const mediaQuery = "@media (min-width: 600px)";
     let changeId = Style.changeId;
@@ -216,7 +216,7 @@ describe("free style", () => {
     );
   });
 
-  it("do not output empty styles", () => {
+  it("should not output empty styles", () => {
     const Style = create();
 
     Style.registerStyle({
@@ -226,7 +226,7 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual("");
   });
 
-  it("support @-rules within @-rules", () => {
+  it("should support @-rules within @-rules", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -242,7 +242,7 @@ describe("free style", () => {
     );
   });
 
-  it("merge styles across instances", () => {
+  it("should merge styles across instances", () => {
     const Style1 = create();
     const Style2 = create();
     const Style3 = create();
@@ -275,7 +275,7 @@ describe("free style", () => {
     expect(Style1.getStyles()).toEqual(`.${className1}{color:red}`);
   });
 
-  it("keyframes", () => {
+  it("should register keyframes", () => {
     const Style = create();
 
     const keyframes = Style.registerKeyframes({
@@ -288,7 +288,7 @@ describe("free style", () => {
     );
   });
 
-  it("merge duplicate keyframes", () => {
+  it("should merge duplicate keyframes", () => {
     const Style = create();
 
     const keyframes1 = Style.registerKeyframes({
@@ -308,7 +308,7 @@ describe("free style", () => {
     );
   });
 
-  it("register arbitrary at rule", () => {
+  it("should register @-rule", () => {
     const Style = create();
     let changeId = Style.changeId;
 
@@ -325,7 +325,7 @@ describe("free style", () => {
     );
   });
 
-  it("does not merge arbitrary at rules with different styles", () => {
+  it("should not merge @-rules with different styles", () => {
     const Style = create();
 
     Style.registerRule("@font-face", {
@@ -345,7 +345,7 @@ describe("free style", () => {
     );
   });
 
-  it("register base rule", () => {
+  it("should register base rule", () => {
     const Style = create();
 
     Style.registerRule("body", {
@@ -356,7 +356,7 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual("body{margin:0;padding:0}");
   });
 
-  it("register at rule with nesting", () => {
+  it("should register @-rule with nesting", () => {
     const Style = create();
 
     Style.registerRule("@media print", {
@@ -368,7 +368,7 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual("@media print{body{color:red}}");
   });
 
-  it("de-dupe across styles and rules", () => {
+  it("should de-dupe across styles and rules", () => {
     const Style = create();
     let changeId = Style.changeId;
 
@@ -387,7 +387,7 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual(`.${className1},.test{color:red}`);
   });
 
-  it("retain insertion order", () => {
+  it("should retain insertion order", () => {
     const Style = create();
 
     const x = Style.registerStyle({
@@ -410,7 +410,7 @@ describe("free style", () => {
     );
   });
 
-  it("retain nested param order", () => {
+  it("should retain nested param order", () => {
     const Style = create();
     let changeId = Style.changeId;
 
@@ -465,7 +465,7 @@ describe("free style", () => {
     );
   });
 
-  it("disable style de-dupe", () => {
+  it("should disable style de-dupe", () => {
     const Style = create();
 
     const className = Style.registerStyle({
@@ -492,7 +492,7 @@ describe("free style", () => {
     );
   });
 
-  it("register a css object", () => {
+  it("should register a css object", () => {
     const Style = create();
 
     Style.registerCss({
@@ -518,7 +518,7 @@ describe("free style", () => {
     );
   });
 
-  it("registering a hashed rule", () => {
+  it("should register a hashed rule", () => {
     const Style = create();
 
     const animation1 = Style.registerHashRule("@keyframes", {
@@ -546,7 +546,7 @@ describe("free style", () => {
     );
   });
 
-  it("change events", () => {
+  it("should emit changes", () => {
     const styles: string[] = [];
 
     const Style = create({
@@ -579,7 +579,7 @@ describe("free style", () => {
     expect(styles.join("")).toEqual(Style.getStyles());
   });
 
-  it("escape css selectors", () => {
+  it("should escape css selectors", () => {
     const Style = create();
     const $displayName = "Connect(App)";
 
@@ -599,10 +599,7 @@ describe("free style", () => {
 
     expect(Style.getStyles()).toEqual(
       `@keyframes ${animationName.replace(/[()]/g, "\\$&")}{from{color:red}}` +
-        `.${className.replace(
-          /[()]/g,
-          "\\$&"
-        )}{animation:Connect(App)_ftl4afb}` +
+        `.${className.replace(/[()]/g, "\\$&")}{animation:${animationName}}` +
         `.${className.replace(/[()]/g, "\\$&")} .t{color:red}`
     );
   });
@@ -621,7 +618,7 @@ describe("free style", () => {
     expect(Style.getStyles()).not.toEqual(Style2.getStyles());
   });
 
-  describe("production", () => {
+  describe("in production", () => {
     const PREV_NODE_ENV = process.env.NODE_ENV;
 
     beforeAll(() => {
@@ -632,7 +629,7 @@ describe("free style", () => {
       process.env.NODE_ENV = PREV_NODE_ENV;
     });
 
-    it('ignore debug prefixes in "production"', () => {
+    it("should ignore debug prefixes", () => {
       const Style = create(undefined);
       let changeId = Style.changeId;
 

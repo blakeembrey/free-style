@@ -13,6 +13,7 @@ export type PropertyValue = number | boolean | string;
  */
 export interface Styles {
   $unique?: boolean;
+  $global?: boolean;
   $displayName?: string;
   [selector: string]:
     | null
@@ -21,11 +22,6 @@ export interface Styles {
     | PropertyValue[]
     | Styles;
 }
-
-/**
- * Hash algorithm interface.
- */
-export type HashFunction = (str: string) => string;
 
 /**
  * Quick dictionary lookup for unit-less numbers.
@@ -100,6 +96,13 @@ function escape(str: string) {
 }
 
 /**
+ * Interpolate the `&` with style name.
+ */
+function interpolate(selector: string, styleName: string) {
+  return selector.replace(/&/g, styleName);
+}
+
+/**
  * Transform a JavaScript property into a CSS property.
  */
 function hyphenate(propertyName: string): string {
@@ -137,34 +140,6 @@ function sortTuples<T extends any[]>(value: T[]): T[] {
 }
 
 /**
- * Categorize user styles.
- */
-function parseStyles(styles: Styles, hasNestedStyles: boolean) {
-  const properties: Array<[string, PropertyValue | PropertyValue[]]> = [];
-  const nestedStyles: Array<[string, Styles]> = [];
-
-  // Sort keys before adding to styles.
-  for (const key of Object.keys(styles)) {
-    const name = key.trim();
-    const value = styles[key];
-
-    if (name.charCodeAt(0) !== 36 /* $ */ && value != null) {
-      if (typeof value === "object" && !Array.isArray(value)) {
-        nestedStyles.push([name, value]);
-      } else {
-        properties.push([hyphenate(name), value]);
-      }
-    }
-  }
-
-  return {
-    style: stringifyProperties(sortTuples(properties)),
-    nested: hasNestedStyles ? nestedStyles : sortTuples(nestedStyles),
-    isUnique: !!styles.$unique
-  };
-}
-
-/**
  * Stringify an array of property tuples.
  */
 function stringifyProperties(
@@ -182,12 +157,17 @@ function stringifyProperties(
 /**
  * Interpolate CSS selectors.
  */
-function interpolate(selector: string, parent: string) {
+function child(selector: string, parent: string) {
+  if (!selector) return parent;
   if (selector.indexOf("&") === -1) return `${parent} ${selector}`;
-  return selector.replace(/&/g, parent);
+  return interpolate(selector, parent);
 }
 
-type StylizeStyle = { selector: string; style: string; isUnique: boolean };
+type StylizeStyle = {
+  selector: string;
+  style: string;
+  isUnique: boolean;
+};
 
 type StylizeRule = {
   selector: string;
@@ -200,39 +180,63 @@ type StylizeRule = {
  * Recursive loop building styles with deferred selectors.
  */
 function stylize(
-  selector: string,
-  styles: Styles,
   rulesList: StylizeRule[],
   stylesList: StylizeStyle[],
-  parent?: string
+  className: string,
+  styles: Styles,
+  parentClassName: string
 ) {
-  const { style, nested, isUnique } = parseStyles(styles, selector !== "");
+  const properties: Array<[string, PropertyValue | PropertyValue[]]> = [];
+  const nestedStyles: Array<[string, Styles]> = [];
+
+  // Sort keys before adding to styles.
+  for (const key of Object.keys(styles)) {
+    const value = styles[key];
+
+    if (key.charCodeAt(0) !== 36 /* $ */ && value != null) {
+      if (typeof value === "object" && !Array.isArray(value)) {
+        nestedStyles.push([key, value]);
+      } else {
+        properties.push([hyphenate(key), value]);
+      }
+    }
+  }
+
+  const isUnique = !!styles.$unique;
+  const parent = styles.$global ? "" : parentClassName;
+  const nested = parent ? nestedStyles : sortTuples(nestedStyles);
+  const style = stringifyProperties(sortTuples(properties));
   let pid = style;
 
-  if (selector.charCodeAt(0) === 64 /* @ */) {
-    const child: StylizeRule = {
-      selector,
-      styles: [],
-      rules: [],
+  if (className.charCodeAt(0) === 64 /* @ */) {
+    const childRules: StylizeRule[] = [];
+    const childStyles: StylizeStyle[] = [];
+
+    // Nested styles support (e.g. `.foo > @media`).
+    if (parent && style) {
+      childStyles.push({ selector: parent, style, isUnique });
+    }
+
+    for (const [name, value] of nested) {
+      pid += stylize(childRules, childStyles, name, value, parent);
+    }
+
+    // Add new rule to parent.
+    rulesList.push({
+      selector: className,
+      rules: childRules,
+      styles: childStyles,
       style: parent ? "" : style
-    };
-    rulesList.push(child);
-
-    // Nested styles support (e.g. `.foo > @media > .bar`).
-    if (style && parent) {
-      child.styles.push({ selector: parent, style, isUnique });
-    }
-
-    for (const [name, value] of nested) {
-      pid += name + stylize(name, value, child.rules, child.styles, parent);
-    }
+    });
   } else {
-    const key = parent ? interpolate(selector, parent) : selector;
+    const selector = parent ? child(className, parent) : className;
 
-    if (style) stylesList.push({ selector: key, style, isUnique });
+    if (style) {
+      stylesList.push({ selector, style, isUnique });
+    }
 
     for (const [name, value] of nested) {
-      pid += name + stylize(name, value, rulesList, stylesList, key);
+      pid += stylize(rulesList, stylesList, name, value, selector);
     }
   }
 
@@ -242,27 +246,33 @@ function stylize(
 /**
  * Transform `stylize` tree into style objects.
  */
-function composeStylize(
+function compose(
   cache: Cache<Rule | Style>,
   pid: string,
   rulesList: StylizeRule[],
   stylesList: StylizeStyle[],
-  className: string,
-  isStyle: boolean
+  name: string
 ) {
   for (const { selector, style, isUnique } of stylesList) {
-    const key = isStyle ? interpolate(selector, className) : selector;
-    const id = isUnique
-      ? `u\0${(++uniqueId).toString(36)}`
-      : `s\0${pid}\0${style}`;
-    const item = new Style(style, id);
-    item.add(new Selector(key, `k\0${pid}\0${key}`));
+    const key = interpolate(selector, name);
+    const item = new Style(
+      style,
+      isUnique ? `u\0${(++uniqueId).toString(36)}` : `s\0${pid}\0${style}`
+    );
+    item.add(new Selector(key, `k${key}`));
     cache.add(item);
   }
 
   for (const { selector, style, rules, styles } of rulesList) {
-    const item = new Rule(selector, style, `r\0${pid}\0${selector}\0${style}`);
-    composeStylize(item, pid, rules, styles, className, isStyle);
+    const key = interpolate(selector, name);
+    const item = new Rule(key, style, `r\0${pid}\0${key}\0${style}`);
+    compose(
+      item,
+      pid,
+      rules,
+      styles,
+      name
+    );
     cache.add(item);
   }
 }
@@ -441,6 +451,9 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   }
 }
 
+/**
+ * Generate class name from styles.
+ */
 function key(pid: string, styles: Styles): string {
   const key = `f${stringHash(pid)}`;
   if (process.env.NODE_ENV === "production" || !styles.$displayName) return key;
@@ -456,15 +469,19 @@ export class FreeStyle extends Cache<Rule | Style>
     super(changes);
   }
 
-  registerStyle(styles: Styles) {
-    const rulesList: StylizeRule[] = [];
-    const stylesList: StylizeStyle[] = [];
-    const pid = stylize("&", styles, rulesList, stylesList);
-    const id = key(pid, styles);
-    const selector = `.${
+  registerStyle(css: Styles) {
+    const ruleList: StylizeRule[] = [];
+    const styleList: StylizeStyle[] = [];
+    const pid = stylize(ruleList, styleList, "", css, ".&");
+    const id = key(pid, css);
+    compose(
+      this,
+      pid,
+      ruleList,
+      styleList,
+      // Escape selector used in CSS.
       process.env.NODE_ENV === "production" ? id : escape(id)
-    }`;
-    composeStylize(this, pid, rulesList, stylesList, selector, true);
+    );
     return id;
   }
 
@@ -473,24 +490,15 @@ export class FreeStyle extends Cache<Rule | Style>
   }
 
   registerHashRule(prefix: string, styles: Styles) {
-    const rulesList: StylizeRule[] = [];
-    const stylesList: StylizeStyle[] = [];
-    const pid = stylize("", styles, rulesList, stylesList);
-    const id = key(pid, styles);
-    const selector = `${prefix} ${
-      process.env.NODE_ENV === "production" ? id : escape(id)
-    }`;
-    const rule = new Rule(selector, "", `h\0${pid}\0${prefix}`);
-    composeStylize(rule, pid, rulesList, stylesList, "", false);
-    this.add(rule);
-    return id;
+    return this.registerStyle({
+      $global: true,
+      $displayName: styles.$displayName,
+      [`${prefix} &`]: styles
+    });
   }
 
   registerRule(rule: string, styles: Styles) {
-    const rulesList: StylizeRule[] = [];
-    const stylesList: StylizeStyle[] = [];
-    const pid = stylize(rule, styles, rulesList, stylesList);
-    composeStylize(this, pid, rulesList, stylesList, "", false);
+    return this.registerStyle({ $global: true, [rule]: styles });
   }
 
   registerCss(styles: Styles) {

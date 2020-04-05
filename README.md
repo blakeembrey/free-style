@@ -45,8 +45,8 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 ### Ways to Use
 
-- [`react-free-style`](https://github.com/blakeembrey/react-free-style) - React implementation that renders styles on the current page (for universal apps)
 - [`typestyle`](https://github.com/typestyle/typestyle) - Popular type-safe interface for working with CSS
+- [`react-free-style`](https://github.com/blakeembrey/react-free-style) - React implementation that renders styles on the current page (for universal apps)
 - [`stylin`](https://github.com/ajoslin/stylin) - Simplest abstraction for creating styles, rules, and keyframes, and keeps `<style />` in sync
 - [`i-css`](https://github.com/irom-io/i-css) - Library for writing CSS with literal objects
 - **This module!** - Manually create, compose and manipulate style instances
@@ -105,7 +105,7 @@ Style.registerStyle({
 }); //=> "f1n85iiq"
 ```
 
-#### Nest Rules
+#### Nested Rules
 
 ```js
 Style.registerStyle({
@@ -116,12 +116,12 @@ Style.registerStyle({
 }); //=> "fk9tfor"
 ```
 
-#### Nest Selectors
+#### Nested Selectors
 
 ```js
 Style.registerStyle({
   color: "red",
-  ".classname": {
+  ".classy": {
     color: "blue"
   }
 }); //=> "fc1zv17"
@@ -143,27 +143,18 @@ Style.registerStyle({
 #### Use JavaScript
 
 ```js
-var extend = require("xtend");
-
-var ellipsisStyle = {
+const ellipsisStyle = {
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis"
 };
 
-var redEllipsisStyle = Style.registerStyle(
-  extend(
-    {
-      color: "red"
-    },
-    ellipsisStyle
-  )
-); //=> "fvxl8qs"
-```
+const redEllipsisStyle = Style.registerStyle({
+  color: "red",
+  ...ellipsisStyle
+}); //=> "fvxl8qs"
 
-**Tip:** This is a shallow extend example. There are modules on NPM for deep extending objects. You can also take advantage of new JavaScript features, such as `const` and computed properties:
-
-```js
+// Share rule between styles using computed properties.
 const mediaQuery = "@media (min-width: 400px)";
 
 const style = Style.registerStyle({
@@ -198,64 +189,57 @@ Style.registerStyle({
 Style.getStyles(); //=> ".f13byakl{color:blue}.f13byakl::-webkit-input-placeholder{color:rgba(0, 0, 0, 0)}.f13byakl::-moz-placeholder{color:rgba(0, 0, 0, 0)}.f13byakl::-ms-input-placeholder{color:rgba(0, 0, 0, 0)}"
 ```
 
-### Keyframes
+### Rules
 
 ```js
-var colorAnimation = Style.registerKeyframes({
-  from: { color: "red" },
-  to: { color: "blue" }
+const colorAnimation = Style.registerStyle({
+  $global: true,
+  "@keyframes &": {
+    from: { color: "red" },
+    to: { color: "blue" }
+  }
 }); //=> "h1j3ughx"
 
-var style = Style.registerStyle({
+const style = Style.registerStyle({
   animationName: colorAnimation,
   animationDuration: "1s"
 }); //=> "fibanyf"
 ```
 
-**Tip:** The string returned by `registerKeyframes` the name of the animation, which is a hash of the rule.
-
-### Hash Rule
-
-Hashed rules are what `registerKeyframes` uses internally. It accepts a prefix and the styles object, which will create a rule using `prefix + hash`. Conveniently, the same contents will generate the same hash so you can register vendor-specific rules using the same hash.
+#### Global Rules
 
 ```js
-var keyframes = {
-  from: {
-    color: "blue"
-  },
-  to: {
-    color: "red"
+Style.registerStyle({
+  $global: true,
+  "@font-face": {
+    fontFamily: '"Bitstream Vera Serif Bold"',
+    src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
   }
-};
-
-var animation1 = Style.registerHashRule("@keyframes", keyframes); //=> "f1dz2mpx"
-var animation2 = Style.registerHashRule("@-webkit-keyframes", keyframes); //=> "f1dz2mpx"
-```
-
-### Rules
-
-```js
-Style.registerRule("@font-face", {
-  fontFamily: '"Bitstream Vera Serif Bold"',
-  src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
 });
 
-Style.registerRule("@media print", {
+Style.registerStyle({
+  $global: true,
+  "@media print": {
+    body: {
+      color: "red"
+    }
+  }
+});
+
+Style.registerStyle({
+  $global: true,
   body: {
-    color: "red"
+    margin: 0,
+    padding: 0
   }
-});
-
-Style.registerRule("body", {
-  margin: 0,
-  padding: 0
 });
 ```
 
-### CSS Object
+#### Global Styles
 
 ```js
-Style.registerCss({
+Style.registerStyle({
+  $global: true,
   body: {
     margin: 0,
     padding: 0,
