@@ -23,7 +23,7 @@ const cssValues = [
   'content("test")',
   'content("")',
   'url("http://example.com/test.png")',
-  "url('background.png')"
+  "url('background.png')",
 ];
 
 // Generate numeric values.

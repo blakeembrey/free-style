@@ -10,7 +10,7 @@ var buttonStyle = Style.registerStyle({
   color: "#fff",
   border: 0,
   padding: 10,
-  transition: "0.2s ease-in-out transform"
+  transition: "0.2s ease-in-out transform",
 });
 
 var sectionStyle = Style.registerStyle({
@@ -20,8 +20,8 @@ var sectionStyle = Style.registerStyle({
   background: "blue",
   padding: 10,
   ["&:hover > ." + buttonStyle]: {
-    transform: "translate(100px, 100px)"
-  }
+    transform: "translate(100px, 100px)",
+  },
 });
 
 function app(targetEl) {

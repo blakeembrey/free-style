@@ -78,7 +78,7 @@ const CSS_NUMBER_KEYS = [
   "stroke-dashoffset",
   "stroke-miterlimit",
   "stroke-opacity",
-  "stroke-width"
+  "stroke-width",
 ];
 
 // Add vendor prefixes to all unit-less properties.
@@ -149,7 +149,7 @@ function stringifyProperties(
     .map(([name, value]) => {
       if (!Array.isArray(value)) return styleToString(name, value);
 
-      return value.map(x => styleToString(name, x)).join(";");
+      return value.map((x) => styleToString(name, x)).join(";");
     })
     .join(";");
 }
@@ -226,7 +226,7 @@ function stylize(
       selector: className,
       rules: childRules,
       styles: childStyles,
-      style: parent ? "" : style
+      style: parent ? "" : style,
     });
   } else {
     const selector = parent ? child(className, parent) : className;
@@ -266,13 +266,7 @@ function compose(
   for (const { selector, style, rules, styles } of rulesList) {
     const key = interpolate(selector, name);
     const item = new Rule(key, style, `r\0${pid}\0${key}\0${style}`);
-    compose(
-      item,
-      pid,
-      rules,
-      styles,
-      name
-    );
+    compose(item, pid, rules, styles, name);
     cache.add(item);
   }
 }
@@ -301,7 +295,7 @@ export interface Changes {
 const noopChanges: Changes = {
   add: () => undefined,
   change: () => undefined,
-  remove: () => undefined
+  remove: () => undefined,
 };
 
 /**
@@ -384,7 +378,7 @@ export class Cache<T extends Container<any>> {
   }
 
   values(): T[] {
-    return this._keys.map(key => this._children[key]!);
+    return this._keys.map((key) => this._children[key]!);
   }
 
   merge(cache: Cache<any>) {
@@ -493,7 +487,7 @@ export class FreeStyle extends Cache<Rule | Style>
     return this.registerStyle({
       $global: true,
       $displayName: styles.$displayName,
-      [`${prefix} &`]: styles
+      [`${prefix} &`]: styles,
     });
   }
 

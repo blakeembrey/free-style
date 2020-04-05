@@ -61,7 +61,7 @@ var Style = FreeStyle.create();
 
 // Register a new style, returning a class name to use.
 var backgroundStyle = Style.registerStyle({
-  backgroundColor: "red"
+  backgroundColor: "red",
 }); //=> "f14svl5e"
 
 // Inject `<style>` into the `<head>`.
@@ -82,7 +82,7 @@ React.render(
 var buttonStyle = Style.registerStyle({
   $displayName: "button",
   backgroundColor: "red",
-  padding: 10
+  padding: 10,
 });
 
 console.log(buttonStyle); //=> "button_f65pi0b"
@@ -100,8 +100,8 @@ Style.registerStyle({
     "-webkit-linear-gradient(left, red 0%, blue 100%)",
     "-o-linear-gradient(left, red 0%, blue 100%)",
     "-ms-linear-gradient(left, red 0%, blue 100%)",
-    "linear-gradient(to right, red 0%, blue 100%)"
-  ]
+    "linear-gradient(to right, red 0%, blue 100%)",
+  ],
 }); //=> "f1n85iiq"
 ```
 
@@ -111,8 +111,8 @@ Style.registerStyle({
 Style.registerStyle({
   color: "red",
   "@media (min-width: 500px)": {
-    color: "blue"
-  }
+    color: "blue",
+  },
 }); //=> "fk9tfor"
 ```
 
@@ -122,8 +122,8 @@ Style.registerStyle({
 Style.registerStyle({
   color: "red",
   ".classy": {
-    color: "blue"
-  }
+    color: "blue",
+  },
 }); //=> "fc1zv17"
 ```
 
@@ -133,8 +133,8 @@ Style.registerStyle({
 Style.registerStyle({
   color: "red",
   "&:hover": {
-    color: "blue"
-  }
+    color: "blue",
+  },
 }); //=> "f1h42yg6"
 ```
 
@@ -146,12 +146,12 @@ Style.registerStyle({
 const ellipsisStyle = {
   whiteSpace: "nowrap",
   overflow: "hidden",
-  textOverflow: "ellipsis"
+  textOverflow: "ellipsis",
 };
 
 const redEllipsisStyle = Style.registerStyle({
   color: "red",
-  ...ellipsisStyle
+  ...ellipsisStyle,
 }); //=> "fvxl8qs"
 
 // Share rule between styles using computed properties.
@@ -160,8 +160,8 @@ const mediaQuery = "@media (min-width: 400px)";
 const style = Style.registerStyle({
   backgroundColor: "red",
   [mediaQuery]: {
-    backgroundColor: "pink"
-  }
+    backgroundColor: "pink",
+  },
 });
 ```
 
@@ -174,16 +174,16 @@ Style.registerStyle({
   color: "blue",
   "&::-webkit-input-placeholder": {
     color: `rgba(0, 0, 0, 0)`,
-    $unique: true
+    $unique: true,
   },
   "&::-moz-placeholder": {
     color: `rgba(0, 0, 0, 0)`,
-    $unique: true
+    $unique: true,
   },
   "&::-ms-input-placeholder": {
     color: `rgba(0, 0, 0, 0)`,
-    $unique: true
-  }
+    $unique: true,
+  },
 }); //=> "f13byakl"
 
 Style.getStyles(); //=> ".f13byakl{color:blue}.f13byakl::-webkit-input-placeholder{color:rgba(0, 0, 0, 0)}.f13byakl::-moz-placeholder{color:rgba(0, 0, 0, 0)}.f13byakl::-ms-input-placeholder{color:rgba(0, 0, 0, 0)}"
@@ -196,13 +196,13 @@ const colorAnimation = Style.registerStyle({
   $global: true,
   "@keyframes &": {
     from: { color: "red" },
-    to: { color: "blue" }
-  }
+    to: { color: "blue" },
+  },
 }); //=> "h1j3ughx"
 
 const style = Style.registerStyle({
   animationName: colorAnimation,
-  animationDuration: "1s"
+  animationDuration: "1s",
 }); //=> "fibanyf"
 ```
 
@@ -213,25 +213,25 @@ Style.registerStyle({
   $global: true,
   "@font-face": {
     fontFamily: '"Bitstream Vera Serif Bold"',
-    src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
-  }
+    src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")',
+  },
 });
 
 Style.registerStyle({
   $global: true,
   "@media print": {
     body: {
-      color: "red"
-    }
-  }
+      color: "red",
+    },
+  },
 });
 
 Style.registerStyle({
   $global: true,
   body: {
     margin: 0,
-    padding: 0
-  }
+    padding: 0,
+  },
 });
 ```
 
@@ -244,12 +244,12 @@ Style.registerStyle({
     margin: 0,
     padding: 0,
     "@print": {
-      color: "#000"
-    }
+      color: "#000",
+    },
   },
   h1: {
-    fontSize: "2em"
-  }
+    fontSize: "2em",
+  },
 });
 ```
 

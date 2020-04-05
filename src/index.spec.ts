@@ -6,7 +6,7 @@ describe("free style", () => {
     let changeId = Style.changeId;
 
     const className = Style.registerStyle({
-      color: "red"
+      color: "red",
     });
 
     expect(Style.getStyles()).toEqual(`.${className}{color:red}`);
@@ -17,7 +17,7 @@ describe("free style", () => {
     const Style = create();
 
     const className = Style.registerStyle({
-      background: ["red", "linear-gradient(to right, red 0%, green 100%)"]
+      background: ["red", "linear-gradient(to right, red 0%, green 100%)"],
     });
 
     expect(Style.getStyles()).toEqual(
@@ -29,7 +29,7 @@ describe("free style", () => {
     const Style = create();
 
     const className = Style.registerStyle({
-      backgroundColor: "red"
+      backgroundColor: "red",
     });
 
     expect(Style.getStyles()).toEqual(`.${className}{background-color:red}`);
@@ -41,8 +41,8 @@ describe("free style", () => {
     const className = Style.registerStyle({
       color: "red",
       "@media (min-width: 500px)": {
-        color: "blue"
-      }
+        color: "blue",
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -58,9 +58,9 @@ describe("free style", () => {
       "& > &": {
         color: "blue",
         ".class-name": {
-          background: "green"
-        }
-      }
+          background: "green",
+        },
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -74,7 +74,7 @@ describe("free style", () => {
 
     const className = Style.registerStyle({
       flexGrow: 2,
-      WebkitFlexGrow: 2
+      WebkitFlexGrow: 2,
     });
 
     expect(Style.getStyles()).toEqual(
@@ -88,7 +88,7 @@ describe("free style", () => {
 
     const className1 = Style.registerStyle({
       background: "blue",
-      color: "red"
+      color: "red",
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -98,7 +98,7 @@ describe("free style", () => {
 
     const className2 = Style.registerStyle({
       color: "red",
-      background: "blue"
+      background: "blue",
     });
 
     expect(Style.changeId).toEqual(changeId);
@@ -114,7 +114,7 @@ describe("free style", () => {
 
     const className1 = Style.registerStyle({
       color: "red",
-      $displayName: "className1"
+      $displayName: "className1",
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -123,7 +123,7 @@ describe("free style", () => {
 
     const className2 = Style.registerStyle({
       color: "red",
-      $displayName: "className2"
+      $displayName: "className2",
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -139,7 +139,7 @@ describe("free style", () => {
     const className = Style.registerStyle({
       border: "5px solid red",
       borderWidth: 10,
-      borderColor: "blue"
+      borderColor: "blue",
     });
 
     expect(Style.getStyles()).toEqual(
@@ -152,7 +152,7 @@ describe("free style", () => {
 
     const className = Style.registerStyle({
       borderRadius: 5,
-      msBorderRadius: 5
+      msBorderRadius: 5,
     });
 
     expect(Style.getStyles()).toEqual(
@@ -164,7 +164,7 @@ describe("free style", () => {
     const Style = create();
 
     const className = Style.registerStyle({
-      foo: [15, 13, 11, 9, 7, 5, 3, 1, 14, 12, 10, 8, 6, 4, 2]
+      foo: [15, 13, 11, 9, 7, 5, 3, 1, 14, 12, 10, 8, 6, 4, 2],
     });
 
     expect(Style.getStyles()).toEqual(
@@ -178,8 +178,8 @@ describe("free style", () => {
     const className = Style.registerStyle({
       color: "red",
       ".foo": {
-        color: "red"
-      }
+        color: "red",
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -194,8 +194,8 @@ describe("free style", () => {
 
     const className1 = Style.registerStyle({
       [mediaQuery]: {
-        color: "red"
-      }
+        color: "red",
+      },
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -205,8 +205,8 @@ describe("free style", () => {
 
     const className2 = Style.registerStyle({
       [mediaQuery]: {
-        color: "blue"
-      }
+        color: "blue",
+      },
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -220,7 +220,7 @@ describe("free style", () => {
     const Style = create();
 
     Style.registerStyle({
-      color: null
+      color: null,
     });
 
     expect(Style.getStyles()).toEqual("");
@@ -232,9 +232,9 @@ describe("free style", () => {
     const className = Style.registerStyle({
       "@media (min-width: 100em)": {
         "@supports (display: flexbox)": {
-          maxWidth: 100
-        }
-      }
+          maxWidth: 100,
+        },
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -248,19 +248,19 @@ describe("free style", () => {
     const Style3 = create();
 
     const className1 = Style1.registerStyle({
-      color: "red"
+      color: "red",
     });
 
     Style2.registerStyle({
       // Should duplicate `className1`.
-      color: "red"
+      color: "red",
     });
 
     const className3 = Style3.registerStyle({
       color: "red",
       "@media (max-width: 600px)": {
-        color: "blue"
-      }
+        color: "blue",
+      },
     });
 
     Style2.merge(Style3);
@@ -280,7 +280,7 @@ describe("free style", () => {
 
     const keyframes = Style.registerKeyframes({
       from: { color: "red" },
-      to: { color: "blue" }
+      to: { color: "blue" },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -293,12 +293,12 @@ describe("free style", () => {
 
     const keyframes1 = Style.registerKeyframes({
       from: { color: "red" },
-      to: { color: "blue" }
+      to: { color: "blue" },
     });
 
     const keyframes2 = Style.registerKeyframes({
       to: { color: "blue" },
-      from: { color: "red" }
+      from: { color: "red" },
     });
 
     expect(keyframes1).toEqual(keyframes2);
@@ -314,7 +314,7 @@ describe("free style", () => {
 
     Style.registerRule("@font-face", {
       fontFamily: '"Bitstream Vera Serif Bold"',
-      src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
+      src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")',
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -330,12 +330,12 @@ describe("free style", () => {
 
     Style.registerRule("@font-face", {
       fontFamily: '"Bitstream Vera Serif Bold"',
-      src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")'
+      src: 'url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")',
     });
 
     Style.registerRule("@font-face", {
       fontFamily: '"MyWebFont"',
-      src: 'url("myfont.woff2")'
+      src: 'url("myfont.woff2")',
     });
 
     expect(Style.getStyles()).toEqual(
@@ -350,7 +350,7 @@ describe("free style", () => {
 
     Style.registerRule("body", {
       margin: 0,
-      padding: 0
+      padding: 0,
     });
 
     expect(Style.getStyles()).toEqual("body{margin:0;padding:0}");
@@ -361,8 +361,8 @@ describe("free style", () => {
 
     Style.registerRule("@media print", {
       body: {
-        color: "red"
-      }
+        color: "red",
+      },
     });
 
     expect(Style.getStyles()).toEqual("@media print{body{color:red}}");
@@ -373,14 +373,14 @@ describe("free style", () => {
     let changeId = Style.changeId;
 
     const className1 = Style.registerStyle({
-      color: "red"
+      color: "red",
     });
 
     expect(Style.changeId).not.toEqual(changeId);
     changeId = Style.changeId;
 
     Style.registerRule(".test", {
-      color: "red"
+      color: "red",
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -393,15 +393,15 @@ describe("free style", () => {
     const x = Style.registerStyle({
       background: "red",
       "@media (min-width: 400px)": {
-        background: "yellow"
-      }
+        background: "yellow",
+      },
     });
 
     const y = Style.registerStyle({
       background: "palegreen",
       "@media (min-width: 400px)": {
-        background: "pink"
-      }
+        background: "pink",
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -417,11 +417,11 @@ describe("free style", () => {
     const className = Style.registerStyle({
       width: "20rem",
       "@media screen and (min-width: 500px)": {
-        width: 500
+        width: 500,
       },
       "@media screen and (min-width: 1000px)": {
-        width: 1000
-      }
+        width: 1000,
+      },
     });
 
     expect(Style.changeId).not.toEqual(changeId);
@@ -438,8 +438,8 @@ describe("free style", () => {
     Style.registerRule("body", {
       height: "100%",
       a: {
-        color: "red"
-      }
+        color: "red",
+      },
     });
 
     expect(Style.getStyles()).toEqual("body{height:100%}body a{color:red}");
@@ -451,13 +451,13 @@ describe("free style", () => {
     Style.registerRule("body", {
       height: "100%",
       a: {
-        color: "red"
+        color: "red",
       },
       "@print": {
         a: {
-          color: "blue"
-        }
-      }
+          color: "blue",
+        },
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -472,16 +472,16 @@ describe("free style", () => {
       color: "blue",
       "&::-webkit-input-placeholder": {
         color: `rgba(0, 0, 0, 0)`,
-        $unique: true
+        $unique: true,
       },
       "&::-moz-placeholder": {
         color: `rgba(0, 0, 0, 0)`,
-        $unique: true
+        $unique: true,
       },
       "&::-ms-input-placeholder": {
         color: `rgba(0, 0, 0, 0)`,
-        $unique: true
-      }
+        $unique: true,
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -499,18 +499,18 @@ describe("free style", () => {
       body: {
         color: "red",
         "@print": {
-          color: "blue"
-        }
+          color: "blue",
+        },
       },
       h1: {
         color: "red",
         "@print": {
           color: "#000",
           a: {
-            color: "blue"
-          }
-        }
-      }
+            color: "blue",
+          },
+        },
+      },
     });
 
     expect(Style.getStyles()).toEqual(
@@ -523,20 +523,20 @@ describe("free style", () => {
 
     const animation1 = Style.registerHashRule("@keyframes", {
       from: {
-        color: "blue"
+        color: "blue",
       },
       to: {
-        color: "red"
-      }
+        color: "red",
+      },
     });
 
     const animation2 = Style.registerHashRule("@-webkit-keyframes", {
       from: {
-        color: "blue"
+        color: "blue",
       },
       to: {
-        color: "red"
-      }
+        color: "red",
+      },
     });
 
     expect(animation1).toEqual(animation2);
@@ -559,21 +559,21 @@ describe("free style", () => {
       },
       remove(_, index) {
         styles.splice(index, 1);
-      }
+      },
     });
 
     Style.registerStyle({
       background: "red",
       "@media (min-width: 400px)": {
-        background: "yellow"
-      }
+        background: "yellow",
+      },
     });
 
     Style.registerStyle({
       background: "palegreen",
       "@media (min-width: 400px)": {
-        background: "pink"
-      }
+        background: "pink",
+      },
     });
 
     expect(styles.join("")).toEqual(Style.getStyles());
@@ -585,13 +585,13 @@ describe("free style", () => {
 
     const animationName = Style.registerKeyframes({
       from: { color: "red" },
-      $displayName
+      $displayName,
     });
 
     const className = Style.registerStyle({
       animation: animationName,
       ".t": { color: "red" },
-      $displayName
+      $displayName,
     });
 
     expect(animationName.startsWith($displayName)).toBe(true);
@@ -635,7 +635,7 @@ describe("free style", () => {
 
       const className1 = Style.registerStyle({
         color: "red",
-        $displayName: "className1"
+        $displayName: "className1",
       });
 
       expect(Style.changeId).not.toEqual(changeId);
@@ -644,7 +644,7 @@ describe("free style", () => {
 
       const className2 = Style.registerStyle({
         color: "red",
-        $displayName: "className2"
+        $displayName: "className2",
       });
 
       expect(Style.changeId).toEqual(changeId);
