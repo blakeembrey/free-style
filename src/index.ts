@@ -290,15 +290,6 @@ export interface Changes {
 }
 
 /**
- * Noop changes.
- */
-const noopChanges: Changes = {
-  add: () => undefined,
-  change: () => undefined,
-  remove: () => undefined,
-};
-
-/**
  * Cache-able interface.
  */
 export interface Container<T> {
@@ -318,7 +309,7 @@ export class Cache<T extends Container<any>> {
   private _children: Record<string, T | undefined> = Object.create(null);
   private _counters: Record<string, number | undefined> = Object.create(null);
 
-  constructor(public changes: Changes = noopChanges) {}
+  constructor(public changes?: Changes) {}
 
   add(style: T): void {
     const count = this._counters[style.id] || 0;
@@ -331,7 +322,7 @@ export class Cache<T extends Container<any>> {
       this._keys.push(item.id);
       this.sheet.push(item.getStyles());
       this.changeId++;
-      this.changes.add(item, this._keys.length - 1);
+      if (this.changes) this.changes.add(item, this._keys.length - 1);
     } else if (item instanceof Cache && style instanceof Cache) {
       const curIndex = this._keys.indexOf(style.id);
       const prevItemChangeId = item.changeId;
@@ -341,7 +332,7 @@ export class Cache<T extends Container<any>> {
       if (item.changeId !== prevItemChangeId) {
         this.sheet.splice(curIndex, 1, item.getStyles());
         this.changeId++;
-        this.changes.change(item, curIndex, curIndex);
+        if (this.changes) this.changes.change(item, curIndex, curIndex);
       }
     }
   }
@@ -362,7 +353,7 @@ export class Cache<T extends Container<any>> {
         this._keys.splice(index, 1);
         this.sheet.splice(index, 1);
         this.changeId++;
-        this.changes.remove(item, index);
+        if (this.changes) this.changes.remove(item, index);
       } else if (item instanceof Cache && style instanceof Cache) {
         const prevChangeId = item.changeId;
 
@@ -371,7 +362,7 @@ export class Cache<T extends Container<any>> {
         if (item.changeId !== prevChangeId) {
           this.sheet.splice(index, 1, item.getStyles());
           this.changeId++;
-          this.changes.change(item, index, index);
+          if (this.changes) this.changes.change(item, index, index);
         }
       }
     }
