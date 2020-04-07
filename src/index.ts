@@ -324,15 +324,15 @@ export class Cache<T extends Container<any>> {
       this.changeId++;
       if (this.changes) this.changes.add(item, this._keys.length - 1);
     } else if (item instanceof Cache && style instanceof Cache) {
-      const curIndex = this._keys.indexOf(style.id);
       const prevItemChangeId = item.changeId;
 
       item.merge(style);
 
       if (item.changeId !== prevItemChangeId) {
-        this.sheet.splice(curIndex, 1, item.getStyles());
+        const index = this._keys.indexOf(style.id);
+        this.sheet.splice(index, 1, item.getStyles());
         this.changeId++;
-        if (this.changes) this.changes.change(item, curIndex, curIndex);
+        if (this.changes) this.changes.change(item, index, index);
       }
     }
   }
