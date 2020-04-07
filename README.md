@@ -320,7 +320,7 @@ Style.unmerge(ChildStyle); // Unmerge the child styles from the current instance
 
 ## Legacy Browsers
 
-To support legacy browsers (<= IE8) you'll need to [polyfill](https://github.com/es-shims/es5-shim) some ES5 features, such as `Object.keys`, `Object.create(null)` and `Array.isArray`.
+Version 3 requires support for `class`, see [#82](https://github.com/blakeembrey/free-style/issues/82). As of April 2020, that's [95% of browsers](https://caniuse.com/#feat=es6-class). You can use a transpiler to translate classes into ES5 for the remaining 5%.
 
 ## License
 
