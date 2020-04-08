@@ -4,19 +4,19 @@
   "description": "Make CSS easier and more maintainable by using JavaScript",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "module": "dist.es2015/index.js",
+  "module": "dist.module/index.js",
+  "jsnext:main": "dist.module/index.js",
   "sideEffects": false,
-  "jsnext:main": "dist.es2015/index.js",
   "files": [
     "dist/",
-    "dist.es2015/",
+    "dist.module/",
     "LICENSE"
   ],
   "scripts": {
     "prettier": "prettier --write",
     "lint": "eslint \"./src/**/*.{js,jsx,ts,tsx}\" --quiet --fix",
     "format": "npm run prettier -- \"{,{src,benchmarks}/**/}*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
-    "build": "rimraf dist/ dist.es2015/ && tsc && tsc -P tsconfig.es2015.json",
+    "build": "rimraf dist/ dist.module/ dist.es5/ && tsc && tsc -P tsconfig.module.json && tsc -P tsconfig.es5.json",
     "bench:hash": "ts-node benchmarks/hash.ts",
     "bench:perf": "ts-node benchmarks/perf.ts",
     "specs": "jest --coverage",
