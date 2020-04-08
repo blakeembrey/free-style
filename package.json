@@ -10,6 +10,7 @@
   "files": [
     "dist/",
     "dist.module/",
+    "dist.es5/",
     "LICENSE"
   ],
   "scripts": {
