@@ -41,7 +41,7 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 
 ### But How?
 
-**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged on duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters that will warn on unused variables and features like dead code minification. Using "register" returns the class name used for the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (see [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should usually be created outside of the application run loop (e.g. `render()`) so the CSS string and hashes are only generated once.
+**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged on duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters that will warn on unused variables and features like dead code minification. Using "register" returns the class name used for the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (e.g. [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should usually be created outside of the application run loop (e.g. `render()`) so the CSS string and hashes are only generated once.
 
 ### Ways to Use
 
@@ -111,6 +111,7 @@ Style.registerStyle({
 Style.registerStyle({
   color: "red",
   "@media (min-width: 500px)": {
+    //=> "@media (min-width: 500px){.fk9tfor{color:blue}}"
     color: "blue",
   },
 }); //=> "fk9tfor"
@@ -122,6 +123,7 @@ Style.registerStyle({
 Style.registerStyle({
   color: "red",
   ".classy": {
+    //=> ".fc1zv17 .classy"
     color: "blue",
   },
 }); //=> "fc1zv17"
@@ -133,12 +135,13 @@ Style.registerStyle({
 Style.registerStyle({
   color: "red",
   "&:hover": {
+    //=> ".f1h42yg6:hover"
     color: "blue",
   },
 }); //=> "f1h42yg6"
 ```
 
-**Tip:** The ampersand (`&`) will be replaced by the parent selector at runtime. In this example, the result is `.f1h42yg6:hover`.
+**Tip:** The ampersand (`&`) will be replaced by the parent selector at runtime.
 
 #### Use JavaScript
 
@@ -271,51 +274,29 @@ Style.getStyles(); //=> ".f65pi0b{background-color:red;padding:10px}"
 - [`image-url`](https://github.com/ajoslin/image-url)
 - [**Add yours!**](https://github.com/blakeembrey/free-style/issues/new)
 
-### Implementor Details
+### Implementation Details
 
-#### Debug
+#### Debugging
 
 Display names will automatically be removed when `process.env.NODE_ENV === "production"`.
 
 #### Changes
 
-**Free-Style** provides two methods for detecting style changes. First is a `changeId` property, incremented every time a change occurs.
-
-```js
-const Style = create();
-const prevChangeId = Style.changeId;
-
-Style.registerStyle({ color: "red" });
-
-if (Style.changeId !== prevChangeId) {
-}
-```
-
 The only argument to `create()` is a map of change function handlers. All functions are required:
 
-- `add (style: Container<any>, index: number): void`
-- `change (style: Container<any>, oldIndex: number, newIndex: number): void`
-- `remove (style: Container<any>, index: number): void`
+- `add(style: Container<any>, index: number)`
+- `change(style: Container<any>, oldIndex: number, newIndex: number)`
+- `remove(style: Container<any>, index: number)`
 
-All classes implement `Container`, so you can `getStyles()`, `getIdentifier()` or use `id`.
-
-#### Classes
-
-```js
-FreeStyle.FreeStyle; // Similar to writing a CSS file, holds styles and rules - returned from `create()`.
-FreeStyle.Style; // Styles hold the CSS string and a generate a consistent hash of their contents.
-FreeStyle.Rule; // Rules are lighter-weight containers that can be nested inside `FreeStyle` instances.
-FreeStyle.Selector; // Selectors hold the CSS selector and can be nested inside `Style` instances.
-FreeStyle.Cache; // `FreeStyle`, `Style` and `Rule` all extend the cache which maintains reference counts.
-```
+All classes implement `Container`, so you can call `getStyles()`, `clone()` or get `id`.
 
 #### Other Properties and Methods
 
 ```js
-var ChildStyle = Style.create();
+var OtherStyle = Style.create();
 
-Style.merge(ChildStyle); // Merge the child styles into the current instance.
-Style.unmerge(ChildStyle); // Unmerge the child styles from the current instance.
+Style.merge(OtherStyle); // Merge the current styles of `OtherStyle` into `Style`.
+Style.unmerge(OtherStyle); // Remove the current styles of `OtherStyle` from `Style`.
 ```
 
 ## Legacy Browsers
