@@ -48,7 +48,7 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 - [`typestyle`](https://github.com/typestyle/typestyle) - Popular type-safe interface for working with CSS
 - [`react-free-style`](https://github.com/blakeembrey/react-free-style) - React implementation that renders styles on the current page (for universal apps)
 - [`stylin`](https://github.com/ajoslin/stylin) - Simplest abstraction for creating styles, rules, and keyframes, and keeps `<style />` in sync
-- [`i-css`](https://github.com/irom-io/i-css) - Library for writing CSS with literal objects
+- [`ethcss`](https://github.com/ethorz/ethcss) - Library for writing CSS with literal objects
 - **This module!** - Manually create, compose and manipulate style instances
 
 ## Usage
