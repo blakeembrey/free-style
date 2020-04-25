@@ -1,4 +1,4 @@
-import { create } from "../src/free-style";
+import { create } from "../src/index";
 
 const cssProperties = require("just-css-properties");
 
@@ -18,6 +18,4 @@ for (let i = 0; i < count; i += 3) {
 const end = process.hrtime(start);
 const timer = `${end[0]}s ${~~(end[1] / 1000000)}ms`;
 
-console.log(
-  `${Style.sheet.length} styles / ${Style.getStyles().length} size / ${timer}`
-);
+console.log(`${Style.getStyles().length} size / ${timer}`);
