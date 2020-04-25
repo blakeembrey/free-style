@@ -248,25 +248,25 @@ function stylize(
  */
 function compose(
   cache: Cache<Rule | Style>,
-  pid: string,
   rulesList: StylizeRule[],
   stylesList: StylizeStyle[],
+  id: string,
   name: string
 ) {
   for (const { selector, style, isUnique } of stylesList) {
     const key = interpolate(selector, name);
     const item = new Style(
       style,
-      isUnique ? `u\0${(++uniqueId).toString(36)}` : `s\0${pid}\0${style}`
+      isUnique ? `u:${(++uniqueId).toString(36)}` : `s:${id}:${style}`
     );
-    item.add(new Selector(key, `k${key}`));
+    item.add(new Selector(key, `k:${key}`));
     cache.add(item);
   }
 
   for (const { selector, style, rules, styles } of rulesList) {
     const key = interpolate(selector, name);
-    const item = new Rule(key, style, `r\0${pid}\0${key}\0${style}`);
-    compose(item, pid, rules, styles, name);
+    const item = new Rule(key, style, `r:${id}:${key}:${style}`);
+    compose(item, rules, styles, id, name);
     cache.add(item);
   }
 }
@@ -439,10 +439,9 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
 /**
  * Generate class name from styles.
  */
-function key(pid: string, styles: Styles): string {
-  const key = `f${stringHash(pid)}`;
-  if (process.env.NODE_ENV === "production" || !styles.$displayName) return key;
-  return `${styles.$displayName}_${key}`;
+function key(id: string, styles: Styles): string {
+  if (process.env.NODE_ENV === "production" || !styles.$displayName) return id;
+  return `${styles.$displayName}_${id}`;
 }
 
 /**
@@ -458,16 +457,17 @@ export class FreeStyle extends Cache<Rule | Style>
     const ruleList: StylizeRule[] = [];
     const styleList: StylizeStyle[] = [];
     const pid = stylize(ruleList, styleList, "", css, ".&");
-    const id = key(pid, css);
+    const id = `f${stringHash(pid)}`;
+    const name = key(id, css);
     compose(
       this,
-      pid,
       ruleList,
       styleList,
-      // Escape selector used in CSS.
-      process.env.NODE_ENV === "production" ? id : escape(id)
+      id,
+      // Escape selector used in CSS when needed for display names.
+      process.env.NODE_ENV === "production" ? name : escape(name)
     );
-    return id;
+    return name;
   }
 
   registerKeyframes(keyframes: Styles) {
