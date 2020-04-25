@@ -124,18 +124,17 @@ function stringHash(str: string): string {
 /**
  * Transform a style string to a CSS string.
  */
-function styleToString(key: string, value: PropertyValue) {
-  if (value && typeof value === "number" && !CSS_NUMBER[key]) {
-    return `${key}:${value}px`;
-  }
+function styleToString(name: string, value: PropertyValue) {
+  const suffix =
+    typeof value === "number" && value && !CSS_NUMBER[name] ? "px" : "";
 
-  return `${key}:${value}`;
+  return `${name}:${value}${suffix}`;
 }
 
 /**
  * Sort an array of tuples by first value.
  */
-function sortTuples<T extends any[]>(value: T[]): T[] {
+function sortTuples<T extends any>(value: [string, T][]): [string, T][] {
   return value.sort((a, b) => (a[0] > b[0] ? 1 : -1));
 }
 
@@ -257,7 +256,7 @@ function compose(
     const key = interpolate(selector, name);
     const item = new Style(
       style,
-      isUnique ? `u:${(++uniqueId).toString(36)}` : `s:${id}:${style}`
+      `s:${isUnique ? (++uniqueId).toString(36) : id}:${style}`
     );
     item.add(new Selector(key, `k:${key}`));
     cache.add(item);
