@@ -181,7 +181,7 @@ type StylizeRule = {
 function stylize(
   rulesList: StylizeRule[],
   stylesList: StylizeStyle[],
-  className: string,
+  key: string,
   styles: Styles,
   parentClassName: string
 ) {
@@ -207,35 +207,38 @@ function stylize(
   const style = stringifyProperties(sortTuples(properties));
   let pid = style;
 
-  if (className.charCodeAt(0) === 64 /* @ */) {
+  if (key.charCodeAt(0) === 64 /* @ */) {
     const childRules: StylizeRule[] = [];
     const childStyles: StylizeStyle[] = [];
 
     // Nested styles support (e.g. `.foo > @media`).
     if (parent && style) {
+      pid += `:${parent}`;
       childStyles.push({ selector: parent, style, isUnique });
     }
 
     for (const [name, value] of nested) {
-      pid += stylize(childRules, childStyles, name, value, parent);
+      pid += `:${stylize(childRules, childStyles, name, value, parent)}`;
     }
 
     // Add new rule to parent.
     rulesList.push({
-      selector: className,
+      selector: key,
       rules: childRules,
       styles: childStyles,
       style: parent ? "" : style,
     });
   } else {
-    const selector = parent ? child(className, parent) : className;
+    const selector = parent ? child(key, parent) : key;
+
+    pid += `:${selector}`;
 
     if (style) {
       stylesList.push({ selector, style, isUnique });
     }
 
     for (const [name, value] of nested) {
-      pid += stylize(rulesList, stylesList, name, value, selector);
+      pid += `:${stylize(rulesList, stylesList, name, value, selector)}`;
     }
   }
 

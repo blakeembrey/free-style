@@ -368,23 +368,23 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual("@media print{body{color:red}}");
   });
 
-  it("should de-dupe across styles and rules", () => {
+  it("should create a different hash for nested css rules", () => {
     const Style = create();
-    let changeId = Style.changeId;
 
     const className1 = Style.registerStyle({
       color: "red",
     });
 
-    expect(Style.changeId).not.toEqual(changeId);
-    changeId = Style.changeId;
-
-    Style.registerRule(".test", {
-      color: "red",
+    const className2 = Style.registerStyle({
+      "&:first-child": {
+        color: "red",
+      },
     });
 
-    expect(Style.changeId).not.toEqual(changeId);
-    expect(Style.getStyles()).toEqual(`.${className1},.test{color:red}`);
+    expect(className1).not.toEqual(className2);
+    expect(Style.getStyles()).toEqual(
+      `.${className1}{color:red}.${className2}:first-child{color:red}`
+    );
   });
 
   it("should retain insertion order", () => {
