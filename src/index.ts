@@ -213,12 +213,17 @@ function stylize(
 
     // Nested styles support (e.g. `.foo > @media`).
     if (parent && style) {
-      pid += `:${parent}`;
       childStyles.push({ selector: parent, style, isUnique });
     }
 
     for (const [name, value] of nested) {
-      pid += `:${stylize(childRules, childStyles, name, value, parent)}`;
+      pid += `|${name}#${stylize(
+        childRules,
+        childStyles,
+        name,
+        value,
+        parent
+      )}`;
     }
 
     // Add new rule to parent.
@@ -231,14 +236,18 @@ function stylize(
   } else {
     const selector = parent ? child(key, parent) : key;
 
-    pid += `:${selector}`;
-
     if (style) {
       stylesList.push({ selector, style, isUnique });
     }
 
     for (const [name, value] of nested) {
-      pid += `:${stylize(rulesList, stylesList, name, value, selector)}`;
+      pid += `|${name}#${stylize(
+        rulesList,
+        stylesList,
+        name,
+        value,
+        selector
+      )}`;
     }
   }
 
@@ -257,17 +266,14 @@ function compose(
 ) {
   for (const { selector, style, isUnique } of stylesList) {
     const key = interpolate(selector, name);
-    const item = new Style(
-      style,
-      `s:${isUnique ? (++uniqueId).toString(36) : id}:${style}`
-    );
-    item.add(new Selector(key, `k:${key}`));
+    const item = new Style(style, isUnique ? (++uniqueId).toString(36) : id);
+    item.add(new Selector(key));
     cache.add(item);
   }
 
   for (const { selector, style, rules, styles } of rulesList) {
     const key = interpolate(selector, name);
-    const item = new Rule(key, style, `r:${id}:${key}:${style}`);
+    const item = new Rule(key, style, id);
     compose(item, rules, styles, id, name);
     cache.add(item);
   }
@@ -393,7 +399,11 @@ export class Cache<T extends Container<any>> {
  * Selector is a dumb class made to represent nested CSS selectors.
  */
 export class Selector implements Container<Selector> {
-  constructor(public selector: string, public id: string) {}
+  id: string;
+
+  constructor(public selector: string) {
+    this.id = `k:${selector}`;
+  }
 
   getStyles() {
     return this.selector;
@@ -408,8 +418,12 @@ export class Selector implements Container<Selector> {
  * The style container registers a style string with selectors.
  */
 export class Style extends Cache<Selector> implements Container<Style> {
-  constructor(public style: string, public id: string) {
+  id: string;
+
+  constructor(public style: string, private pid: string) {
     super();
+
+    this.id = `s:${pid}:${style}`;
   }
 
   getStyles(): string {
@@ -417,7 +431,7 @@ export class Style extends Cache<Selector> implements Container<Style> {
   }
 
   clone(): Style {
-    return new Style(this.style, this.id).merge(this);
+    return new Style(this.style, this.pid).merge(this);
   }
 }
 
@@ -425,8 +439,12 @@ export class Style extends Cache<Selector> implements Container<Style> {
  * Implement rule logic for style output.
  */
 export class Rule extends Cache<Rule | Style> implements Container<Rule> {
-  constructor(public rule: string, public style: string, public id: string) {
+  id: string;
+
+  constructor(public rule: string, public style: string, private pid: string) {
     super();
+
+    this.id = `r:${pid}:${rule}:${style}`;
   }
 
   getStyles(): string {
@@ -434,16 +452,8 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   }
 
   clone(): Rule {
-    return new Rule(this.rule, this.style, this.id).merge(this);
+    return new Rule(this.rule, this.style, this.pid).merge(this);
   }
-}
-
-/**
- * Generate class name from styles.
- */
-function key(id: string, styles: Styles): string {
-  if (process.env.NODE_ENV === "production" || !styles.$displayName) return id;
-  return `${styles.$displayName}_${id}`;
 }
 
 /**
@@ -455,41 +465,20 @@ export class FreeStyle extends Cache<Rule | Style>
     super(changes);
   }
 
-  registerStyle(css: Styles) {
+  registerStyle(styles: Styles) {
     const ruleList: StylizeRule[] = [];
     const styleList: StylizeStyle[] = [];
-    const pid = stylize(ruleList, styleList, "", css, ".&");
+    const pid = stylize(ruleList, styleList, "", styles, ".&");
     const id = `f${stringHash(pid)}`;
-    const name = key(id, css);
-    compose(
-      this,
-      ruleList,
-      styleList,
-      id,
-      // Escape selector used in CSS when needed for display names.
-      process.env.NODE_ENV === "production" ? name : escape(name)
-    );
-    return name;
-  }
 
-  registerKeyframes(keyframes: Styles) {
-    return this.registerHashRule("@keyframes", keyframes);
-  }
+    if (process.env.NODE_ENV !== "production" && styles.$displayName) {
+      const name = `${styles.$displayName}_${id}`;
+      compose(this, ruleList, styleList, id, escape(name));
+      return name;
+    }
 
-  registerHashRule(prefix: string, styles: Styles) {
-    return this.registerStyle({
-      $global: true,
-      $displayName: styles.$displayName,
-      [`${prefix} &`]: styles,
-    });
-  }
-
-  registerRule(rule: string, styles: Styles) {
-    return this.registerStyle({ $global: true, [rule]: styles });
-  }
-
-  registerCss(styles: Styles) {
-    return this.registerRule("", styles);
+    compose(this, ruleList, styleList, id, id);
+    return id;
   }
 
   getStyles(): string {
