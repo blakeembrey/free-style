@@ -320,14 +320,15 @@ export class Cache<T extends Container<any>> {
   constructor(public changes?: Changes) {}
 
   add(style: T): void {
-    const count = this._counters[style.id] || 0;
-    const item: T = this._children[style.id] || style.clone();
+    const id = style.id;
+    const count = this._counters[id] || 0;
+    const item: T = this._children[id] || style.clone();
 
-    this._counters[style.id] = count + 1;
+    this._counters[id] = count + 1;
 
     if (count === 0) {
-      this._children[item.id] = item;
-      this._keys.push(item.id);
+      this._children[id] = item;
+      this._keys.push(id);
       this.sheet.push(item.getStyles());
       this.changeId++;
       if (this.changes) this.changes.add(item, this._keys.length - 1);
@@ -337,7 +338,7 @@ export class Cache<T extends Container<any>> {
       item.merge(style);
 
       if (item.changeId !== prevItemChangeId) {
-        const index = this._keys.indexOf(style.id);
+        const index = this._keys.indexOf(id);
         this.sheet.splice(index, 1, item.getStyles());
         this.changeId++;
         if (this.changes) this.changes.change(item, index, index);
@@ -346,17 +347,18 @@ export class Cache<T extends Container<any>> {
   }
 
   remove(style: T): void {
-    const count = this._counters[style.id];
+    const id = style.id;
+    const count = this._counters[id];
 
     if (count) {
-      this._counters[style.id] = count - 1;
+      this._counters[id] = count - 1;
 
-      const item = this._children[style.id]!;
-      const index = this._keys.indexOf(item.id);
+      const item = this._children[id]!;
+      const index = this._keys.indexOf(id);
 
       if (count === 1) {
-        delete this._counters[style.id];
-        delete this._children[style.id];
+        delete this._counters[id];
+        delete this._children[id];
 
         this._keys.splice(index, 1);
         this.sheet.splice(index, 1);
@@ -399,10 +401,10 @@ export class Cache<T extends Container<any>> {
  * Selector is a dumb class made to represent nested CSS selectors.
  */
 export class Selector implements Container<Selector> {
-  id: string;
+  constructor(public selector: string) {}
 
-  constructor(public selector: string) {
-    this.id = `k:${selector}`;
+  get id() {
+    return `k:${this.selector}`;
   }
 
   getStyles() {
@@ -418,12 +420,12 @@ export class Selector implements Container<Selector> {
  * The style container registers a style string with selectors.
  */
 export class Style extends Cache<Selector> implements Container<Style> {
-  id: string;
-
   constructor(public style: string, private pid: string) {
     super();
+  }
 
-    this.id = `s:${pid}:${style}`;
+  get id() {
+    return `s:${this.pid}:${this.style}`;
   }
 
   getStyles(): string {
@@ -439,12 +441,12 @@ export class Style extends Cache<Selector> implements Container<Style> {
  * Implement rule logic for style output.
  */
 export class Rule extends Cache<Rule | Style> implements Container<Rule> {
-  id: string;
-
   constructor(public rule: string, public style: string, private pid: string) {
     super();
+  }
 
-    this.id = `r:${pid}:${rule}:${style}`;
+  get id() {
+    return `r:${this.pid}:${this.rule}:${this.style}`;
   }
 
   getStyles(): string {
