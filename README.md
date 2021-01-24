@@ -311,8 +311,8 @@ MIT
 [npm-url]: https://npmjs.org/package/free-style
 [downloads-image]: https://img.shields.io/npm/dm/free-style.svg?style=flat
 [downloads-url]: https://npmjs.org/package/free-style
-[travis-image]: https://img.shields.io/travis/blakeembrey/free-style.svg?style=flat
-[travis-url]: https://travis-ci.org/blakeembrey/free-style
+[travis-image]: https://img.shields.io/travis/com/blakeembrey/free-style.svg?style=flat
+[travis-url]: https://travis-ci.com/github/blakeembrey/free-style
 [coveralls-image]: https://img.shields.io/coveralls/blakeembrey/free-style.svg?style=flat
 [coveralls-url]: https://coveralls.io/r/blakeembrey/free-style?branch=master
 [bundlephobia-image]: https://img.shields.io/bundlephobia/minzip/free-style.svg
