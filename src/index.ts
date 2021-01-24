@@ -6,7 +6,7 @@ let uniqueId = 0;
 /**
  * Valid CSS property values.
  */
-export type PropertyValue = number | boolean | string;
+export type PropertyValue = number | boolean | string | null | undefined;
 
 /**
  * Input styles object.
@@ -15,12 +15,7 @@ export interface Styles {
   $unique?: boolean;
   $global?: boolean;
   $displayName?: string;
-  [selector: string]:
-    | null
-    | undefined
-    | PropertyValue
-    | PropertyValue[]
-    | Styles;
+  [selector: string]: PropertyValue | PropertyValue[] | Styles;
 }
 
 /**
@@ -124,34 +119,21 @@ function stringHash(str: string): string {
 /**
  * Transform a style string to a CSS string.
  */
-function styleToString(name: string, value: PropertyValue) {
-  const suffix =
-    typeof value === "number" && value && !CSS_NUMBER[name] ? "px" : "";
+function styleToString(name: string, value: NonNullable<PropertyValue>) {
+  if (typeof value === "number" && value !== 0 && !CSS_NUMBER[name]) {
+    return `${name}:${value}px`;
+  }
 
-  return `${name}:${String(value)}${suffix}`;
+  return `${name}:${String(value)}`;
 }
 
 /**
- * Sort an array of tuples by first value.
+ * Implement a stable sort by falling back on a third numeric property.
+ *
+ * Node.js < 12 and IE do not support stable sort.
  */
-function sortTuples<T extends any>(value: [string, T][]): [string, T][] {
-  return value.sort((a, b) => (a[0] > b[0] ? 1 : -1));
-}
-
-/**
- * Stringify an array of property tuples.
- */
-function stringifyProperties(
-  properties: Array<[string, PropertyValue | PropertyValue[]]>
-) {
-  return properties
-    .map(([name, value]) => {
-      if (!Array.isArray(value)) return styleToString(name, value);
-
-      return value.map((x) => styleToString(name, x)).join(";");
-    })
-    .join(";");
-}
+const tupleCompare = <T>(a: [string, T, number], b: [string, T, number]) =>
+  a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : a[2] - b[2];
 
 /**
  * Interpolate CSS selectors.
@@ -185,26 +167,34 @@ function stylize(
   styles: Styles,
   parentClassName: string
 ) {
-  const properties: Array<[string, PropertyValue | PropertyValue[]]> = [];
-  const nestedStyles: Array<[string, Styles]> = [];
+  const properties: Array<[string, NonNullable<PropertyValue>, number]> = [];
+  const nestedStyles: Array<[string, Styles, number]> = [];
 
   // Sort keys before adding to styles.
   for (const key of Object.keys(styles)) {
     const value = styles[key];
 
     if (key.charCodeAt(0) !== 36 /* $ */ && value != null) {
-      if (typeof value === "object" && !Array.isArray(value)) {
-        nestedStyles.push([key, value]);
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          const val = value[i];
+          if (val != null) properties.push([hyphenate(key), val, i]);
+        }
+      } else if (typeof value === "object") {
+        nestedStyles.push([key, value, 0]);
       } else {
-        properties.push([hyphenate(key), value]);
+        properties.push([hyphenate(key), value, 0]);
       }
     }
   }
 
   const isUnique = !!styles.$unique;
   const parent = styles.$global ? "" : parentClassName;
-  const nested = parent ? nestedStyles : sortTuples(nestedStyles);
-  const style = stringifyProperties(sortTuples(properties));
+  const nested = parent ? nestedStyles : nestedStyles.sort(tupleCompare);
+  const style = properties
+    .sort(tupleCompare)
+    .map((x) => styleToString(x[0], x[1]))
+    .join(";");
   let pid = style;
 
   if (key.charCodeAt(0) === 64 /* @ */) {
