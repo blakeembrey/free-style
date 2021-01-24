@@ -26,7 +26,7 @@ export interface Styles {
 /**
  * Quick dictionary lookup for unit-less numbers.
  */
-const CSS_NUMBER: Record<string, true> = Object.create(null);
+const CSS_NUMBER = Object.create(null) as Record<string, true>;
 
 /**
  * CSS properties that are valid unit-less numbers.
@@ -128,7 +128,7 @@ function styleToString(name: string, value: PropertyValue) {
   const suffix =
     typeof value === "number" && value && !CSS_NUMBER[name] ? "px" : "";
 
-  return `${name}:${value}${suffix}`;
+  return `${name}:${String(value)}${suffix}`;
 }
 
 /**
@@ -314,15 +314,15 @@ export class Cache<T extends Container<any>> {
   changeId = 0;
 
   private _keys: string[] = [];
-  private _children: Record<string, T | undefined> = Object.create(null);
-  private _counters: Record<string, number | undefined> = Object.create(null);
+  private _children = Object.create(null) as Record<string, T | undefined>;
+  private _counters = Object.create(null) as Record<string, number | undefined>;
 
   constructor(public changes?: Changes) {}
 
   add(style: T): void {
     const id = style.id;
     const count = this._counters[id] || 0;
-    const item: T = this._children[id] || style.clone();
+    const item = this._children[id] || (style.clone() as T);
 
     this._counters[id] = count + 1;
 
