@@ -117,30 +117,10 @@ function stringHash(str: string): string {
 }
 
 /**
- * Transform a style string to a CSS string.
- */
-function styleToString(name: string, value: NonNullable<PropertyValue>) {
-  if (typeof value === "number" && value !== 0 && !CSS_NUMBER[name]) {
-    return `${name}:${value}px`;
-  }
-
-  return `${name}:${String(value)}`;
-}
-
-/**
- * Implement a stable sort by falling back on a third numeric property.
- *
- * Node.js < 12 and IE do not support stable sort.
- */
-const tupleCompare = <T>(a: [string, T, number], b: [string, T, number]) =>
-  a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : a[2] - b[2];
-
-/**
  * Interpolate CSS selectors.
  */
 function child(selector: string, parent: string) {
-  if (!selector) return parent;
-  if (!selector.includes("&")) return `${parent} ${selector}`;
+  if (selector.indexOf("&") === -1) return `${parent} ${selector}`;
   return interpolate(selector, parent);
 }
 
@@ -158,6 +138,31 @@ type StylizeRule = {
 };
 
 /**
+ * Sorted set of values used for style ordering.
+ */
+type TupleSort<T> = [string, T, number];
+
+/**
+ * Implement a stable sort by falling back on a third numeric property.
+ *
+ * Node.js < 12 and IE do not support stable sort.
+ */
+function tupleSort<T>(a: TupleSort<T>, b: TupleSort<T>) {
+  return a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : a[2] - b[2];
+}
+
+/**
+ * Transform a style string to a CSS string.
+ */
+function tupleToStyle([name, value]: TupleSort<NonNullable<PropertyValue>>) {
+  if (typeof value === "number" && value && !CSS_NUMBER[name]) {
+    return `${name}:${value}px`;
+  }
+
+  return `${name}:${String(value)}`;
+}
+
+/**
  * Recursive loop building styles with deferred selectors.
  */
 function stylize(
@@ -167,8 +172,8 @@ function stylize(
   styles: Styles,
   parentClassName: string
 ) {
-  const properties: Array<[string, NonNullable<PropertyValue>, number]> = [];
-  const nestedStyles: Array<[string, Styles, number]> = [];
+  const properties: Array<TupleSort<NonNullable<PropertyValue>>> = [];
+  const nestedStyles: Array<TupleSort<Styles>> = [];
 
   // Sort keys before adding to styles.
   for (const key of Object.keys(styles)) {
@@ -176,9 +181,10 @@ function stylize(
 
     if (key.charCodeAt(0) !== 36 /* $ */ && value != null) {
       if (Array.isArray(value)) {
+        const name = hyphenate(key);
         for (let i = 0; i < value.length; i++) {
-          const val = value[i];
-          if (val != null) properties.push([hyphenate(key), val, i]);
+          const style = value[i];
+          if (style != null) properties.push([name, style, i]);
         }
       } else if (typeof value === "object") {
         nestedStyles.push([key, value, 0]);
@@ -190,30 +196,20 @@ function stylize(
 
   const isUnique = !!styles.$unique;
   const parent = styles.$global ? "" : parentClassName;
-  const nested = parent ? nestedStyles : nestedStyles.sort(tupleCompare);
-  const style = properties
-    .sort(tupleCompare)
-    .map((x) => styleToString(x[0], x[1]))
-    .join(";");
+  const nested = parent ? nestedStyles : nestedStyles.sort(tupleSort);
+  const style = properties.sort(tupleSort).map(tupleToStyle).join(";");
   let pid = style;
+  let selector = parent;
+  let childRules = rulesList;
+  let childStyles = stylesList;
 
   if (key.charCodeAt(0) === 64 /* @ */) {
-    const childRules: StylizeRule[] = [];
-    const childStyles: StylizeStyle[] = [];
+    childRules = [];
+    childStyles = [];
 
     // Nested styles support (e.g. `.foo > @media`).
     if (parent && style) {
-      childStyles.push({ selector: parent, style, isUnique });
-    }
-
-    for (const [name, value] of nested) {
-      pid += `|${name}#${stylize(
-        childRules,
-        childStyles,
-        name,
-        value,
-        parent
-      )}`;
+      childStyles.push({ selector, style, isUnique });
     }
 
     // Add new rule to parent.
@@ -224,21 +220,21 @@ function stylize(
       style: parent ? "" : style,
     });
   } else {
-    const selector = parent ? child(key, parent) : key;
+    selector = parent ? (key ? child(key, parent) : parent) : key;
 
     if (style) {
       stylesList.push({ selector, style, isUnique });
     }
+  }
 
-    for (const [name, value] of nested) {
-      pid += `|${name}#${stylize(
-        rulesList,
-        stylesList,
-        name,
-        value,
-        selector
-      )}`;
-    }
+  for (const [name, value] of nested) {
+    pid += `|${name}#${stylize(
+      childRules,
+      childStyles,
+      name,
+      value,
+      selector
+    )}`;
   }
 
   return pid;
