@@ -480,6 +480,37 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual("body{height:100%}body a{color:red}");
   });
 
+  it("should add pseudo class to each selector in a selector list (no whitespace)", () => {
+    const Style = create();
+
+    const className = Style.registerStyle({
+      "& > input,& .foo > input": {
+        "&:focus": { background: "green" },
+      },
+    });
+
+    expect(Style.getStyles()).toEqual(
+      `.${className} > input:focus, .${className} .foo > input:focus{background:green}`
+    );
+  });
+
+  it("should add pseudo class to each selector in a selector list (whitespace)", () => {
+    const Style = create();
+
+    const className = Style.registerStyle({
+      "& > input, & .foo > input": {
+        "&:focus": { background: "green" },
+      },
+      "& > button,   & .foo > button": {
+        "&:first": { background: "green" },
+      },
+    });
+
+    expect(Style.getStyles()).toEqual(
+      `.${className} > input:focus, .${className} .foo > input:focus,.${className} > button:first, .${className} .foo > button:first{background:green}`
+    );
+  });
+
   it("should interpolate recursively with a rule", () => {
     const Style = create();
 
