@@ -94,7 +94,10 @@ function escape(str: string) {
  * Interpolate the `&` with style name.
  */
 function interpolate(selector: string, styleName: string) {
-  return selector.replace(/&/g, styleName);
+  return styleName
+    .split(/, */)
+    .map((x) => selector.replace(/&/g, x))
+    .join(", ");
 }
 
 /**
