@@ -124,33 +124,27 @@ function child(selector: string, parent: string) {
   return interpolate(selector, parent);
 }
 
-export class CompiledStyle {
-  constructor(
-    public selector: string,
-    public style: string,
-    public isUnique: boolean
-  ) {}
+export interface CompiledStyle {
+  selector: string;
+  style: string;
+  isUnique: boolean;
 }
 
-export class CompiledRule {
-  constructor(
-    public selector: string,
-    public style: string,
-    public rules: CompiledRule[],
-    public styles: CompiledStyle[]
-  ) {}
+export interface CompiledRule {
+  selector: string;
+  style: string;
+  rules: CompiledRule[];
+  styles: CompiledStyle[];
 }
 
 /**
  * Pre-registered container for cached styles and rules.
  */
-export class Compiled {
-  constructor(
-    public id: string,
-    public rules: CompiledRule[],
-    public styles: CompiledStyle[],
-    public displayName: string | undefined
-  ) {}
+export interface Compiled {
+  id: string;
+  rules: CompiledRule[];
+  styles: CompiledStyle[];
+  displayName: string | undefined;
 }
 
 /**
@@ -225,18 +219,21 @@ function stylize(
 
     // Nested styles support (e.g. `.foo > @media`).
     if (parent && style) {
-      childStyles.push(new CompiledStyle(selector, style, isUnique));
+      childStyles.push({ selector, style, isUnique });
     }
 
     // Add new rule to parent.
-    rulesList.push(
-      new CompiledRule(key, parent ? "" : style, childRules, childStyles)
-    );
+    rulesList.push({
+      selector: key,
+      style: parent ? "" : style,
+      rules: childRules,
+      styles: childStyles,
+    });
   } else {
     selector = parent ? (key ? child(key, parent) : parent) : key;
 
     if (style) {
-      stylesList.push(new CompiledStyle(selector, style, isUnique));
+      stylesList.push({ selector, style, isUnique });
     }
   }
 
@@ -502,10 +499,14 @@ export function create(changes?: Changes) {
 /**
  * Compile styles into a registerable object.
  */
-export function compile(styles: Styles) {
+export function compile(styles: Styles): Compiled {
   const ruleList: CompiledRule[] = [];
   const styleList: CompiledStyle[] = [];
   const pid = stylize(ruleList, styleList, "", styles, ".&");
-  const id = stringHash(pid);
-  return new Compiled(id, ruleList, styleList, styles.$displayName);
+  return {
+    id: stringHash(pid),
+    rules: ruleList,
+    styles: styleList,
+    displayName: styles.$displayName,
+  };
 }
