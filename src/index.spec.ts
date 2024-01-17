@@ -632,6 +632,17 @@ describe("free style", () => {
     expect(Style.getStyles()).not.toEqual(Style2.getStyles());
   });
 
+  it("should customize class name prefix", () => {
+    const Style = create(undefined, "foo");
+
+    const className = Style.registerStyle({
+      color: "red",
+    });
+
+    expect(className.startsWith("foo")).toBe(true);
+    expect(Style.getStyles()).toEqual(`.${className}{color:red}`);
+  });
+
   describe("in production", () => {
     const PREV_NODE_ENV = process.env.NODE_ENV;
 

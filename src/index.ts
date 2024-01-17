@@ -492,8 +492,8 @@ export class FreeStyle extends Cache<Rule | Style>
 /**
  * Exports a simple function to create a new instance.
  */
-export function create(changes?: Changes) {
-  return new FreeStyle("", changes);
+export function create(changes?: Changes, prefix = "") {
+  return new FreeStyle(prefix, changes);
 }
 
 /**
