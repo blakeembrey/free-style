@@ -153,13 +153,6 @@ export interface Compiled {
 type Tuple<T> = [string, T];
 
 /**
- * Sort tuples by key, assuming unique keys (due to the nature of object keys).
- */
-function tupleSort<T>(a: Tuple<T>, b: Tuple<T>) {
-  return a[0] > b[0] ? 1 : -1;
-}
-
-/**
  * Transform a style string to a CSS string.
  */
 function tupleToStyle([name, value]: Tuple<NonNullable<PropertyValue>>) {
@@ -204,7 +197,6 @@ function stylize(
 
   const isUnique = !!styles.$unique;
   const parent = styles.$global ? "" : parentClassName;
-  const nested = parent ? nestedStyles : nestedStyles.sort(tupleSort);
   const style = properties.map(tupleToStyle).join(";");
   let pid = style;
   let selector = parent;
@@ -235,7 +227,7 @@ function stylize(
     }
   }
 
-  for (const [name, value] of nested) {
+  for (const [name, value] of nestedStyles) {
     pid += `|${name}#${stylize(
       childRules,
       childStyles,

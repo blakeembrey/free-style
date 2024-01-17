@@ -315,8 +315,8 @@ describe("free style", () => {
     const keyframes2 = Style.registerStyle({
       $global: true,
       "@keyframes &": {
-        to: { color: "blue" },
         from: { color: "red" },
+        to: { color: "blue" },
       },
     });
 
