@@ -335,7 +335,7 @@ export class Cache<T extends Container<any>> {
 
       if (item.changeId !== prevItemChangeId) {
         const index = this._keys.indexOf(id);
-        this.sheet.splice(index, 1, item.getStyles());
+        this.sheet[index] = item.getStyles();
         this.changeId++;
         if (this.changes) this.changes.change(item, index, index);
       }
