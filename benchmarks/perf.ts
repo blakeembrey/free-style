@@ -1,6 +1,5 @@
+import cssProperties from "just-css-properties";
 import { create } from "../src/index";
-
-const cssProperties = require("just-css-properties");
 
 const Style = create();
 const start = process.hrtime();

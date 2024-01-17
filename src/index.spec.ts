@@ -74,8 +74,8 @@ describe("free style", () => {
     const Style = create();
 
     const className = Style.registerStyle({
-      flexGrow: 2,
       WebkitFlexGrow: 2,
+      flexGrow: 2,
     });
 
     expect(Style.getStyles()).toEqual(
@@ -98,8 +98,8 @@ describe("free style", () => {
     changeId = Style.changeId;
 
     const className2 = Style.registerStyle({
-      color: "red",
       background: "blue",
+      color: "red",
     });
 
     expect(Style.changeId).toEqual(changeId);
@@ -134,17 +134,18 @@ describe("free style", () => {
     );
   });
 
-  it("should sort keys by property name", () => {
+  it("should maintain key ordering from object", () => {
     const Style = create();
 
     const className = Style.registerStyle({
-      border: "5px solid red",
-      borderWidth: 10,
-      borderColor: "blue",
+      borderStyle: "solid",
+      borderColor: "transparent",
+      borderBottomColor: "black",
+      borderTopColor: "black",
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className}{border:5px solid red;border-color:blue;border-width:10px}`,
+      `.${className}{border-style:solid;border-color:transparent;border-bottom-color:black;border-top-color:black}`,
     );
   });
 
@@ -152,8 +153,8 @@ describe("free style", () => {
     const Style = create();
 
     const className = Style.registerStyle({
-      borderRadius: 5,
       msBorderRadius: 5,
+      borderRadius: 5,
     });
 
     expect(Style.getStyles()).toEqual(

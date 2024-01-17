@@ -1,3 +1,4 @@
+import cssProperties from "just-css-properties";
 import fnv32a from "./hashes/fnv32a";
 import fnv32h from "./hashes/fnv32h";
 import murmurhash2 from "./hashes/murmurhash2-32-gc";
@@ -5,7 +6,6 @@ import murmurhash3 from "./hashes/murmurhash3-32-gc";
 import stringHash from "./hashes/string-hash";
 
 const tests: string[] = [];
-const cssProperties = require("just-css-properties");
 const cssValues = [
   "block",
   "flex",
@@ -57,7 +57,7 @@ interface Result {
 }
 
 function runTests(
-  fn: (value: string, seed?: number) => number | string
+  fn: (value: string, seed: number) => number | string
 ): Result {
   const map: { [value: string]: string[] } = {};
   const start = process.hrtime();

@@ -150,21 +150,19 @@ export interface Compiled {
 /**
  * Sorted set of values used for style ordering.
  */
-type TupleSort<T> = [string, T, number];
+type Tuple<T> = [string, T];
 
 /**
- * Implement a stable sort by falling back on a third numeric property.
- *
- * Node.js < 12 and IE do not support stable sort.
+ * Sort tuples by key, assuming unique keys (due to the nature of object keys).
  */
-function tupleSort<T>(a: TupleSort<T>, b: TupleSort<T>) {
-  return a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : a[2] - b[2];
+function tupleSort<T>(a: Tuple<T>, b: Tuple<T>) {
+  return a[0] > b[0] ? 1 : -1;
 }
 
 /**
  * Transform a style string to a CSS string.
  */
-function tupleToStyle([name, value]: TupleSort<NonNullable<PropertyValue>>) {
+function tupleToStyle([name, value]: Tuple<NonNullable<PropertyValue>>) {
   if (typeof value === "number" && value && !CSS_NUMBER[name]) {
     return `${name}:${value}px`;
   }
@@ -182,8 +180,8 @@ function stylize(
   styles: Styles,
   parentClassName: string,
 ) {
-  const properties: Array<TupleSort<NonNullable<PropertyValue>>> = [];
-  const nestedStyles: Array<TupleSort<Styles>> = [];
+  const properties: Array<Tuple<NonNullable<PropertyValue>>> = [];
+  const nestedStyles: Array<Tuple<Styles>> = [];
 
   // Sort keys before adding to styles.
   for (const key of Object.keys(styles)) {
@@ -194,12 +192,12 @@ function stylize(
         const name = hyphenate(key);
         for (let i = 0; i < value.length; i++) {
           const style = value[i];
-          if (style != null) properties.push([name, style, i]);
+          if (style != null) properties.push([name, style]);
         }
       } else if (typeof value === "object") {
-        nestedStyles.push([key, value, 0]);
+        nestedStyles.push([key, value]);
       } else {
-        properties.push([hyphenate(key), value, 0]);
+        properties.push([hyphenate(key), value]);
       }
     }
   }
@@ -207,7 +205,7 @@ function stylize(
   const isUnique = !!styles.$unique;
   const parent = styles.$global ? "" : parentClassName;
   const nested = parent ? nestedStyles : nestedStyles.sort(tupleSort);
-  const style = properties.sort(tupleSort).map(tupleToStyle).join(";");
+  const style = properties.map(tupleToStyle).join(";");
   let pid = style;
   let selector = parent;
   let childRules = rulesList;
