@@ -1,11 +1,5 @@
 # Free-Style
 
-[![NPM version][npm-image]][npm-url]
-[![NPM downloads][downloads-image]][downloads-url]
-[![Build status][travis-image]][travis-url]
-[![Test coverage][coveralls-image]][coveralls-url]
-[![Bundle size][bundlephobia-image]][bundlephobia-url]
-
 > **Free-Style** is designed to make CSS easier and more maintainable by using JavaScript.
 
 ## Installation
@@ -306,14 +300,3 @@ Version 3 requires support for `class`, see [#82](https://github.com/blakeembrey
 ## License
 
 MIT
-
-[npm-image]: https://img.shields.io/npm/v/free-style.svg?style=flat
-[npm-url]: https://npmjs.org/package/free-style
-[downloads-image]: https://img.shields.io/npm/dm/free-style.svg?style=flat
-[downloads-url]: https://npmjs.org/package/free-style
-[travis-image]: https://img.shields.io/travis/com/blakeembrey/free-style.svg?style=flat
-[travis-url]: https://travis-ci.com/github/blakeembrey/free-style
-[coveralls-image]: https://img.shields.io/coveralls/blakeembrey/free-style.svg?style=flat
-[coveralls-url]: https://coveralls.io/r/blakeembrey/free-style?branch=master
-[bundlephobia-image]: https://img.shields.io/bundlephobia/minzip/free-style.svg
-[bundlephobia-url]: https://bundlephobia.com/result?p=free-style
