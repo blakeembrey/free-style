@@ -2,33 +2,6 @@
   "name": "free-style",
   "version": "4.1.0",
   "description": "Make CSS easier and more maintainable by using JavaScript",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "module": "dist.module/index.js",
-  "jsnext:main": "dist.module/index.js",
-  "sideEffects": false,
-  "files": [
-    "dist/",
-    "dist.module/",
-    "dist.es5/",
-    "LICENSE"
-  ],
-  "scripts": {
-    "prettier": "prettier --write",
-    "lint": "eslint \"./src/**/*.{js,jsx,ts,tsx}\" --quiet --fix",
-    "format": "npm run prettier -- \"{,{src,benchmarks}/**/}*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
-    "build": "rimraf dist/ dist.module/ dist.es5/ && tsc && tsc -P tsconfig.module.json && tsc -P tsconfig.es5.json",
-    "bench:hash": "ts-node benchmarks/hash.ts",
-    "bench:perf": "ts-node benchmarks/perf.ts",
-    "specs": "jest --coverage",
-    "test": "npm run build && npm run lint && npm run specs && npm run size",
-    "size": "size-limit",
-    "prepare": "npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/blakeembrey/free-style.git"
-  },
   "keywords": [
     "inline",
     "css",
@@ -37,68 +10,61 @@
     "hash",
     "server"
   ],
+  "homepage": "https://github.com/blakeembrey/free-style",
+  "bugs": {
+    "url": "https://github.com/blakeembrey/free-style/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/blakeembrey/free-style.git"
+  },
+  "license": "MIT",
   "author": {
     "name": "Blake Embrey",
     "email": "hello@blakeembrey.com",
     "url": "http://blakeembrey.me"
   },
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/blakeembrey/free-style/issues"
+  "type": "module",
+  "exports": "./dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "LICENSE"
+  ],
+  "scripts": {
+    "bench:hash": "tsx benchmarks/hash.ts",
+    "bench:perf": "tsx benchmarks/perf.ts",
+    "build": "ts-scripts build",
+    "format": "ts-scripts format",
+    "prepare": "ts-scripts install",
+    "prepublishOnly": "npm run build",
+    "size": "size-limit",
+    "specs": "ts-scripts specs",
+    "test": "ts-scripts test && npm run size"
   },
-  "homepage": "https://github.com/blakeembrey/free-style",
+  "devDependencies": {
+    "@borderless/ts-scripts": "^0.15.0",
+    "@size-limit/preset-small-lib": "^11.0.2",
+    "@types/node": "^20.11.5",
+    "@vitest/coverage-v8": "^1.2.1",
+    "just-css-properties": "^1.0.0",
+    "size-limit": "^11.0.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "size-limit": [
     {
       "path": "dist/index.js",
       "limit": "1.6 kB"
     }
   ],
-  "jest": {
-    "roots": [
-      "<rootDir>/src/"
-    ],
-    "transform": {
-      "\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(tsx?|jsx?)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
+  "ts-scripts": {
+    "project": [
+      "tsconfig.build.json"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,md,yml,yaml}": "npm run prettier"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "@size-limit/preset-small-lib": "^4.4.5",
-    "@types/jest": "^26.0.20",
-    "@types/node": "^14.14.22",
-    "@typescript-eslint/eslint-plugin": "^4.14.0",
-    "@typescript-eslint/parser": "^4.14.0",
-    "eslint": "^7.18.0",
-    "eslint-config-prettier": "^7.2.0",
-    "eslint-plugin-prettier": "^3.1.2",
-    "husky": "^4.2.3",
-    "jest": "^26.6.3",
-    "just-css-properties": "^1.0.0",
-    "lint-staged": "^10.0.8",
-    "prettier": "^2.0.2",
-    "rimraf": "^3.0.0",
-    "size-limit": "^4.0.2",
-    "ts-jest": "^26.4.4",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.1.3"
   }
 }

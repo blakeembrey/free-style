@@ -180,7 +180,7 @@ function stylize(
   stylesList: CompiledStyle[],
   key: string,
   styles: Styles,
-  parentClassName: string
+  parentClassName: string,
 ) {
   const properties: Array<TupleSort<NonNullable<PropertyValue>>> = [];
   const nestedStyles: Array<TupleSort<Styles>> = [];
@@ -243,7 +243,7 @@ function stylize(
       childStyles,
       name,
       value,
-      selector
+      selector,
     )}`;
   }
 
@@ -258,7 +258,7 @@ function compose(
   rulesList: CompiledRule[],
   stylesList: CompiledStyle[],
   id: string,
-  name: string
+  name: string,
 ) {
   for (const { selector, style, isUnique } of stylesList) {
     const key = interpolate(selector, name);
@@ -416,7 +416,10 @@ export class Selector implements Container<Selector> {
  * The style container registers a style string with selectors.
  */
 export class Style extends Cache<Selector> implements Container<Style> {
-  constructor(public style: string, private pid: string) {
+  constructor(
+    public style: string,
+    private pid: string,
+  ) {
     super();
   }
 
@@ -437,7 +440,11 @@ export class Style extends Cache<Selector> implements Container<Style> {
  * Implement rule logic for style output.
  */
 export class Rule extends Cache<Rule | Style> implements Container<Rule> {
-  constructor(public rule: string, public style: string, private pid: string) {
+  constructor(
+    public rule: string,
+    public style: string,
+    private pid: string,
+  ) {
     super();
   }
 
@@ -457,9 +464,14 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
 /**
  * The FreeStyle class implements the API for everything else.
  */
-export class FreeStyle extends Cache<Rule | Style>
-  implements Container<FreeStyle> {
-  constructor(public id: string, changes?: Changes) {
+export class FreeStyle
+  extends Cache<Rule | Style>
+  implements Container<FreeStyle>
+{
+  constructor(
+    public id: string,
+    changes?: Changes,
+  ) {
     super(changes);
   }
 

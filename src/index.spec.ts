@@ -1,4 +1,5 @@
-import { create } from "./index";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { create } from "./index.js";
 
 describe("free style", () => {
   it("should output class name hash", () => {
@@ -21,7 +22,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className}{background:red;background:linear-gradient(to right, red 0%, green 100%)}`
+      `.${className}{background:red;background:linear-gradient(to right, red 0%, green 100%)}`,
     );
   });
 
@@ -46,7 +47,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className}{color:red}@media (min-width: 500px){.${className}{color:blue}}`
+      `.${className}{color:red}@media (min-width: 500px){.${className}{color:blue}}`,
     );
   });
 
@@ -65,7 +66,7 @@ describe("free style", () => {
 
     expect(Style.getStyles()).toEqual(
       `.${className}{color:red}.${className} > .${className}{color:blue}` +
-        `.${className} > .${className} .class-name{background:green}`
+        `.${className} > .${className} .class-name{background:green}`,
     );
   });
 
@@ -78,7 +79,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className}{-webkit-flex-grow:2;flex-grow:2}`
+      `.${className}{-webkit-flex-grow:2;flex-grow:2}`,
     );
   });
 
@@ -104,7 +105,7 @@ describe("free style", () => {
     expect(Style.changeId).toEqual(changeId);
     expect(className1).toEqual(className2);
     expect(Style.getStyles()).toEqual(
-      `.${className1}{background:blue;color:red}`
+      `.${className1}{background:blue;color:red}`,
     );
   });
 
@@ -129,7 +130,7 @@ describe("free style", () => {
     expect(Style.changeId).not.toEqual(changeId);
     expect(className1).not.toEqual(className2);
     expect(Style.getStyles()).toEqual(
-      `.${className1},.${className2}{color:red}`
+      `.${className1},.${className2}{color:red}`,
     );
   });
 
@@ -143,7 +144,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className}{border:5px solid red;border-color:blue;border-width:10px}`
+      `.${className}{border:5px solid red;border-color:blue;border-width:10px}`,
     );
   });
 
@@ -156,7 +157,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className}{-ms-border-radius:5px;border-radius:5px}`
+      `.${className}{-ms-border-radius:5px;border-radius:5px}`,
     );
   });
 
@@ -168,7 +169,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className}{foo:15px;foo:13px;foo:11px;foo:9px;foo:7px;foo:5px;foo:3px;foo:1px;foo:14px;foo:12px;foo:10px;foo:8px;foo:6px;foo:4px;foo:2px}`
+      `.${className}{foo:15px;foo:13px;foo:11px;foo:9px;foo:7px;foo:5px;foo:3px;foo:1px;foo:14px;foo:12px;foo:10px;foo:8px;foo:6px;foo:4px;foo:2px}`,
     );
   });
 
@@ -183,7 +184,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `.${className},.${className} .foo{color:red}`
+      `.${className},.${className} .foo{color:red}`,
     );
   });
 
@@ -212,7 +213,7 @@ describe("free style", () => {
     expect(Style.changeId).not.toEqual(changeId);
 
     expect(Style.getStyles()).toEqual(
-      `@media (min-width: 600px){.${className1}{color:red}}@media (min-width: 600px){.${className2}{color:blue}}`
+      `@media (min-width: 600px){.${className1}{color:red}}@media (min-width: 600px){.${className2}{color:blue}}`,
     );
   });
 
@@ -238,7 +239,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `@media (min-width: 100em){@supports (display: flexbox){.${className}{max-width:100px}}}`
+      `@media (min-width: 100em){@supports (display: flexbox){.${className}{max-width:100px}}}`,
     );
   });
 
@@ -267,7 +268,7 @@ describe("free style", () => {
     Style1.merge(Style2);
 
     expect(Style1.getStyles()).toEqual(
-      `.${className1}{color:red}.${className3}{color:red}@media (max-width: 600px){.${className3}{color:blue}}`
+      `.${className1}{color:red}.${className3}{color:red}@media (max-width: 600px){.${className3}{color:blue}}`,
     );
 
     Style1.unmerge(Style2);
@@ -295,7 +296,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      `@keyframes ${animation1}{from{color:blue}to{color:red}}@-webkit-keyframes ${animation2}{from{color:blue}to{color:red}}`
+      `@keyframes ${animation1}{from{color:blue}to{color:red}}@-webkit-keyframes ${animation2}{from{color:blue}to{color:red}}`,
     );
   });
 
@@ -321,7 +322,7 @@ describe("free style", () => {
     expect(keyframes1).toEqual(keyframes2);
 
     expect(Style.getStyles()).toEqual(
-      `@keyframes ${keyframes1}{from{color:red}to{color:blue}}`
+      `@keyframes ${keyframes1}{from{color:red}to{color:blue}}`,
     );
   });
 
@@ -341,7 +342,7 @@ describe("free style", () => {
 
     expect(Style.getStyles()).toEqual(
       '@font-face{font-family:"Bitstream Vera Serif Bold";' +
-        'src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}'
+        'src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}',
     );
   });
 
@@ -367,7 +368,7 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual(
       '@font-face{font-family:"Bitstream Vera Serif Bold";' +
         'src:url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf")}' +
-        '@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}'
+        '@font-face{font-family:"MyWebFont";src:url("myfont.woff2")}',
     );
   });
 
@@ -415,7 +416,7 @@ describe("free style", () => {
 
     expect(className1).not.toEqual(className2);
     expect(Style.getStyles()).toEqual(
-      `.${className1}{color:red}.${className2}:first-child{color:red}`
+      `.${className1}{color:red}.${className2}:first-child{color:red}`,
     );
   });
 
@@ -438,7 +439,7 @@ describe("free style", () => {
 
     expect(Style.getStyles()).toEqual(
       `.${x}{background:red}@media (min-width: 400px){.${x}{background:yellow}}` +
-        `.${y}{background:palegreen}@media (min-width: 400px){.${y}{background:pink}}`
+        `.${y}{background:palegreen}@media (min-width: 400px){.${y}{background:pink}}`,
     );
   });
 
@@ -460,7 +461,7 @@ describe("free style", () => {
 
     expect(Style.getStyles()).toEqual(
       `.${className}{width:20rem}@media screen and (min-width: 500px){.${className}{width:500px}}` +
-        `@media screen and (min-width: 1000px){.${className}{width:1000px}}`
+        `@media screen and (min-width: 1000px){.${className}{width:1000px}}`,
     );
   });
 
@@ -499,7 +500,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      "body{height:100%}body a{color:red}@print{body a{color:blue}}"
+      "body{height:100%}body a{color:red}@print{body a{color:blue}}",
     );
   });
 
@@ -526,7 +527,7 @@ describe("free style", () => {
       `.${className}{color:blue}` +
         `.${className}::-webkit-input-placeholder{color:rgba(0, 0, 0, 0)}` +
         `.${className}::-moz-placeholder{color:rgba(0, 0, 0, 0)}` +
-        `.${className}::-ms-input-placeholder{color:rgba(0, 0, 0, 0)}`
+        `.${className}::-ms-input-placeholder{color:rgba(0, 0, 0, 0)}`,
     );
   });
 
@@ -553,7 +554,7 @@ describe("free style", () => {
     });
 
     expect(Style.getStyles()).toEqual(
-      "body,h1{color:red}@print{body,h1 a{color:blue}h1{color:#000}}"
+      "body,h1{color:red}@print{body,h1 a{color:blue}h1{color:#000}}",
     );
   });
 
@@ -614,7 +615,7 @@ describe("free style", () => {
     expect(Style.getStyles()).toEqual(
       `@keyframes ${animationName.replace(/[()]/g, "\\$&")}{from{color:red}}` +
         `.${className.replace(/[()]/g, "\\$&")}{animation:${animationName}}` +
-        `.${className.replace(/[()]/g, "\\$&")} .t{color:red}`
+        `.${className.replace(/[()]/g, "\\$&")} .t{color:red}`,
     );
   });
 

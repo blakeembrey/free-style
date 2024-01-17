@@ -66,7 +66,7 @@ document.head.appendChild(styleElement);
 // Render the style by using the class name.
 React.render(
   <div className={backgroundStyle}>Hello world!</div>,
-  document.body
+  document.body,
 );
 ```
 
