@@ -124,18 +124,34 @@ function child(selector: string, parent: string) {
   return interpolate(selector, parent);
 }
 
-type StylizeStyle = {
-  selector: string;
-  style: string;
-  isUnique: boolean;
-};
+export class CompiledStyle {
+  constructor(
+    public selector: string,
+    public style: string,
+    public isUnique: boolean
+  ) {}
+}
 
-type StylizeRule = {
-  selector: string;
-  style: string;
-  rules: StylizeRule[];
-  styles: StylizeStyle[];
-};
+export class CompiledRule {
+  constructor(
+    public selector: string,
+    public style: string,
+    public rules: CompiledRule[],
+    public styles: CompiledStyle[]
+  ) {}
+}
+
+/**
+ * Pre-registered container for cached styles and rules.
+ */
+export class Compiled {
+  constructor(
+    public id: string,
+    public rules: CompiledRule[],
+    public styles: CompiledStyle[],
+    public displayName: string | undefined
+  ) {}
+}
 
 /**
  * Sorted set of values used for style ordering.
@@ -166,8 +182,8 @@ function tupleToStyle([name, value]: TupleSort<NonNullable<PropertyValue>>) {
  * Recursive loop building styles with deferred selectors.
  */
 function stylize(
-  rulesList: StylizeRule[],
-  stylesList: StylizeStyle[],
+  rulesList: CompiledRule[],
+  stylesList: CompiledStyle[],
   key: string,
   styles: Styles,
   parentClassName: string
@@ -209,21 +225,18 @@ function stylize(
 
     // Nested styles support (e.g. `.foo > @media`).
     if (parent && style) {
-      childStyles.push({ selector, style, isUnique });
+      childStyles.push(new CompiledStyle(selector, style, isUnique));
     }
 
     // Add new rule to parent.
-    rulesList.push({
-      selector: key,
-      rules: childRules,
-      styles: childStyles,
-      style: parent ? "" : style,
-    });
+    rulesList.push(
+      new CompiledRule(key, parent ? "" : style, childRules, childStyles)
+    );
   } else {
     selector = parent ? (key ? child(key, parent) : parent) : key;
 
     if (style) {
-      stylesList.push({ selector, style, isUnique });
+      stylesList.push(new CompiledStyle(selector, style, isUnique));
     }
   }
 
@@ -245,8 +258,8 @@ function stylize(
  */
 function compose(
   cache: Cache<Rule | Style>,
-  rulesList: StylizeRule[],
-  stylesList: StylizeStyle[],
+  rulesList: CompiledRule[],
+  stylesList: CompiledStyle[],
   id: string,
   name: string
 ) {
@@ -453,20 +466,21 @@ export class FreeStyle extends Cache<Rule | Style>
     super(changes);
   }
 
-  registerStyle(styles: Styles) {
-    const ruleList: StylizeRule[] = [];
-    const styleList: StylizeStyle[] = [];
-    const pid = stylize(ruleList, styleList, "", styles, ".&");
-    const id = `f${stringHash(pid)}`;
+  register(compiled: Compiled) {
+    const className = `${this.id}${compiled.id}`;
 
-    if (process.env.NODE_ENV !== "production" && styles.$displayName) {
-      const name = `${styles.$displayName}_${id}`;
-      compose(this, ruleList, styleList, id, escape(name));
+    if (process.env.NODE_ENV !== "production" && compiled.displayName) {
+      const name = `${compiled.displayName}_${className}`;
+      compose(this, compiled.rules, compiled.styles, compiled.id, escape(name));
       return name;
     }
 
-    compose(this, ruleList, styleList, id, id);
-    return id;
+    compose(this, compiled.rules, compiled.styles, compiled.id, className);
+    return className;
+  }
+
+  registerStyle(styles: Styles) {
+    return this.register(compile(styles));
   }
 
   getStyles(): string {
@@ -482,5 +496,16 @@ export class FreeStyle extends Cache<Rule | Style>
  * Exports a simple function to create a new instance.
  */
 export function create(changes?: Changes) {
-  return new FreeStyle(`f${(++uniqueId).toString(36)}`, changes);
+  return new FreeStyle("", changes);
+}
+
+/**
+ * Compile styles into a registerable object.
+ */
+export function compile(styles: Styles) {
+  const ruleList: CompiledRule[] = [];
+  const styleList: CompiledStyle[] = [];
+  const pid = stylize(ruleList, styleList, "", styles, ".&");
+  const id = stringHash(pid);
+  return new Compiled(id, ruleList, styleList, styles.$displayName);
 }
