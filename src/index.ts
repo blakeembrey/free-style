@@ -356,7 +356,7 @@ export class Cache<T extends Container<any>> {
         item.unmerge(style);
 
         if (item.changeId !== prevChangeId) {
-          this.sheet.splice(index, 1, item.getStyles());
+          this.sheet[index] = item.getStyles();
           this.changeId++;
           if (this.changes) this.changes.change(item, index, index);
         }
