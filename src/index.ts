@@ -250,7 +250,7 @@ function compose(
 ) {
   for (const { selector, style, isUnique } of stylesList) {
     const key = interpolate(selector, name);
-    const item = new Style(style, isUnique ? (++uniqueId).toString(36) : id);
+    const item = new Style(style, isUnique ? String(++uniqueId) : id);
     item.add(new Selector(key));
     cache.add(item);
   }
@@ -286,7 +286,7 @@ export interface Changes {
  */
 export interface Container<T> {
   /** Unique identifier for the cache, used for merging styles. */
-  cid: string;
+  cid(): string;
   clone(): T;
   getStyles(): string;
 }
@@ -304,7 +304,7 @@ export class Cache<T extends Container<any>> {
   constructor(public changes?: Changes) {}
 
   add(style: T): void {
-    const id = style.cid;
+    const id = style.cid();
     const count = this.counters[id] || 0;
 
     this.counters[id] = count + 1;
@@ -316,7 +316,7 @@ export class Cache<T extends Container<any>> {
       this.changeId++;
       if (this.changes) this.changes.add(item, index);
     } else if (style instanceof Cache) {
-      const index = this.children.findIndex((x) => x.cid === id);
+      const index = this.children.findIndex((x) => x.cid() === id);
       const item = this.children[index] as T & Cache<any>;
       const prevChangeId = item.changeId;
 
@@ -331,13 +331,13 @@ export class Cache<T extends Container<any>> {
   }
 
   remove(style: T): void {
-    const id = style.cid;
+    const id = style.cid();
     const count = this.counters[id];
 
     if (count) {
       this.counters[id] = count - 1;
 
-      const index = this.children.findIndex((x) => x.cid === id);
+      const index = this.children.findIndex((x) => x.cid() === id);
 
       if (count === 1) {
         const item = this.children[index];
@@ -378,7 +378,7 @@ export class Cache<T extends Container<any>> {
 export class Selector implements Container<Selector> {
   constructor(public selector: string) {}
 
-  get cid() {
+  cid() {
     return this.selector;
   }
 
@@ -402,7 +402,7 @@ export class Style extends Cache<Selector> implements Container<Style> {
     super();
   }
 
-  get cid() {
+  cid() {
     return `${this.id}|${this.style}`;
   }
 
@@ -427,7 +427,7 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
     super();
   }
 
-  get cid() {
+  cid() {
     return `${this.id}|${this.rule}|${this.style}`;
   }
 
