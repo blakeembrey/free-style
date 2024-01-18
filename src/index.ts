@@ -287,7 +287,8 @@ export interface Changes {
  * Cache-able interface.
  */
 export interface Container<T> {
-  id: string;
+  /** Unique identifier for the cache, used for merging styles. */
+  cid: string;
   clone(): T;
   getStyles(): string;
 }
@@ -305,7 +306,7 @@ export class Cache<T extends Container<any>> {
   constructor(public changes?: Changes) {}
 
   add(style: T): void {
-    const id = style.id;
+    const id = style.cid;
     const count = this.counters[id] || 0;
 
     this.counters[id] = count + 1;
@@ -317,7 +318,7 @@ export class Cache<T extends Container<any>> {
       this.changeId++;
       if (this.changes) this.changes.add(item, index);
     } else if (style instanceof Cache) {
-      const index = this.children.findIndex((x) => x.id === id);
+      const index = this.children.findIndex((x) => x.cid === id);
       const item = this.children[index] as T & Cache<any>;
       const prevItemChangeId = item.changeId;
 
@@ -332,13 +333,13 @@ export class Cache<T extends Container<any>> {
   }
 
   remove(style: T): void {
-    const id = style.id;
+    const id = style.cid;
     const count = this.counters[id];
 
     if (count) {
       this.counters[id] = count - 1;
 
-      const index = this.children.findIndex((x) => x.id === id);
+      const index = this.children.findIndex((x) => x.cid === id);
 
       if (count === 1) {
         delete this.counters[id];
@@ -382,8 +383,8 @@ export class Cache<T extends Container<any>> {
 export class Selector implements Container<Selector> {
   constructor(public selector: string) {}
 
-  get id() {
-    return `k:${this.selector}`;
+  get cid() {
+    return `s:${this.selector}`;
   }
 
   getStyles() {
@@ -401,13 +402,13 @@ export class Selector implements Container<Selector> {
 export class Style extends Cache<Selector> implements Container<Style> {
   constructor(
     public style: string,
-    private pid: string,
+    public id: string,
   ) {
     super();
   }
 
-  get id() {
-    return `s:${this.pid}:${this.style}`;
+  get cid() {
+    return `s:${this.id}:${this.style}`;
   }
 
   getStyles(): string {
@@ -415,7 +416,7 @@ export class Style extends Cache<Selector> implements Container<Style> {
   }
 
   clone(): Style {
-    return new Style(this.style, this.pid).merge(this);
+    return new Style(this.style, this.id).merge(this);
   }
 }
 
@@ -426,13 +427,13 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   constructor(
     public rule: string,
     public style: string,
-    private pid: string,
+    public id: string,
   ) {
     super();
   }
 
-  get id() {
-    return `r:${this.pid}:${this.rule}:${this.style}`;
+  get cid() {
+    return `r:${this.id}:${this.rule}:${this.style}`;
   }
 
   getStyles(): string {
@@ -440,7 +441,7 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   }
 
   clone(): Rule {
-    return new Rule(this.rule, this.style, this.pid).merge(this);
+    return new Rule(this.rule, this.style, this.id).merge(this);
   }
 }
 
@@ -452,14 +453,14 @@ export class FreeStyle
   implements Container<FreeStyle>
 {
   constructor(
-    public id: string,
+    public cid: string,
     changes?: Changes,
   ) {
     super(changes);
   }
 
   register(compiled: Compiled) {
-    const className = `${this.id}${compiled.id}`;
+    const className = `${this.cid}${compiled.id}`;
 
     if (process.env.NODE_ENV !== "production" && compiled.displayName) {
       const name = `${compiled.displayName}_${className}`;
@@ -480,7 +481,7 @@ export class FreeStyle
   }
 
   clone(): FreeStyle {
-    return new FreeStyle(this.id, this.changes).merge(this);
+    return new FreeStyle(this.cid, this.changes).merge(this);
   }
 }
 
