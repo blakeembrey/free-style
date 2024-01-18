@@ -84,7 +84,7 @@ console.log(buttonStyle); //=> "button_f65pi0b"
 
 **Tip:** The string returned by `registerStyle` is a unique hash of the content and used as the HTML class name. The `$displayName` is only used during development, and stripped in production (`process.env.NODE_ENV === 'production'`).
 
-#### Overload CSS Properties
+#### Overload CSS properties
 
 ```js
 Style.registerStyle({
@@ -99,7 +99,7 @@ Style.registerStyle({
 }); //=> "f1n85iiq"
 ```
 
-#### Nested Rules
+#### Nested rules
 
 ```js
 Style.registerStyle({
@@ -111,7 +111,7 @@ Style.registerStyle({
 }); //=> "fk9tfor"
 ```
 
-#### Nested Selectors
+#### Nested selectors
 
 ```js
 Style.registerStyle({
@@ -123,7 +123,7 @@ Style.registerStyle({
 }); //=> "fc1zv17"
 ```
 
-#### Parent Selector Reference
+#### Parent selector
 
 ```js
 Style.registerStyle({
@@ -162,7 +162,7 @@ const style = Style.registerStyle({
 });
 ```
 
-#### Unique Style Output
+#### Unique style output
 
 Sometimes you need to skip the de-duping behavior of `free-style`. Use `$unique` to force separate styles:
 
@@ -203,7 +203,7 @@ const style = Style.registerStyle({
 }); //=> "fibanyf"
 ```
 
-#### Global Rules
+#### Global rules and styles
 
 ```js
 Style.registerStyle({
@@ -230,11 +230,7 @@ Style.registerStyle({
     padding: 0,
   },
 });
-```
 
-#### Global Styles
-
-```js
 Style.registerStyle({
   $global: true,
   body: {
@@ -250,13 +246,13 @@ Style.registerStyle({
 });
 ```
 
-### CSS String
+### CSS string
 
 ```js
 Style.getStyles(); //=> ".f65pi0b{background-color:red;padding:10px}"
 ```
 
-### Useful Libraries
+### Useful libraries
 
 - [`polished`](https://polished.js.org)
 - [`classnames`](https://github.com/JedWatson/classnames)
@@ -268,7 +264,7 @@ Style.getStyles(); //=> ".f65pi0b{background-color:red;padding:10px}"
 - [`image-url`](https://github.com/ajoslin/image-url)
 - [**Add yours!**](https://github.com/blakeembrey/free-style/issues/new)
 
-### Implementation Details
+### Implementation details
 
 #### Debugging
 
