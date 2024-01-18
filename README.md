@@ -51,16 +51,16 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 import { create } from "free-style";
 
 // Create a stylesheet instance.
-const Sheet = create();
+const sheet = create();
 
 // Register a new style, returning a class name to use.
-const backgroundStyle = Sheet.registerStyle({
+const backgroundStyle = sheet.registerStyle({
   backgroundColor: "red",
 }); //=> "f14svl5e"
 
 // Inject `<style>` into the `<head>`.
 const styleElement = document.createElement("style");
-styleElement.textContent = Sheet.getStyles();
+styleElement.textContent = sheet.getStyles();
 document.head.appendChild(styleElement);
 
 // Render the style by using the class name.
@@ -73,7 +73,7 @@ React.render(
 ### Style
 
 ```js
-const buttonStyle = Sheet.registerStyle({
+const buttonStyle = sheet.registerStyle({
   $displayName: "button",
   backgroundColor: "red",
   padding: 10,
@@ -279,20 +279,20 @@ Display names will automatically be removed when `process.env.NODE_ENV === "prod
 The only argument to `create()` is a map of change function handlers. All functions are required:
 
 - `add(style: Container<any>, index: number)`
-- `change(style: Container<any>, oldIndex: number, newIndex: number)`
+- `change(style: Container<any>, index: number)`
 - `remove(style: Container<any>, index: number)`
 
-All classes implement `Container`, so you can call `getStyles()` or `clone()`.
+All styles implement `Container`, so you can call `getStyles()` or `clone()`.
 
 #### Merging
 
 `Sheet`, `Style`, and `Rule` have the ability to be merged.
 
 ```js
-const OtherSheet = create();
+const otherSheet = create();
 
-Sheet.merge(OtherSheet); // Merge the current styles of `OtherSheet` into `Sheet`.
-Sheet.unmerge(OtherSheet); // Remove the current styles of `OtherSheet` from `Sheet`.
+sheet.merge(otherSheet); // Merge the current styles of `otherSheet` into `sheet`.
+sheet.unmerge(otherSheet); // Remove the current styles of `otherSheet` from `sheet`.
 ```
 
 #### Pre-process styles

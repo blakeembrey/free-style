@@ -177,9 +177,7 @@ function stylize(
   const nestedStyles: Array<Tuple<Styles>> = [];
 
   // Sort keys before adding to styles.
-  for (const key of Object.keys(styles)) {
-    const value = styles[key];
-
+  for (const [key, value] of Object.entries(styles)) {
     if (key.charCodeAt(0) !== 36 /* $ */ && value != null) {
       if (Array.isArray(value)) {
         const name = hyphenate(key);
@@ -279,8 +277,8 @@ function join(arr: string[]): string {
  */
 export interface Changes {
   add(style: Container<any>, index: number): void;
-  change(style: Container<any>, oldIndex: number, newIndex: number): void;
   remove(style: Container<any>, index: number): void;
+  change(style: Container<any>, index: number): void;
 }
 
 /**
@@ -312,22 +310,22 @@ export class Cache<T extends Container<any>> {
     this.counters[id] = count + 1;
 
     if (count === 0) {
-      const item = style.clone() as T;
+      const item = style.clone();
       const index = this.children.push(item);
-      this.sheet.push(style.getStyles());
+      this.sheet.push(item.getStyles());
       this.changeId++;
       if (this.changes) this.changes.add(item, index);
     } else if (style instanceof Cache) {
       const index = this.children.findIndex((x) => x.cid === id);
       const item = this.children[index] as T & Cache<any>;
-      const prevItemChangeId = item.changeId;
+      const prevChangeId = item.changeId;
 
       item.merge(style);
 
-      if (item.changeId !== prevItemChangeId) {
+      if (item.changeId !== prevChangeId) {
         this.sheet[index] = item.getStyles();
         this.changeId++;
-        if (this.changes) this.changes.change(item, index, index);
+        if (this.changes) this.changes.change(item, index);
       }
     }
   }
@@ -342,11 +340,12 @@ export class Cache<T extends Container<any>> {
       const index = this.children.findIndex((x) => x.cid === id);
 
       if (count === 1) {
+        const item = this.children[index];
         delete this.counters[id];
         this.children.splice(index, 1);
         this.sheet.splice(index, 1);
         this.changeId++;
-        if (this.changes) this.changes.remove(this.children[index], index);
+        if (this.changes) this.changes.remove(item, index);
       } else if (style instanceof Cache) {
         const item = this.children[index] as T & Cache<any>;
         const prevChangeId = item.changeId;
@@ -356,7 +355,7 @@ export class Cache<T extends Container<any>> {
         if (item.changeId !== prevChangeId) {
           this.sheet[index] = item.getStyles();
           this.changeId++;
-          if (this.changes) this.changes.change(item, index, index);
+          if (this.changes) this.changes.change(item, index);
         }
       }
     }
@@ -380,7 +379,7 @@ export class Selector implements Container<Selector> {
   constructor(public selector: string) {}
 
   get cid() {
-    return `s:${this.selector}`;
+    return this.selector;
   }
 
   getStyles() {
@@ -404,7 +403,7 @@ export class Style extends Cache<Selector> implements Container<Style> {
   }
 
   get cid() {
-    return `s:${this.id}:${this.style}`;
+    return `${this.id}|${this.style}`;
   }
 
   getStyles(): string {
@@ -429,7 +428,7 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
   }
 
   get cid() {
-    return `r:${this.id}:${this.rule}:${this.style}`;
+    return `${this.id}|${this.rule}|${this.style}`;
   }
 
   getStyles(): string {
@@ -471,10 +470,6 @@ export class Sheet extends Cache<Rule | Style> {
 
   getStyles(): string {
     return join(this.sheet);
-  }
-
-  clone(): Sheet {
-    return new Sheet(this.prefix, this.changes).merge(this);
   }
 }
 
