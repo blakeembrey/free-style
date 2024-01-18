@@ -252,7 +252,11 @@ Style.registerStyle({
 Style.getStyles(); //=> ".f65pi0b{background-color:red;padding:10px}"
 ```
 
-### Useful libraries
+## TypeScript and ESM
+
+This package is a [pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) and ships with TypeScript definitions. It cannot be `require`'d or used with CommonJS module resolution in TypeScript.
+
+## Useful libraries
 
 - [`polished`](https://polished.js.org)
 - [`classnames`](https://github.com/JedWatson/classnames)
@@ -264,13 +268,13 @@ Style.getStyles(); //=> ".f65pi0b{background-color:red;padding:10px}"
 - [`image-url`](https://github.com/ajoslin/image-url)
 - [**Add yours!**](https://github.com/blakeembrey/free-style/issues/new)
 
-### Implementation details
+## Implementation details
 
-#### Debugging
+### Debugging
 
 Display names will automatically be removed when `process.env.NODE_ENV === "production"`.
 
-#### Changes
+### Changes
 
 The only argument to `create()` is a map of change function handlers. All functions are required:
 
@@ -280,7 +284,7 @@ The only argument to `create()` is a map of change function handlers. All functi
 
 All styles implement `Container`, so you can call `getStyles()` or `clone()`.
 
-#### Merging
+### Merging
 
 `Sheet`, `Style`, and `Rule` have the ability to be merged.
 
@@ -291,7 +295,7 @@ sheet.merge(otherSheet); // Merge the current styles of `otherSheet` into `sheet
 sheet.unmerge(otherSheet); // Remove the current styles of `otherSheet` from `sheet`.
 ```
 
-#### Pre-process styles
+### Pre-process styles
 
 If you plan to re-use styles across `Sheet`s, it will be more efficient to use `compile` once and `register` many times instead of `registerStyle`.
 
