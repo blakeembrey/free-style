@@ -21,7 +21,7 @@ export interface Styles {
 /**
  * Quick dictionary lookup for unit-less numbers.
  */
-const CSS_NUMBER = Object.create(null) as Record<string, true>;
+const CSS_NUMBER = new Set<string>();
 
 /**
  * CSS properties that are valid unit-less numbers.
@@ -79,7 +79,7 @@ const CSS_NUMBER_KEYS = [
 // Add vendor prefixes to all unit-less properties.
 for (const property of CSS_NUMBER_KEYS) {
   for (const prefix of ["-webkit-", "-ms-", "-moz-", "-o-", ""]) {
-    CSS_NUMBER[prefix + property] = true;
+    CSS_NUMBER.add(prefix + property);
   }
 }
 
@@ -156,7 +156,7 @@ type Tuple<T> = [string, T];
  * Transform a style string to a CSS string.
  */
 function tupleToStyle([name, value]: Tuple<NonNullable<PropertyValue>>) {
-  if (typeof value === "number" && value && !CSS_NUMBER[name]) {
+  if (typeof value === "number" && value && !CSS_NUMBER.has(name)) {
     return `${name}:${value}px`;
   }
 
@@ -299,15 +299,15 @@ export class Cache<T extends Container<any>> {
 
   protected sheet: string[] = [];
   protected children: T[] = [];
-  protected counters: Record<string, number | undefined> = Object.create(null);
+  protected counters = new Map<string, number>();
 
   constructor(public changes?: Changes) {}
 
   add(style: T): void {
     const id = style.cid();
-    const count = this.counters[id] || 0;
+    const count = this.counters.get(id) ?? 0;
 
-    this.counters[id] = count + 1;
+    this.counters.set(id, count + 1);
 
     if (count === 0) {
       const item = style.clone();
@@ -332,16 +332,14 @@ export class Cache<T extends Container<any>> {
 
   remove(style: T): void {
     const id = style.cid();
-    const count = this.counters[id];
+    const count = this.counters.get(id);
 
     if (count) {
-      this.counters[id] = count - 1;
-
       const index = this.children.findIndex((x) => x.cid() === id);
 
       if (count === 1) {
         const item = this.children[index];
-        delete this.counters[id];
+        this.counters.delete(id);
         this.children.splice(index, 1);
         this.sheet.splice(index, 1);
         this.changeId++;
@@ -350,6 +348,7 @@ export class Cache<T extends Container<any>> {
         const item = this.children[index] as T & Cache<any>;
         const prevChangeId = item.changeId;
 
+        this.counters.set(id, count - 1);
         item.unmerge(style);
 
         if (item.changeId !== prevChangeId) {
