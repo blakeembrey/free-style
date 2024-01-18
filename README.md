@@ -295,6 +295,10 @@ Sheet.merge(OtherSheet); // Merge the current styles of `OtherSheet` into `Sheet
 Sheet.unmerge(OtherSheet); // Remove the current styles of `OtherSheet` from `Sheet`.
 ```
 
+#### Pre-process styles
+
+If you plan to re-use styles across `Sheet`s, it will be more efficient to use `compile` once and `register` many times instead of `registerStyle`.
+
 ## Legacy Browsers
 
 Version 3 requires support for `class`, see [#82](https://github.com/blakeembrey/free-style/issues/82). As of April 2020, that's [95% of browsers](https://caniuse.com/#feat=es6-class). You can import from `free-style/dist.es5` for a version compatible with ES5 (IE 11).
