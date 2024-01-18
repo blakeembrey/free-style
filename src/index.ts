@@ -299,26 +299,26 @@ export class Cache<T extends Container<any>> {
   changeId = 0;
 
   protected sheet: string[] = [];
-  protected _children: T[] = [];
-  protected _counters: Record<string, number | undefined> = Object.create(null);
+  protected children: T[] = [];
+  protected counters: Record<string, number | undefined> = Object.create(null);
 
   constructor(public changes?: Changes) {}
 
   add(style: T): void {
     const id = style.id;
-    const count = this._counters[id] || 0;
+    const count = this.counters[id] || 0;
 
-    this._counters[id] = count + 1;
+    this.counters[id] = count + 1;
 
     if (count === 0) {
       const item = style.clone() as T;
-      const index = this._children.push(item);
+      const index = this.children.push(item);
       this.sheet.push(style.getStyles());
       this.changeId++;
       if (this.changes) this.changes.add(item, index);
     } else if (style instanceof Cache) {
-      const index = this._children.findIndex((x) => x.id === id);
-      const item = this._children[index] as T & Cache<any>;
+      const index = this.children.findIndex((x) => x.id === id);
+      const item = this.children[index] as T & Cache<any>;
       const prevItemChangeId = item.changeId;
 
       item.merge(style);
@@ -333,21 +333,21 @@ export class Cache<T extends Container<any>> {
 
   remove(style: T): void {
     const id = style.id;
-    const count = this._counters[id];
+    const count = this.counters[id];
 
     if (count) {
-      this._counters[id] = count - 1;
+      this.counters[id] = count - 1;
 
-      const index = this._children.findIndex((x) => x.id === id);
+      const index = this.children.findIndex((x) => x.id === id);
 
       if (count === 1) {
-        delete this._counters[id];
-        this._children.splice(index, 1);
+        delete this.counters[id];
+        this.children.splice(index, 1);
         this.sheet.splice(index, 1);
         this.changeId++;
-        if (this.changes) this.changes.remove(this._children[index], index);
+        if (this.changes) this.changes.remove(this.children[index], index);
       } else if (style instanceof Cache) {
-        const item = this._children[index] as T & Cache<any>;
+        const item = this.children[index] as T & Cache<any>;
         const prevChangeId = item.changeId;
 
         item.unmerge(style);
@@ -361,17 +361,13 @@ export class Cache<T extends Container<any>> {
     }
   }
 
-  values(): T[] {
-    return this._children;
-  }
-
   merge(cache: Cache<any>) {
-    for (const item of cache.values()) this.add(item);
+    for (const item of cache.children) this.add(item);
     return this;
   }
 
   unmerge(cache: Cache<any>) {
-    for (const item of cache.values()) this.remove(item);
+    for (const item of cache.children) this.remove(item);
     return this;
   }
 
