@@ -299,8 +299,7 @@ export class Cache<T extends Container<any>> {
   sheet: string[] = [];
   changeId = 0;
 
-  private _keys: string[] = [];
-  private _children = Object.create(null) as Record<string, T | undefined>;
+  private _children: T[] = [];
   private _counters = Object.create(null) as Record<string, number | undefined>;
 
   constructor(public changes?: Changes) {}
@@ -308,23 +307,23 @@ export class Cache<T extends Container<any>> {
   add(style: T): void {
     const id = style.id;
     const count = this._counters[id] || 0;
-    const item = this._children[id] || (style.clone() as T);
 
     this._counters[id] = count + 1;
 
     if (count === 0) {
-      this._children[id] = item;
-      this._keys.push(id);
-      this.sheet.push(item.getStyles());
+      const item = style.clone() as T;
+      const index = this._children.push(item);
+      this.sheet.push(style.getStyles());
       this.changeId++;
-      if (this.changes) this.changes.add(item, this._keys.length - 1);
-    } else if (item instanceof Cache && style instanceof Cache) {
+      if (this.changes) this.changes.add(item, index);
+    } else if (style instanceof Cache) {
+      const index = this._children.findIndex((x) => x.id === id);
+      const item = (this._children[index]! as unknown) as T & Cache<any>;
       const prevItemChangeId = item.changeId;
 
       item.merge(style);
 
       if (item.changeId !== prevItemChangeId) {
-        const index = this._keys.indexOf(id);
         this.sheet[index] = item.getStyles();
         this.changeId++;
         if (this.changes) this.changes.change(item, index, index);
@@ -339,14 +338,12 @@ export class Cache<T extends Container<any>> {
     if (count) {
       this._counters[id] = count - 1;
 
-      const item = this._children[id]!;
-      const index = this._keys.indexOf(id);
+      const index = this._children.findIndex((x) => x.id === id);
+      const item = this._children[index]!;
 
       if (count === 1) {
         delete this._counters[id];
-        delete this._children[id];
-
-        this._keys.splice(index, 1);
+        this._children.splice(index, 1);
         this.sheet.splice(index, 1);
         this.changeId++;
         if (this.changes) this.changes.remove(item, index);
@@ -365,7 +362,7 @@ export class Cache<T extends Container<any>> {
   }
 
   values(): T[] {
-    return this._keys.map((key) => this._children[key]!);
+    return this._children;
   }
 
   merge(cache: Cache<any>) {
