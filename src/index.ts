@@ -296,11 +296,11 @@ export interface Container<T> {
  * Implement a cache/event emitter.
  */
 export class Cache<T extends Container<any>> {
-  sheet: string[] = [];
   changeId = 0;
 
-  private _children: T[] = [];
-  private _counters = Object.create(null) as Record<string, number | undefined>;
+  protected sheet: string[] = [];
+  protected _children: T[] = [];
+  protected _counters: Record<string, number | undefined> = Object.create(null);
 
   constructor(public changes?: Changes) {}
 
@@ -318,7 +318,7 @@ export class Cache<T extends Container<any>> {
       if (this.changes) this.changes.add(item, index);
     } else if (style instanceof Cache) {
       const index = this._children.findIndex((x) => x.id === id);
-      const item = (this._children[index]! as unknown) as T & Cache<any>;
+      const item = this._children[index] as T & Cache<any>;
       const prevItemChangeId = item.changeId;
 
       item.merge(style);
@@ -339,15 +339,15 @@ export class Cache<T extends Container<any>> {
       this._counters[id] = count - 1;
 
       const index = this._children.findIndex((x) => x.id === id);
-      const item = this._children[index]!;
 
       if (count === 1) {
         delete this._counters[id];
         this._children.splice(index, 1);
         this.sheet.splice(index, 1);
         this.changeId++;
-        if (this.changes) this.changes.remove(item, index);
-      } else if (item instanceof Cache && style instanceof Cache) {
+        if (this.changes) this.changes.remove(this._children[index], index);
+      } else if (style instanceof Cache) {
+        const item = this._children[index] as T & Cache<any>;
         const prevChangeId = item.changeId;
 
         item.unmerge(style);
