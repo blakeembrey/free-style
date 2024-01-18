@@ -371,10 +371,6 @@ export class Cache<T extends Container<any>> {
     for (const item of cache.children) this.remove(item);
     return this;
   }
-
-  clone(): Cache<T> {
-    return new Cache<T>().merge(this);
-  }
 }
 
 /**
@@ -448,19 +444,16 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
 /**
  * The FreeStyle class implements the API for everything else.
  */
-export class FreeStyle
-  extends Cache<Rule | Style>
-  implements Container<FreeStyle>
-{
+export class FreeStyle extends Cache<Rule | Style> {
   constructor(
-    public cid: string,
+    public prefix: string,
     changes?: Changes,
   ) {
     super(changes);
   }
 
   register(compiled: Compiled) {
-    const className = `${this.cid}${compiled.id}`;
+    const className = `${this.prefix}${compiled.id}`;
 
     if (process.env.NODE_ENV !== "production" && compiled.displayName) {
       const name = `${compiled.displayName}_${className}`;
@@ -481,7 +474,7 @@ export class FreeStyle
   }
 
   clone(): FreeStyle {
-    return new FreeStyle(this.cid, this.changes).merge(this);
+    return new FreeStyle(this.prefix, this.changes).merge(this);
   }
 }
 
