@@ -444,7 +444,7 @@ export class Rule extends Cache<Rule | Style> implements Container<Rule> {
 /**
  * The FreeStyle class implements the API for everything else.
  */
-export class FreeStyle extends Cache<Rule | Style> {
+export class Sheet extends Cache<Rule | Style> {
   constructor(
     public prefix: string,
     changes?: Changes,
@@ -473,8 +473,8 @@ export class FreeStyle extends Cache<Rule | Style> {
     return join(this.sheet);
   }
 
-  clone(): FreeStyle {
-    return new FreeStyle(this.prefix, this.changes).merge(this);
+  clone(): Sheet {
+    return new Sheet(this.prefix, this.changes).merge(this);
   }
 }
 
@@ -482,7 +482,7 @@ export class FreeStyle extends Cache<Rule | Style> {
  * Exports a simple function to create a new instance.
  */
 export function create(changes?: Changes, prefix = "") {
-  return new FreeStyle(prefix, changes);
+  return new Sheet(prefix, changes);
 }
 
 /**

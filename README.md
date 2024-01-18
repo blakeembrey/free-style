@@ -25,17 +25,17 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 ### Also solved with Free-Style
 
 - Works with third-party DOM components (You can nest regular `.class-name` in your styles)
-- Consistently generates styles and class names, and will automatically merge duplicate styles
+- Deterministically generates styles and class names, and automatically merges duplicate styles
 - Develop components alongside the style (No more hunting CSS files for estranged `ul > li > a`)
 - Create universal applications and serve styles for **only** the components rendered (see [React Free-Style](http://github.com/blakeembrey/react-free-style))
-- Use the CSS you already know (`{ '&:hover': { ... } }`)
+- Write the CSS you already know (`{ '&:hover': { ... } }`)
 - Automatically namespace `@`-rule styles (`{ '@media (min-width: 500px)': { ... } }`)
 - Overload CSS properties using arrays (`{ backgroundColor: ['red', 'linear-gradient(to right, red 0%, blue 100%)'] }`)
 - Small and powerful API that works with any ecosystem (~360 SLOC)
 
 ### But How?
 
-**Free-Style** generates a consistent hash from the style, after alphabetical property ordering and formatting, to use as the class name. This allows duplicate styles to automatically be merged on duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters that will warn on unused variables and features like dead code minification. Using "register" returns the class name used for the `Style` instance and style instances (returned by `create()`) can be merged together at runtime to output _only_ the styles on page (e.g. [React Free-Style](http://github.com/blakeembrey/react-free-style)). Styles should usually be created outside of the application run loop (e.g. `render()`) so the CSS string and hashes are only generated once.
+**Free-Style** generates a hash from the style to use as the class name. This allows duplicate styles to automatically be merged on duplicate hashes. Every style is "registered" and assigned to a variable, which gets the most out of linters that will warn on unused variables and features like dead code minification. Styles should usually be created outside of the application run loop (e.g. `render()`) so the CSS string and hashes are only generated once.
 
 ### Ways to Use
 
@@ -48,19 +48,19 @@ There's a [great presentation by Christopher Chedeau](https://speakerdeck.com/vj
 ## Usage
 
 ```js
-var FreeStyle = require("free-style");
+import { create } from "free-style";
 
 // Create a stylesheet instance.
-var Style = FreeStyle.create();
+const Sheet = create();
 
 // Register a new style, returning a class name to use.
-var backgroundStyle = Style.registerStyle({
+const backgroundStyle = Sheet.registerStyle({
   backgroundColor: "red",
 }); //=> "f14svl5e"
 
 // Inject `<style>` into the `<head>`.
-var styleElement = document.createElement("style");
-styleElement.textContent = Style.getStyles();
+const styleElement = document.createElement("style");
+styleElement.textContent = Sheet.getStyles();
 document.head.appendChild(styleElement);
 
 // Render the style by using the class name.
@@ -73,7 +73,7 @@ React.render(
 ### Style
 
 ```js
-var buttonStyle = Style.registerStyle({
+const buttonStyle = Sheet.registerStyle({
   $displayName: "button",
   backgroundColor: "red",
   padding: 10,
@@ -282,15 +282,17 @@ The only argument to `create()` is a map of change function handlers. All functi
 - `change(style: Container<any>, oldIndex: number, newIndex: number)`
 - `remove(style: Container<any>, index: number)`
 
-All classes implement `Container`, so you can call `getStyles()`, `clone()` or get `id`.
+All classes implement `Container`, so you can call `getStyles()` or `clone()`.
 
-#### Other Properties and Methods
+#### Merging
+
+`Sheet`, `Style`, and `Rule` have the ability to be merged.
 
 ```js
-var OtherStyle = Style.create();
+const OtherSheet = create();
 
-Style.merge(OtherStyle); // Merge the current styles of `OtherStyle` into `Style`.
-Style.unmerge(OtherStyle); // Remove the current styles of `OtherStyle` from `Style`.
+Sheet.merge(OtherSheet); // Merge the current styles of `OtherSheet` into `Sheet`.
+Sheet.unmerge(OtherSheet); // Remove the current styles of `OtherSheet` from `Sheet`.
 ```
 
 ## Legacy Browsers
